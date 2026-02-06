@@ -39,51 +39,81 @@ export default function HomePage() {
   return (
     <>
       <JsonLd data={jsonLd} />
-      <section className="space-y-6">
-        <h1 className="text-3xl font-semibold tracking-tight">
+
+      <section style={{ display: "grid", gap: 16 }}>
+        <h1 style={{ fontSize: 32, fontWeight: 700, letterSpacing: -0.4 }}>
           Read European webtoons and serialized stories
         </h1>
-        <p className="max-w-2xl text-neutral-700">
+        <p style={{ maxWidth: 720, color: "#404040", lineHeight: 1.5 }}>
           Mobile-first vertical reading. Free episodes to start. Unlock early
           access (“Fast Pass”) via credits.
         </p>
 
-        <div className="flex gap-3">
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Link
             href="/series"
-            className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            style={{
+              borderRadius: 14,
+              background: "#111",
+              color: "#fff",
+              padding: "10px 14px",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
           >
             Browse series
           </Link>
           <Link
             href="/about"
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
+            style={{
+              borderRadius: 14,
+              border: "1px solid #d4d4d4",
+              padding: "10px 14px",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
           >
             How it works
           </Link>
         </div>
       </section>
 
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold tracking-tight">Trending now</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <section style={{ marginTop: 32 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.2 }}>
+          Trending now
+        </h2>
+        <div
+          style={{
+            marginTop: 16,
+            display: "grid",
+            gap: 16,
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          }}
+        >
           {list.map((s) => (
             <SeriesCard key={s.slug} s={s} />
           ))}
         </div>
       </section>
 
-      <section className="mt-12 rounded-2xl border border-neutral-200 p-6">
-        <h2 className="text-lg font-semibold tracking-tight">
+      <section
+        style={{
+          marginTop: 36,
+          borderRadius: 18,
+          border: "1px solid #e5e5e5",
+          padding: 18,
+        }}
+      >
+        <h2 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2 }}>
           For creators (MVP)
         </h2>
-        <p className="mt-2 text-sm text-neutral-700">
+        <p style={{ marginTop: 8, fontSize: 14, color: "#404040", lineHeight: 1.5 }}>
           Publish serialized episodes. Earn revenue share on paid unlocks. In the
           MVP, onboarding is manual (email).
         </p>
-        <p className="mt-3 text-sm">
+        <p style={{ marginTop: 10, fontSize: 14 }}>
           Email:{" "}
-          <a className="underline" href="mailto:creators@yourdomain.com">
+          <a style={{ textDecoration: "underline" }} href="mailto:creators@yourdomain.com">
             creators@yourdomain.com
           </a>
         </p>
