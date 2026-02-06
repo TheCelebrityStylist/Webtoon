@@ -1,6 +1,6 @@
 // components/EpisodeList.tsx
 import Link from "next/link";
-import type { Series } from "@/lib/data";
+import type { Series } from "@/lib/types";
 
 export function EpisodeList({ series }: { series: Series }) {
   return (
