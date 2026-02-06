@@ -54,19 +54,19 @@ export default function SeriesIndexPage({ searchParams }: Props) {
             style={{
               flex: 1,
               borderRadius: "999px",
-              border: "1px solid #e5e7eb",
+              border: "1px solid #e2e8f0",
               padding: "10px 14px",
               fontSize: "0.95rem",
             }}
           />
-          <button className="button button-primary" type="submit">
+          <button className="btn btnPrimary" type="submit">
             Search
           </button>
         </div>
       </form>
 
       <section className="section">
-        <div className="grid grid-2">
+        <div className="grid gridCards">
           {list.map((s) => (
             <SeriesCard key={s.slug} s={s} />
           ))}

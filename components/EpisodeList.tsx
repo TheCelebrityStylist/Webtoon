@@ -4,30 +4,35 @@ import type { Series } from "@/lib/data";
 
 export function EpisodeList({ series }: { series: Series }) {
   return (
-    <ol className="mt-6 space-y-3">
+    <ol className="stack" style={{ gap: "12px", padding: 0, listStyle: "none" }}>
       {series.episodes
         .slice()
         .sort((a, b) => a.ep - b.ep)
         .map((e) => (
-          <li
-            key={e.ep}
-            className="rounded-2xl border border-neutral-200 p-4"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium">
+          <li key={e.ep} className="card" style={{ padding: "16px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: "16px",
+              }}
+            >
+              <div className="stack" style={{ gap: "6px" }}>
+                <p style={{ margin: 0, fontWeight: 600 }}>
                   Episode {e.ep}: {e.title}
                 </p>
-                <p className="mt-1 text-sm text-neutral-700">{e.excerpt}</p>
-                <p className="mt-2 text-xs text-neutral-600">
-                  {new Date(e.publishedAt).toLocaleDateString("en-GB")} ·{" "}
-                  {e.isFree ? "Free" : "Fast Pass (paid)"}
-                </p>
+                <p style={{ margin: 0, color: "#4b5563" }}>{e.excerpt}</p>
+                <div className="chipRow" style={{ marginTop: "4px" }}>
+                  <span className="chip">
+                    {new Date(e.publishedAt).toLocaleDateString("en-GB")}
+                  </span>
+                  <span className="chip">
+                    {e.isFree ? "Free" : "Fast Pass"}
+                  </span>
+                </div>
               </div>
-              <Link
-                href={`/series/${series.slug}/read/${e.ep}`}
-                className="shrink-0 rounded-xl border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-50"
-              >
+              <Link href={`/series/${series.slug}/read/${e.ep}`} className="btn btnGhost">
                 Read
               </Link>
             </div>

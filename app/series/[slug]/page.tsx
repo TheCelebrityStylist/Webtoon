@@ -53,23 +53,38 @@ export default function SeriesPage({ params }: Props) {
     <div className="stack" style={{ gap: "24px" }}>
       <JsonLd data={jsonLd} />
       <section className="hero" style={{ padding: "32px" }}>
-        <h1 className="hero-title" style={{ fontSize: "2.25rem" }}>
-          {series.title}
-        </h1>
-        <p className="hero-subtitle">{series.logline}</p>
-        <div className="chip-row">
-          {series.genres.map((g) => (
-            <span key={g} className="chip">
-              {g}
-            </span>
-          ))}
-          <span className="chip">{series.language.toUpperCase()}</span>
+        <div className="grid" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: "24px" }}>
+          <div className="stack">
+            <h1 className="heroTitle" style={{ fontSize: "2.25rem" }}>
+              {series.title}
+            </h1>
+            <p className="heroSubtitle">{series.logline}</p>
+            <div className="chipRow">
+              {series.genres.map((g) => (
+                <span key={g} className="chip">
+                  {g}
+                </span>
+              ))}
+              <span className="chip">{series.language.toUpperCase()}</span>
+            </div>
+            <p style={{ marginTop: "16px", color: "#4b5563" }}>{series.description}</p>
+          </div>
+          <div
+            className="cardCover"
+            style={{
+              height: "220px",
+              backgroundImage: `linear-gradient(135deg, rgba(17, 24, 39, 0.85), rgba(67, 56, 202, 0.85)), url(${series.coverUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              borderRadius: "16px",
+            }}
+            aria-hidden="true"
+          />
         </div>
-        <p style={{ marginTop: "16px", color: "#4b5563" }}>{series.description}</p>
       </section>
 
       <section>
-        <h2 className="section-title">Episodes</h2>
+        <h2 className="sectionTitle">Episodes</h2>
         <EpisodeList series={series} />
       </section>
     </div>

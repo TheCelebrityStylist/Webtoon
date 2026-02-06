@@ -1,36 +1,22 @@
 // components/Header.tsx
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 export function Header() {
-  const pathname = usePathname();
-
-  const navItems = [
-    { href: "/series", label: "Series" },
-    { href: "/ai-stylist", label: "AI Stylist" },
-    { href: "/about", label: "About" },
-  ];
-
   return (
     <header className="header">
-      <div className="container" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px 0" }}>
+      <div
+        className="container"
+        style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px 0" }}
+      >
         <Link href="/" style={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
           EU Webtoon
         </Link>
-        <nav className="nav" style={{ marginLeft: "auto" }}>
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={pathname === item.href ? "page" : undefined}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="nav" style={{ marginLeft: "auto" }} aria-label="Primary">
+          <Link href="/series">Series</Link>
+          <Link href="/look">AI Stylist</Link>
+          <Link href="/about">About</Link>
         </nav>
-        <Link href="/series" className="button button-primary">
+        <Link href="/series" className="btn btnPrimary">
           Start reading
         </Link>
       </div>

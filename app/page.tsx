@@ -41,20 +41,20 @@ export default function HomePage() {
       <JsonLd data={jsonLd} />
 
       <section className="hero">
-        <h1 className="hero-title">Read European webtoons and serialized stories</h1>
-        <p className="hero-subtitle">
+        <h1 className="heroTitle">Read European webtoons and serialized stories</h1>
+        <p className="heroSubtitle">
           Mobile-first vertical reading. Free episodes to start. Unlock early access via
           credits with Fast Pass.
         </p>
-        <div className="hero-actions">
-          <Link href="/series" className="button button-primary">
+        <div className="heroActions">
+          <Link href="/series" className="btn btnPrimary">
             Browse series
           </Link>
-          <Link href="/about" className="button button-secondary">
+          <Link href="/about" className="btn btnGhost">
             How it works
           </Link>
         </div>
-        <div className="hero-proof">
+        <div className="heroProof">
           <span>New: European creators</span>
           <span>•</span>
           <span>Mobile-first</span>
@@ -64,8 +64,8 @@ export default function HomePage() {
       </section>
 
       <section className="section">
-        <h2 className="section-title">Trending now</h2>
-        <div className="grid grid-2">
+        <h2 className="sectionTitle">Trending now</h2>
+        <div className="grid gridCards">
           {list.map((s) => (
             <SeriesCard key={s.slug} s={s} />
           ))}
@@ -73,8 +73,8 @@ export default function HomePage() {
       </section>
 
       <section className="section surface">
-        <h2 className="section-title">How Fast Pass works</h2>
-        <div className="grid grid-2">
+        <h2 className="sectionTitle">How Fast Pass works</h2>
+        <div className="grid gridCards">
           {[
             {
               title: "Start free",
@@ -98,9 +98,9 @@ export default function HomePage() {
       </section>
 
       <section className="section surface">
-        <div className="grid grid-2">
+        <div className="grid gridCards">
           <div className="stack">
-            <h2 className="section-title" style={{ marginBottom: 0 }}>
+            <h2 className="sectionTitle" style={{ marginBottom: 0 }}>
               For creators (MVP)
             </h2>
             <p style={{ margin: 0, color: "#4b5563" }}>
@@ -119,7 +119,7 @@ export default function HomePage() {
             </p>
             <Link
               href="mailto:creators@yourdomain.com"
-              className="button button-primary"
+              className="btn btnPrimary"
               style={{ alignSelf: "flex-start" }}
             >
               Email creators@yourdomain.com
