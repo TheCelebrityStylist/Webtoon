@@ -1,8 +1,15 @@
-/* app/globals.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+:root { color-scheme: light; }
 
-:root {
-  color-scheme: light;
+html, body {
+  margin: 0;
+  padding: 0;
 }
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: #0a0a0a;
+  background: #ffffff;
+}
+
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; }
