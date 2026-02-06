@@ -1,21 +1,22 @@
 // lib/data.ts
+
 export type Episode = {
-  ep: number;
+  id: string;
   title: string;
-  blurb: string;
-  dateISO: string; // "2026-01-05"
+  date: string; // ISO
   isFree: boolean;
+  summary: string;
+  content?: string;
 };
 
 export type Series = {
   slug: string;
   title: string;
-  logline: string;
-  description: string;
-  creatorName: string;
-  language: string; // "en", "nl", etc
+  author: string;
+  language: string; // e.g. "EN"
   genres: string[];
-  cover?: string; // optional image path
+  description: string;
+  cover?: string;
   episodes: Episode[];
 };
 
