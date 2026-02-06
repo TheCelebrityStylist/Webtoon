@@ -3,21 +3,24 @@ import Link from "next/link";
 
 export function Header() {
   return (
-    <header className="border-b border-neutral-200">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-        <Link href="/" className="font-semibold tracking-tight">
+    <header style={{ borderBottom: "1px solid #e5e7eb" }}>
+      <div
+        style={{
+          maxWidth: "72rem",
+          margin: "0 auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "16px",
+        }}
+      >
+        <Link href="/" style={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
           EU Webtoon
         </Link>
-        <nav className="flex items-center gap-4 text-sm">
-          <Link href="/series" className="hover:underline">
-            Series
-          </Link>
-          <Link href="/look" className="hover:underline">
-            AI Stylist
-          </Link>
-          <Link href="/about" className="hover:underline">
-            About
-          </Link>
+        <nav style={{ display: "flex", gap: "16px", fontSize: "14px" }}>
+          <Link href="/series">Series</Link>
+          <Link href="/ai-stylist">AI Stylist</Link>
+          <Link href="/about">About</Link>
         </nav>
       </div>
     </header>

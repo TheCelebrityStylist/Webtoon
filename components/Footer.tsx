@@ -1,24 +1,18 @@
 // components/Footer.tsx
-import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="border-t border-neutral-200">
-      <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-neutral-600">
-        <div className="flex flex-col gap-2">
-          <p>© {new Date().getFullYear()} EU Webtoon MVP</p>
-          <div className="flex gap-4">
-            <Link href="/about" className="hover:underline">
-              About
-            </Link>
-            <Link href="/series" className="hover:underline">
-              Browse
-            </Link>
-            <Link href="/look" className="hover:underline">
-              AI Stylist
-            </Link>
-          </div>
-        </div>
+    <footer style={{ borderTop: "1px solid #e5e7eb" }}>
+      <div
+        style={{
+          maxWidth: "72rem",
+          margin: "0 auto",
+          padding: "24px 16px",
+          fontSize: "14px",
+          color: "#6b7280",
+        }}
+      >
+        © {new Date().getFullYear()} EU Webtoon MVP
       </div>
     </footer>
   );
