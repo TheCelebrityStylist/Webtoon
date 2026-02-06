@@ -14,6 +14,9 @@ export function Footer() {
             <Link href="/series" className="hover:underline">
               Browse
             </Link>
+            <Link href="/look" className="hover:underline">
+              AI Stylist
+            </Link>
           </div>
         </div>
       </div>

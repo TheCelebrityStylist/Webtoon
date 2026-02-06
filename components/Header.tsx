@@ -12,6 +12,9 @@ export function Header() {
           <Link href="/series" className="hover:underline">
             Series
           </Link>
+          <Link href="/look" className="hover:underline">
+            AI Stylist
+          </Link>
           <Link href="/about" className="hover:underline">
             About
           </Link>
