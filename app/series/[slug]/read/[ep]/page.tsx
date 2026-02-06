@@ -2,47 +2,55 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { JsonLd } from "@/components/JsonLd";
-import { getEpisode, getSeriesBySlug } from "@/lib/data";
 import { absoluteUrl } from "@/lib/seo";
+import { getEpisode, getSeriesBySlug } from "@/lib/data";
 
 type Props = { params: { slug: string; ep: string } };
 
 export function generateMetadata({ params }: Props): Metadata {
   const series = getSeriesBySlug(params.slug);
   if (!series) return {};
-  const epNum = Number(params.ep);
-  const episode = getEpisode(series, epNum);
+
+  const episodeNumber = Number(params.ep);
+  const episode = getEpisode(series, episodeNumber);
   if (!episode) return {};
 
   const title = `${series.title} — Episode ${episode.ep}: ${episode.title}`;
   const description = episode.excerpt;
-
-  // SEO choice:
-  // - Free episodes: indexable
-  // - Paid/fast-pass episodes: typically NOINDEX until they become free (you can flip later)
-  const indexable = episode.isFree;
+  const canonical = absoluteUrl(`/series/${series.slug}/read/${episode.ep}`);
 
   return {
     title,
     description,
-    alternates: {
-      canonical: absoluteUrl(`/series/${series.slug}/read/${episode.ep}`),
-    },
-    robots: indexable ? { index: true, follow: true } : { index: false, follow: true },
+    alternates: { canonical },
     openGraph: {
       title,
       description,
-      url: absoluteUrl(`/series/${series.slug}/read/${episode.ep}`),
+      url: canonical,
       images: [{ url: absoluteUrl(series.coverUrl) }],
+    },
+    twitter: {
+      title,
+      description,
+      images: [absoluteUrl(series.coverUrl)],
+    },
+    robots: {
+      index: episode.isFree,
+      follow: true,
+      googleBot: {
+        index: episode.isFree,
+        follow: true,
+      },
     },
   };
 }
 
-export default function EpisodePage({ params }: Props) {
+export default function EpisodeReaderPage({ params }: Props) {
   const series = getSeriesBySlug(params.slug);
   if (!series) return notFound();
-  const epNum = Number(params.ep);
-  const episode = getEpisode(series, epNum);
+
+  const episodeNumber = Number(params.ep);
+  const episode = getEpisode(series, episodeNumber);
   if (!episode) return notFound();
 
   const jsonLd = {
@@ -55,34 +63,42 @@ export default function EpisodePage({ params }: Props) {
       url: absoluteUrl(`/series/${series.slug}`),
     },
     datePublished: episode.publishedAt,
+    inLanguage: series.language,
     url: absoluteUrl(`/series/${series.slug}/read/${episode.ep}`),
   };
 
   return (
-    <>
+    <div className="space-y-6">
       <JsonLd data={jsonLd} />
-      <header className="space-y-2">
+      <div className="space-y-2">
+        <p className="text-xs uppercase tracking-wide text-neutral-500">
+          {series.title}
+        </p>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          Episode {episode.ep}: {episode.title}
+        </h1>
         <p className="text-sm text-neutral-600">
-          {series.title} · Episode {episode.ep}
+          {new Date(episode.publishedAt).toLocaleDateString("en-GB")} ·{" "}
+          {episode.isFree ? "Free to read" : "Fast Pass (paid)"}
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight">{episode.title}</h1>
-        <p className="text-sm text-neutral-700">{episode.excerpt}</p>
-        <p className="text-xs text-neutral-600">
-          {episode.isFree ? "Free episode" : "Fast Pass (paid) — demo content"}
-        </p>
-      </header>
+      </div>
 
-      {/* MVP reader: placeholder. Replace with image panels from storage later. */}
-      <article className="prose mt-8 max-w-none">
-        <p>
-          This is the reader page. For SEO, free episodes can be fully indexable.
-          For paid episodes, keep <code>noindex</code> until they rotate to free.
+      <section className="rounded-2xl border border-neutral-200 bg-neutral-50 p-6">
+        <p className="text-sm leading-6 text-neutral-800">
+          {episode.excerpt} This is a sample reader experience in the MVP. Each
+          episode will render vertical panels and creator notes here.
         </p>
-        <p>
-          Next step: store episode panels in Supabase Storage and render them
-          as vertically stacked images with width/height attributes for Core Web Vitals.
-        </p>
-      </article>
-    </>
+      </section>
+
+      {!episode.isFree && (
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+          <p className="font-medium">Fast Pass — early access</p>
+          <p className="mt-2">
+            This episode is paid by default and set to noindex for SEO until
+            it’s released for free.
+          </p>
+        </section>
+      )}
+    </div>
   );
 }
