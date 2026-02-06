@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
-  const list = getAllSeries().slice(0, 6);
+export default async function HomePage() {
+  const list = (await getAllSeries()).slice(0, 6);
 
   const jsonLd = {
     "@context": "https://schema.org",

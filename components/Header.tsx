@@ -13,7 +13,7 @@ export function Header() {
         </Link>
         <nav className="nav" style={{ marginLeft: "auto" }} aria-label="Primary">
           <Link href="/series">Series</Link>
-          <Link href="/look">AI Stylist</Link>
+          <Link href="/ai-stylist">AI Studio</Link>
           <Link href="/about">About</Link>
         </nav>
         <Link href="/series" className="btn btnPrimary">

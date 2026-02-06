@@ -1,14 +1,16 @@
 // app/series/[slug]/read/[ep]/page.tsx
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { JsonLd } from "@/components/JsonLd";
 import { absoluteUrl } from "@/lib/seo";
 import { getEpisode, getSeriesBySlug } from "@/lib/data";
+import { StoryRender } from "@/components/StoryRender";
 
 type Props = { params: { slug: string; ep: string } };
 
-export function generateMetadata({ params }: Props): Metadata {
-  const series = getSeriesBySlug(params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const series = await getSeriesBySlug(params.slug);
   if (!series) return {};
 
   const episodeNumber = Number(params.ep);
@@ -45,8 +47,8 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function EpisodeReaderPage({ params }: Props) {
-  const series = getSeriesBySlug(params.slug);
+export default async function EpisodeReaderPage({ params }: Props) {
+  const series = await getSeriesBySlug(params.slug);
   if (!series) return notFound();
 
   const episodeNumber = Number(params.ep);
@@ -55,7 +57,7 @@ export default function EpisodeReaderPage({ params }: Props) {
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Chapter",
+    "@type": "CreativeWork",
     name: `Episode ${episode.ep}: ${episode.title}`,
     isPartOf: {
       "@type": "CreativeWorkSeries",
@@ -68,37 +70,50 @@ export default function EpisodeReaderPage({ params }: Props) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="stack" style={{ gap: "24px" }}>
       <JsonLd data={jsonLd} />
-      <div className="space-y-2">
-        <p className="text-xs uppercase tracking-wide text-neutral-500">
-          {series.title}
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Episode {episode.ep}: {episode.title}
-        </h1>
-        <p className="text-sm text-neutral-600">
-          {new Date(episode.publishedAt).toLocaleDateString("en-GB")} ·{" "}
-          {episode.isFree ? "Free to read" : "Fast Pass (paid)"}
-        </p>
+      <div
+        style={{
+          position: "sticky",
+          top: 72,
+          background: "rgba(255,255,255,0.9)",
+          backdropFilter: "blur(10px)",
+          padding: "12px 0",
+          zIndex: 2,
+        }}
+      >
+        <Link href={`/series/${series.slug}`} className="btn btnGhost">
+          Back to series
+        </Link>
       </div>
 
-      <section className="rounded-2xl border border-neutral-200 bg-neutral-50 p-6">
-        <p className="text-sm leading-6 text-neutral-800">
-          {episode.excerpt} This is a sample reader experience in the MVP. Each
-          episode will render vertical panels and creator notes here.
+      <section className="stack">
+        <p style={{ margin: 0, color: "#64748b", fontSize: "0.85rem", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          {series.title}
         </p>
+        <h1 className="heroTitle" style={{ fontSize: "2rem" }}>
+          Episode {episode.ep}: {episode.title}
+        </h1>
+        <div className="chipRow">
+          <span className="chip">
+            {new Date(episode.publishedAt).toLocaleDateString("en-GB")}
+          </span>
+          <span className="chip">{episode.isFree ? "Free" : "Fast Pass"}</span>
+        </div>
       </section>
 
-      {!episode.isFree && (
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
-          <p className="font-medium">Fast Pass — early access</p>
-          <p className="mt-2">
-            This episode is paid by default and set to noindex for SEO until
-            it’s released for free.
-          </p>
-        </section>
-      )}
+      <section className="card" style={{ padding: "24px", maxWidth: "60rem" }}>
+        <StoryRender content={episode.content} />
+      </section>
+
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
+        <span className="btn btnGhost" aria-disabled="true" style={{ opacity: 0.6 }}>
+          Next episode
+        </span>
+        <Link href={`/series/${series.slug}`} className="btn btnPrimary">
+          Back to series
+        </Link>
+      </div>
     </div>
   );
 }

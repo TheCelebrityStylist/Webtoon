@@ -8,8 +8,8 @@ import { EpisodeList } from "@/components/EpisodeList";
 
 type Props = { params: { slug: string } };
 
-export function generateMetadata({ params }: Props): Metadata {
-  const series = getSeriesBySlug(params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const series = await getSeriesBySlug(params.slug);
   if (!series) return {};
 
   const title = series.title;
@@ -33,8 +33,8 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function SeriesPage({ params }: Props) {
-  const series = getSeriesBySlug(params.slug);
+export default async function SeriesPage({ params }: Props) {
+  const series = await getSeriesBySlug(params.slug);
   if (!series) return notFound();
 
   const jsonLd = {

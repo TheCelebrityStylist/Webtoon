@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   alternates: { canonical: absoluteUrl("/series") },
 };
 
-export default function SeriesIndexPage({ searchParams }: Props) {
+export default async function SeriesIndexPage({ searchParams }: Props) {
   const query = searchParams?.q?.trim() ?? "";
-  const list = getAllSeries().filter((series) => {
+  const list = (await getAllSeries()).filter((series) => {
     if (!query) return true;
     const haystack = [
       series.title,
