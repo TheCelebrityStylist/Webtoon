@@ -1,22 +1,20 @@
 // lib/data.ts
-
 export type Episode = {
-  id: string;
+  ep: number;
   title: string;
-  date: string; // ISO
+  date: string; // ISO or yyyy-mm-dd
   isFree: boolean;
-  summary: string;
-  content?: string;
+  blurb?: string;
 };
 
 export type Series = {
   slug: string;
   title: string;
-  author: string;
-  language: string; // e.g. "EN"
-  genres: string[];
   description: string;
-  cover?: string;
+  genres: string[];
+  language: string;
+  author: string;
+  cover?: string; // optional image url/path
   episodes: Episode[];
 };
 
@@ -24,52 +22,51 @@ const SERIES: Series[] = [
   {
     slug: "paper-crown",
     title: "Paper Crown",
-    logline: "A young illustrator fakes royal portraits—until the royal family hires her.",
     description:
-      "A cozy, comedic serialized story for readers who love art, ambition, and slow-burn romance.",
-    creatorName: "Mira V.",
-    language: "en",
+      "A young illustrator fakes royal portraits—until the royal family hires her.",
     genres: ["Slice of Life", "Comedy", "Romance"],
+    language: "EN",
+    author: "Mira V.",
     episodes: [
       {
         ep: 1,
-        title: "The Forgery",
-        blurb: "A harmless commission turns into an accidental masterpiece—and an invitation.",
-        dateISO: "2026-01-05",
+        title: "Episode 1: The Forgery",
+        date: "2026-01-05",
         isFree: true,
+        blurb:
+          "A harmless commission turns into an accidental masterpiece—and an invitation.",
       },
       {
         ep: 2,
-        title: "A Very Real Contract",
-        blurb: "Fast Pass episode. The palace wants her work… and her silence.",
-        dateISO: "2026-01-12",
+        title: "Episode 2: A Very Real Contract",
+        date: "2026-01-12",
         isFree: false,
+        blurb: "Fast Pass episode. The palace wants her work… and her silence.",
       },
     ],
   },
   {
     slug: "midnight-canal",
     title: "Midnight Canal",
-    logline: "A Maastricht student discovers a hidden canal that rewinds time—at a cost.",
     description:
-      "Mystery + romance with urban fantasy twists, set in a city that keeps secrets in plain sight.",
-    creatorName: "Studio Lumen",
-    language: "en",
+      "A Maastricht student discovers a hidden canal that rewinds time—at a cost.",
     genres: ["Mystery", "Romance", "Urban Fantasy"],
+    language: "EN",
+    author: "Studio Lumen",
     episodes: [
       {
         ep: 1,
-        title: "Under the Bridge",
-        blurb: "She follows the ripple—and the city answers back.",
-        dateISO: "2026-01-06",
+        title: "Episode 1: Water That Remembers",
+        date: "2026-01-06",
         isFree: true,
+        blurb: "A late-night shortcut becomes a door to yesterday.",
       },
       {
         ep: 2,
-        title: "The Second Minute",
-        blurb: "Fast Pass episode. Time gives, then takes.",
-        dateISO: "2026-01-13",
+        title: "Episode 2: The Invoice",
+        date: "2026-01-13",
         isFree: false,
+        blurb: "Fast Pass episode. Time always sends a bill.",
       },
     ],
   },
@@ -79,10 +76,11 @@ export function getAllSeries(): Series[] {
   return SERIES;
 }
 
-export function getSeriesBySlug(slug: string): Series | null {
-  return SERIES.find((s) => s.slug === slug) ?? null;
+export function getSeriesBySlug(slug: string): Series | undefined {
+  return SERIES.find((s) => s.slug === slug);
 }
 
-export function getEpisode(series: Series, ep: number): Episode | null {
-  return series.episodes.find((e) => e.ep === ep) ?? null;
+export function getEpisode(seriesSlug: string, ep: number): Episode | undefined {
+  const s = getSeriesBySlug(seriesSlug);
+  return s?.episodes.find((e) => e.ep === ep);
 }
