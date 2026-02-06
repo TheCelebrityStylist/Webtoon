@@ -7,10 +7,11 @@ const ROOT = process.cwd();
 const EXCLUDE_DIRS = new Set([".git", ".next", "node_modules", "dist", "out", "coverage"]);
 
 function walk(dir, files = []) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (EXCLUDE_DIRS.has(entry.name)) continue;
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) walk(full, files);
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const e of entries) {
+    if (EXCLUDE_DIRS.has(e.name)) continue;
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) walk(full, files);
     else files.push(full);
   }
   return files;
@@ -24,48 +25,40 @@ function existsDir(p) {
   }
 }
 
-function readText(file) {
-  try {
-    return fs.readFileSync(file, "utf8");
-  } catch {
-    return "";
-  }
-}
-
 function main() {
+  const problems = [];
+
   const libLower = path.join(ROOT, "lib");
   const libUpper = path.join(ROOT, "Lib");
 
-  const problems = [];
-
-  // 1) Detect both lib + Lib
   if (existsDir(libLower) && existsDir(libUpper)) {
     problems.push("Both `/lib` and `/Lib` exist. Keep only `/lib` (lowercase).");
   }
 
-  // 2) Detect any path segments named "Lib"
-  const all = walk(ROOT);
-  const hasLibSegment = all.some((f) => f.split(path.sep).includes("Lib"));
-  if (hasLibSegment) {
-    problems.push("Found files under a `Lib/` directory path. Rename/remove `Lib` to `lib`.");
+  const allFiles = walk(ROOT);
+
+  // Any file path containing a "Lib" segment
+  const libSegmentFiles = allFiles.filter((f) => f.split(path.sep).includes("Lib"));
+  if (libSegmentFiles.length) {
+    problems.push(
+      `Found files under a \`Lib/\` path:\n- ${libSegmentFiles
+        .slice(0, 20)
+        .map((f) => path.relative(ROOT, f))
+        .join("\n- ")}${libSegmentFiles.length > 20 ? "\n- ... (more)" : ""}`
+    );
   }
 
-  // 3) Detect any import strings using "@/Lib"
-  const codeFiles = all.filter((f) =>
-    /\.(ts|tsx|js|jsx|mjs|cjs)$/.test(f)
-  );
-
+  // Any source files importing "@/Lib"
+  const srcFiles = allFiles.filter((f) => /\.(ts|tsx|js|jsx|mjs|cjs)$/.test(f));
   const badImports = [];
-  for (const f of codeFiles) {
-    const txt = readText(f);
+  for (const f of srcFiles) {
+    const txt = fs.readFileSync(f, "utf8");
     if (txt.includes("@/Lib/") || txt.includes('from "@/Lib') || txt.includes("from '@/Lib")) {
       badImports.push(path.relative(ROOT, f));
     }
   }
   if (badImports.length) {
-    problems.push(
-      `Found imports using "@/Lib" in:\n- ${badImports.join("\n- ")}\nReplace with "@/lib".`
-    );
+    problems.push(`Found imports using "@/Lib" in:\n- ${badImports.join("\n- ")}\nReplace with "@/lib".`);
   }
 
   if (problems.length) {
@@ -79,3 +72,4 @@ function main() {
 }
 
 main();
+
