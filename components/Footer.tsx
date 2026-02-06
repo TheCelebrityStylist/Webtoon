@@ -1,18 +1,15 @@
 // components/Footer.tsx
+import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer style={{ borderTop: "1px solid #e5e7eb" }}>
-      <div
-        style={{
-          maxWidth: "72rem",
-          margin: "0 auto",
-          padding: "24px 16px",
-          fontSize: "14px",
-          color: "#6b7280",
-        }}
-      >
-        © {new Date().getFullYear()} EU Webtoon MVP
+    <footer className="footer">
+      <div className="container" style={{ display: "flex", flexWrap: "wrap", gap: "16px", justifyContent: "space-between" }}>
+        <span>© {new Date().getFullYear()} EU Webtoon MVP</span>
+        <div className="nav">
+          <Link href="/series">Browse</Link>
+          <Link href="/about">About</Link>
+        </div>
       </div>
     </footer>
   );

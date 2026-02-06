@@ -50,25 +50,28 @@ export default function SeriesPage({ params }: Props) {
   };
 
   return (
-    <>
+    <div className="stack" style={{ gap: "24px" }}>
       <JsonLd data={jsonLd} />
-      <h1 className="text-3xl font-semibold tracking-tight">{series.title}</h1>
-      <p className="mt-2 text-neutral-700">{series.logline}</p>
+      <section className="hero" style={{ padding: "32px" }}>
+        <h1 className="hero-title" style={{ fontSize: "2.25rem" }}>
+          {series.title}
+        </h1>
+        <p className="hero-subtitle">{series.logline}</p>
+        <div className="chip-row">
+          {series.genres.map((g) => (
+            <span key={g} className="chip">
+              {g}
+            </span>
+          ))}
+          <span className="chip">{series.language.toUpperCase()}</span>
+        </div>
+        <p style={{ marginTop: "16px", color: "#4b5563" }}>{series.description}</p>
+      </section>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {series.genres.map((g) => (
-          <span
-            key={g}
-            className="rounded-full border border-neutral-200 px-3 py-1 text-xs text-neutral-700"
-          >
-            {g}
-          </span>
-        ))}
-      </div>
-
-      <p className="mt-6 text-sm text-neutral-700">{series.description}</p>
-
-      <EpisodeList series={series} />
-    </>
+      <section>
+        <h2 className="section-title">Episodes</h2>
+        <EpisodeList series={series} />
+      </section>
+    </div>
   );
 }
