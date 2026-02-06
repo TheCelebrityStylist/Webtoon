@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
 import { getAllSeries } from "@/lib/data";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const series = getAllSeries();
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const series = await getAllSeries();
 
   const base: MetadataRoute.Sitemap = [
     {
