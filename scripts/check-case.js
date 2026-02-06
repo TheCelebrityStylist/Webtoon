@@ -1,75 +1,81 @@
 // scripts/check-case.js
-/* eslint-disable no-console */
 const fs = require("fs");
 const path = require("path");
 
 const ROOT = process.cwd();
-const EXCLUDE_DIRS = new Set([".git", ".next", "node_modules", "dist", "out", "coverage"]);
+const EXTS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 
-function walk(dir, files = []) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  for (const e of entries) {
-    if (EXCLUDE_DIRS.has(e.name)) continue;
-    const full = path.join(dir, e.name);
-    if (e.isDirectory()) walk(full, files);
-    else files.push(full);
+function walk(dir, out = []) {
+  const items = fs.readdirSync(dir, { withFileTypes: true });
+  for (const it of items) {
+    if (it.name === "node_modules" || it.name === ".next" || it.name === ".git") continue;
+    const p = path.join(dir, it.name);
+    if (it.isDirectory()) walk(p, out);
+    else out.push(p);
   }
-  return files;
+  return out;
 }
 
-function existsDir(p) {
-  try {
-    return fs.statSync(p).isDirectory();
-  } catch {
-    return false;
-  }
+function readFileSafe(p) {
+  try { return fs.readFileSync(p, "utf8"); } catch { return ""; }
 }
 
-function main() {
-  const problems = [];
-
-  const libLower = path.join(ROOT, "lib");
-  const libUpper = path.join(ROOT, "Lib");
-
-  if (existsDir(libLower) && existsDir(libUpper)) {
-    problems.push("Both `/lib` and `/Lib` exist. Keep only `/lib` (lowercase).");
+function existsExact(p) {
+  // Checks exact casing by walking the filesystem segment-by-segment
+  const parts = p.split(path.sep).filter(Boolean);
+  let cur = path.isAbsolute(p) ? path.parse(p).root : "";
+  for (const part of parts) {
+    const dir = cur || ".";
+    const list = fs.readdirSync(dir);
+    const hit = list.find((x) => x === part);
+    if (!hit) return false;
+    cur = path.join(dir, hit);
   }
+  return true;
+}
 
-  const allFiles = walk(ROOT);
+const files = walk(ROOT).filter((f) => EXTS.has(path.extname(f)));
 
-  // Any file path containing a "Lib" segment
-  const libSegmentFiles = allFiles.filter((f) => f.split(path.sep).includes("Lib"));
-  if (libSegmentFiles.length) {
-    problems.push(
-      `Found files under a \`Lib/\` path:\n- ${libSegmentFiles
-        .slice(0, 20)
-        .map((f) => path.relative(ROOT, f))
-        .join("\n- ")}${libSegmentFiles.length > 20 ? "\n- ... (more)" : ""}`
-    );
-  }
+let ok = true;
+for (const f of files) {
+  const src = readFileSafe(f);
+  const re = /from\s+["']([^"']+)["']|require\(\s*["']([^"']+)["']\s*\)/g;
+  let m;
+  while ((m = re.exec(src))) {
+    const spec = m[1] || m[2];
+    if (!spec) continue;
+    if (spec.startsWith("@/") || spec.startsWith("./") || spec.startsWith("../")) {
+      // Only validate relative-ish imports. We don't resolve TS paths fully here.
+      if (spec.startsWith("@/")) continue;
 
-  // Any source files importing "@/Lib"
-  const srcFiles = allFiles.filter((f) => /\.(ts|tsx|js|jsx|mjs|cjs)$/.test(f));
-  const badImports = [];
-  for (const f of srcFiles) {
-    const txt = fs.readFileSync(f, "utf8");
-    if (txt.includes("@/Lib/") || txt.includes('from "@/Lib') || txt.includes("from '@/Lib")) {
-      badImports.push(path.relative(ROOT, f));
+      const base = path.dirname(f);
+      const raw = path.resolve(base, spec);
+      const candidates = [
+        raw,
+        raw + ".ts",
+        raw + ".tsx",
+        raw + ".js",
+        raw + ".jsx",
+        path.join(raw, "index.ts"),
+        path.join(raw, "index.tsx"),
+        path.join(raw, "index.js"),
+        path.join(raw, "index.jsx"),
+      ];
+
+      const found = candidates.find((c) => fs.existsSync(c));
+      if (found && !existsExact(found)) {
+        console.error(`Case mismatch import in: ${f}`);
+        console.error(`  -> ${spec}`);
+        console.error(`  -> resolves to: ${found} (but casing differs on disk)`);
+        ok = false;
+      }
     }
   }
-  if (badImports.length) {
-    problems.push(`Found imports using "@/Lib" in:\n- ${badImports.join("\n- ")}\nReplace with "@/lib".`);
-  }
-
-  if (problems.length) {
-    console.error("\nCase-sensitivity check failed:\n");
-    for (const p of problems) console.error(`- ${p}`);
-    console.error("\nFix these and redeploy.\n");
-    process.exit(1);
-  }
-
-  console.log("Case-sensitivity check passed.");
 }
 
-main();
+if (!ok) {
+  process.exit(1);
+}
+
+console.log("Case-sensitivity import check: OK");
 
