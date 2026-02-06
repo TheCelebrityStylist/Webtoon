@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-import { execSync } from "node:child_process";
-import { readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const errors = [];
+const importPattern = /@\/Lib\//g;
 
-function walk(dir) {
+function walk(dir, files = []) {
   const entries = readdirSync(dir);
   for (const entry of entries) {
     if (entry === ".git" || entry === "node_modules") continue;
@@ -15,26 +15,27 @@ function walk(dir) {
       if (entry === "Lib") {
         errors.push(`Disallowed directory found: ${full}`);
       }
-      walk(full);
+      walk(full, files);
+    } else if (stats.isFile()) {
+      files.push(full);
     }
+  }
+  return files;
+}
+
+const files = walk(process.cwd());
+const matches = [];
+
+for (const file of files) {
+  if (!/\.(ts|tsx|js|jsx|mdx)$/.test(file)) continue;
+  const content = readFileSync(file, "utf8");
+  if (importPattern.test(content)) {
+    matches.push(file);
   }
 }
 
-try {
-  walk(process.cwd());
-
-  const files = execSync("rg -n --glob '!node_modules/**' '@/Lib/'", {
-    encoding: "utf8",
-  }).trim();
-
-  if (files) {
-    errors.push(`Invalid import casing found:\n${files}`);
-  }
-} catch (error) {
-  // rg exits 1 when no matches; ignore that.
-  if (error?.status && error.status !== 1) {
-    errors.push("Failed to scan imports for casing issues.");
-  }
+if (matches.length) {
+  errors.push(`Invalid import casing found:\n${matches.join("\n")}`);
 }
 
 if (errors.length) {
