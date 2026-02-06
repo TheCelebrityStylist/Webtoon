@@ -1,15 +1,9 @@
 // lib/site.ts
 export const site = {
-  name: "EU Webtoon Platform (MVP)",
+  name: "EU Webtoon",
   shortName: "EU Webtoon",
   description:
-    "Read and publish vertical webtoons and serialized stories. Discover new European creators. Fast Pass and bonus episodes via credits.",
-  // IMPORTANT: set this in Vercel project env for production:
-  // NEXT_PUBLIC_SITE_URL="https://yourdomain.com"
-  url:
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
-    "http://localhost:3000",
+    "Read European webtoons and serialized stories. Mobile-first vertical reading with optional Fast Pass credits.",
+  url: "https://your-domain.vercel.app", // TODO: replace with your real domain
   locale: "en",
-  twitterHandle: "@yourhandle",
-  themeColor: "#111111",
 };
