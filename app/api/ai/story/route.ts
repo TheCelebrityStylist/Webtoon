@@ -35,7 +35,15 @@ function demoResponse(inputs: Inputs, mode: "series+episode" | "outline") {
   const description = `A ${inputs.tone.toLowerCase()} ${inputs.genre.toLowerCase()} saga set in ${inputs.setting}.`;
   const logline = `${inputs.mainCharacter} faces ${inputs.coreConflict} in ${inputs.setting}.`;
   const creatorName = "EU Webtoon Studio";
-  const episodeContent = `The city wakes with a hush, the kind that only arrives when something has already changed. ${inputs.mainCharacter} stands at the edge of ${inputs.setting}, feeling the pull of ${inputs.coreConflict}.\n\nEvery breath is a decision. Every decision bends the day in a new direction. The streets carry whispers, and a promise that if ${inputs.mainCharacter} takes one more step, nothing will ever be the same again.\n\nBy nightfall, the truth arrives like a tide. The story breaks open. The cliff is close. And just before the leap, a voice calls their name.`;
+  const episodeContent = `The city wakes with a hush, the kind that only arrives when something has already changed. ${inputs.mainCharacter} stands at the edge of ${inputs.setting}, feeling the pull of ${inputs.coreConflict}.
+
+Every breath is a decision. Every decision bends the day in a new direction. The streets carry whispers, and a promise that if ${inputs.mainCharacter} takes one more step, nothing will ever be the same again.
+
+They take that step. The ground shifts under them, and the world answers with a secret it has been hiding for years. The air grows colder. The lights along the street flicker once, twice, and then settle into a new pattern.
+
+By nightfall, the truth arrives like a tide. The story breaks open. The cliff is close. And just before the leap, a voice calls their name. They turn. The city turns with them.
+
+The last line of the day is a promise: tomorrow will not be the same.`;
 
   const series = {
     slug,
