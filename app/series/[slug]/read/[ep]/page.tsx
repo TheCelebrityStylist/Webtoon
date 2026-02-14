@@ -1,26 +1,24 @@
-// app/series/[slug]/read/[ep]/page.tsx
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { JsonLd } from "@/components/JsonLd";
 import { getEpisode, getSeriesBySlug } from "@/lib/data";
 import { absoluteUrl } from "@/lib/seo";
 
-type Props = { params: { slug: string; ep: string } };
+// Next.js 15.5+ App Router typechecks `params` as a Promise in `PageProps`.
+type Props = { params: Promise<{ slug: string; ep: string }> };
 
-export function generateMetadata({ params }: Props): Metadata {
-  const series = getSeriesBySlug(params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug, ep } = await params;
+
+  const series = getSeriesBySlug(slug);
   if (!series) return {};
-  const epNum = Number(params.ep);
+
+  const epNum = Number(ep);
   const episode = getEpisode(series, epNum);
   if (!episode) return {};
 
   const title = `${series.title} — Episode ${episode.ep}: ${episode.title}`;
-  const description = episode.excerpt;
-
-  // SEO choice:
-  // - Free episodes: indexable
-  // - Paid/fast-pass episodes: typically NOINDEX until they become free (you can flip later)
-  const indexable = episode.isFree;
+  const description = episode.summary;
 
   return {
     title,
@@ -28,7 +26,6 @@ export function generateMetadata({ params }: Props): Metadata {
     alternates: {
       canonical: absoluteUrl(`/series/${series.slug}/read/${episode.ep}`),
     },
-    robots: indexable ? { index: true, follow: true } : { index: false, follow: true },
     openGraph: {
       title,
       description,
@@ -38,51 +35,64 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function EpisodePage({ params }: Props) {
-  const series = getSeriesBySlug(params.slug);
+export default async function EpisodePage({ params }: Props) {
+  const { slug, ep } = await params;
+
+  const series = getSeriesBySlug(slug);
   if (!series) return notFound();
-  const epNum = Number(params.ep);
+
+  const epNum = Number(ep);
   const episode = getEpisode(series, epNum);
   if (!episode) return notFound();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Chapter",
-    name: `Episode ${episode.ep}: ${episode.title}`,
-    isPartOf: {
-      "@type": "CreativeWorkSeries",
-      name: series.title,
-      url: absoluteUrl(`/series/${series.slug}`),
-    },
-    datePublished: episode.publishedAt,
-    url: absoluteUrl(`/series/${series.slug}/read/${episode.ep}`),
-  };
-
   return (
-    <>
-      <JsonLd data={jsonLd} />
-      <header className="space-y-2">
-        <p className="text-sm text-neutral-600">
-          {series.title} · Episode {episode.ep}
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight">{episode.title}</h1>
-        <p className="text-sm text-neutral-700">{episode.excerpt}</p>
-        <p className="text-xs text-neutral-600">
-          {episode.isFree ? "Free episode" : "Fast Pass (paid) — demo content"}
-        </p>
-      </header>
+    <main className="mx-auto max-w-3xl px-4 py-10">
+      <div className="mb-6 flex items-center justify-between">
+        <Link
+          href={`/series/${series.slug}`}
+          className="text-sm text-neutral-600 hover:text-neutral-900"
+        >
+          ← Back to series
+        </Link>
+        <div className="text-sm text-neutral-500">
+          Episode {episode.ep} / {series.episodes.length}
+        </div>
+      </div>
 
-      {/* MVP reader: placeholder. Replace with image panels from storage later. */}
-      <article className="prose mt-8 max-w-none">
-        <p>
-          This is the reader page. For SEO, free episodes can be fully indexable.
-          For paid episodes, keep <code>noindex</code> until they rotate to free.
-        </p>
-        <p>
-          Next step: store episode panels in Supabase Storage and render them
-          as vertically stacked images with width/height attributes for Core Web Vitals.
-        </p>
+      <h1 className="text-3xl font-semibold tracking-tight">{episode.title}</h1>
+      <p className="mt-2 text-neutral-600">{episode.summary}</p>
+
+      <article className="prose prose-neutral mt-8 max-w-none">
+        {episode.panels.map((p, idx) => (
+          <section key={idx} className="mb-10">
+            <p className="whitespace-pre-wrap leading-relaxed">{p}</p>
+          </section>
+        ))}
       </article>
-    </>
+
+      <div className="mt-10 flex items-center justify-between">
+        {epNum > 1 ? (
+          <Link
+            className="rounded-full border px-4 py-2 text-sm hover:bg-neutral-50"
+            href={`/series/${series.slug}/read/${epNum - 1}`}
+          >
+            ← Prev
+          </Link>
+        ) : (
+          <span />
+        )}
+
+        {epNum < series.episodes.length ? (
+          <Link
+            className="rounded-full border px-4 py-2 text-sm hover:bg-neutral-50"
+            href={`/series/${series.slug}/read/${epNum + 1}`}
+          >
+            Next →
+          </Link>
+        ) : (
+          <span />
+        )}
+      </div>
+    </main>
   );
 }
