@@ -1,74 +1,77 @@
-// app/series/[slug]/page.tsx
-import type { Metadata } from "next";
+// app/[slug]/page.tsx
 import { notFound } from "next/navigation";
-import { JsonLd } from "@/components/JsonLd";
+import type { Metadata } from "next";
 import { getSeriesBySlug } from "@/lib/data";
-import { absoluteUrl } from "@/lib/seo";
-import { EpisodeList } from "@/components/EpisodeList";
 
-type Props = { params: { slug: string } };
+type RouteParams = { slug: string };
 
-export function generateMetadata({ params }: Props): Metadata {
+export async function generateMetadata({
+  params,
+}: {
+  params: RouteParams;
+}): Promise<Metadata> {
   const series = getSeriesBySlug(params.slug);
-  if (!series) return {};
 
-  const title = series.title;
-  const description = `${series.logline} Read free episodes or unlock early access.`;
+  if (!series) {
+    return {
+      title: "Not found",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const title = series.title ?? series.name ?? params.slug;
+  const description =
+    series.description ??
+    series.blurb ??
+    "Read European webtoons and serialized stories.";
 
   return {
     title,
     description,
-    alternates: { canonical: absoluteUrl(`/series/${series.slug}`) },
     openGraph: {
       title,
       description,
-      url: absoluteUrl(`/series/${series.slug}`),
-      images: [{ url: absoluteUrl(series.coverUrl) }],
+      images: series.cover ? [{ url: series.cover }] : undefined,
     },
     twitter: {
+      card: "summary_large_image",
       title,
       description,
-      images: [absoluteUrl(series.coverUrl)],
+      images: series.cover ? [series.cover] : undefined,
     },
   };
 }
 
-export default function SeriesPage({ params }: Props) {
+export default async function Page({ params }: { params: RouteParams }) {
   const series = getSeriesBySlug(params.slug);
-  if (!series) return notFound();
+  if (!series) notFound();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "CreativeWorkSeries",
-    name: series.title,
-    description: series.description,
-    inLanguage: series.language,
-    genre: series.genres,
-    dateModified: series.updatedAt,
-    url: absoluteUrl(`/series/${series.slug}`),
-    author: { "@type": "Person", name: series.creatorName },
-  };
-
+  // Keep rendering minimal + robust against partial data
   return (
-    <>
-      <JsonLd data={jsonLd} />
-      <h1 className="text-3xl font-semibold tracking-tight">{series.title}</h1>
-      <p className="mt-2 text-neutral-700">{series.logline}</p>
+    <main className="mx-auto max-w-5xl px-4 py-10">
+      <div className="rounded-2xl border bg-white p-6 shadow-sm">
+        <h1 className="text-3xl font-bold">{series.title ?? series.name}</h1>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {series.genres.map((g) => (
-          <span
-            key={g}
-            className="rounded-full border border-neutral-200 px-3 py-1 text-xs text-neutral-700"
-          >
-            {g}
-          </span>
-        ))}
+        {(series.description || series.blurb) && (
+          <p className="mt-3 text-slate-600">
+            {series.description ?? series.blurb}
+          </p>
+        )}
+
+        {Array.isArray(series.tags) && series.tags.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {series.tags.map((t: string) => (
+              <span
+                key={t}
+                className="rounded-full border bg-slate-50 px-3 py-1 text-sm text-slate-700"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
-
-      <p className="mt-6 text-sm text-neutral-700">{series.description}</p>
-
-      <EpisodeList series={series} />
-    </>
+    </main>
   );
 }
+
