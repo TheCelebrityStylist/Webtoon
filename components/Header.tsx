@@ -1,33 +1,21 @@
-// components/Header.tsx
 import Link from "next/link";
 
 export function Header() {
   return (
-    <header className="header">
-      <div className="container headerInner">
-        <Link href="/" className="brand">
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+      <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3">
+        <Link href="/" className="text-lg font-bold tracking-tight text-slate-900">
           EU Webtoon
-          <span className="brandBadge">MVP</span>
         </Link>
-        <nav className="nav" aria-label="Primary">
-          <Link href="/series" className="navLink">
-            Series
-          </Link>
-          <Link href="/ai-stylist" className="navLink">
-            AI Studio
-          </Link>
-          <Link href="/about" className="navLink">
-            About
-          </Link>
+        <nav className="ml-auto hidden items-center gap-5 text-sm font-medium text-slate-700 md:flex" aria-label="Primary">
+          <Link href="/series" className="hover:text-slate-900">Browse library</Link>
+          <Link href="/ai-stylist" className="hover:text-slate-900">AI Studio</Link>
+          <Link href="/about" className="hover:text-slate-900">How it works</Link>
+          <Link href="/about#creators" className="hover:text-slate-900">For creators</Link>
         </nav>
-        <div className="headerActions">
-          <Link href="/series" className="btn btnGhost">
-            Browse library
-          </Link>
-          <Link href="/ai-stylist" className="btn btnPrimary">
-            Create a series
-          </Link>
-        </div>
+        <Link href="/series" className="hidden rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 md:inline-flex">
+          Start reading free
+        </Link>
       </div>
     </header>
   );

@@ -1,95 +1,63 @@
-// app/series/[slug]/page.tsx
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
+import { EpisodeList } from "@/components/EpisodeList";
 import { JsonLd } from "@/components/JsonLd";
 import { getSeriesBySlug } from "@/lib/data";
 import { absoluteUrl } from "@/lib/seo";
-import { EpisodeList } from "@/components/EpisodeList";
 
-type Props = { params: { slug: string } };
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const series = await getSeriesBySlug(params.slug);
   if (!series) return {};
-
-  const title = series.title;
-  const description = `${series.logline} Read free episodes or unlock early access.`;
-
   return {
-    title,
-    description,
+    title: `${series.title} | EU Webtoon`,
+    description: series.description,
     alternates: { canonical: absoluteUrl(`/series/${series.slug}`) },
-    openGraph: {
-      title,
-      description,
-      url: absoluteUrl(`/series/${series.slug}`),
-      images: [{ url: absoluteUrl(series.coverUrl) }],
-    },
-    twitter: {
-      title,
-      description,
-      images: [absoluteUrl(series.coverUrl)],
-    },
+    openGraph: { title: series.title, description: series.description, images: [absoluteUrl(series.coverUrl)] },
   };
 }
 
-export default async function SeriesPage({ params }: Props) {
+export default async function SeriesDetailPage({ params }: { params: { slug: string } }) {
   const series = await getSeriesBySlug(params.slug);
   if (!series) return notFound();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "CreativeWorkSeries",
-    name: series.title,
-    description: series.description,
-    inLanguage: series.language,
-    genre: series.genres,
-    dateModified: series.updatedAt,
-    url: absoluteUrl(`/series/${series.slug}`),
-    author: { "@type": "Person", name: series.creatorName },
-  };
-
   return (
-    <div className="page">
-      <JsonLd data={jsonLd} />
-      <section className="hero" style={{ padding: "32px" }}>
-        <div className="heroGrid">
-          <div className="stack">
-            <p className="tagline" style={{ margin: 0 }}>
-              By {series.creatorName}
-            </p>
-            <h1 className="heroTitle" style={{ fontSize: "2.25rem" }}>
-              {series.title}
-            </h1>
-            <p className="heroSubtitle">{series.logline}</p>
-            <div className="chipRow">
-              {series.genres.map((g) => (
-                <span key={g} className="chip">
-                  {g}
-                </span>
-              ))}
-              <span className="chip">{series.language.toUpperCase()}</span>
-            </div>
-            <p style={{ marginTop: "16px", color: "var(--muted)" }}>{series.description}</p>
+    <div className="space-y-6">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "CreativeWorkSeries",
+          name: series.title,
+          description: series.longDescription,
+          inLanguage: series.language,
+          genre: series.genres,
+          url: absoluteUrl(`/series/${series.slug}`),
+        }}
+      />
+
+      <section className="grid gap-5 rounded-2xl border border-slate-200 bg-white p-5 md:grid-cols-[300px_1fr]">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-xl">
+          <Image src={series.coverUrl} alt={series.coverAlt} fill sizes="300px" className="object-cover" />
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700">{series.language.toUpperCase()} · {series.genres.join(" · ")}</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">{series.title}</h1>
+          <p className="mt-2 text-sm text-slate-500">By {series.creatorName}</p>
+          <p className="mt-4 text-sm text-slate-700">{series.longDescription}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {series.tags.map((tag) => (
+              <span key={tag} className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">#{tag}</span>
+            ))}
           </div>
-          <div
-            className="cardCover"
-            style={{
-              height: "260px",
-              backgroundImage: `linear-gradient(135deg, rgba(17, 24, 39, 0.85), rgba(67, 56, 202, 0.85)), url(${series.coverUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              borderRadius: "16px",
-              boxShadow: "var(--shadow-md)",
-            }}
-            aria-hidden="true"
-          />
         </div>
       </section>
 
       <section>
-        <h2 className="sectionTitle">Episodes</h2>
-        <EpisodeList series={series} />
+        <h2 className="text-2xl font-semibold tracking-tight">Episodes</h2>
+        <p className="mt-1 text-sm text-slate-600">Episode 1 is free on every series. Use Fast Pass credits for early unlocks.</p>
+        <div className="mt-4">
+          <EpisodeList series={series} />
+        </div>
       </section>
     </div>
   );
