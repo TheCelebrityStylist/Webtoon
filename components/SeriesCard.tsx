@@ -1,6 +1,6 @@
 // components/SeriesCard.tsx
 import Link from "next/link";
-import type { Series } from "@/lib/data";
+import type { Series } from "@/lib/types";
 
 export function SeriesCard({ s }: { s: Series }) {
   return (
