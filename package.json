@@ -1,8 +1,7 @@
 {
-  "name": "webtoon-mvp",
-  "private": true,
+  "name": "webtoon",
   "version": "0.1.0",
-  "type": "module",
+  "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,14 +9,20 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "^15.1.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@ai-sdk/openai": "^1.1.0",
+    "ai": "^4.1.0",
+    "next": "15.5.12",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3"
   }
 }
