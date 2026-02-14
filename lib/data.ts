@@ -142,6 +142,9 @@ export const seriesIndex: Series[] = [
   },
 ];
 
+// Backward-compatible alias for legacy imports in build pipelines
+export const series: Series[] = seriesIndex;
+
 export async function getAllSeries(): Promise<Series[]> {
   const generated = await getGeneratedSeries();
   const merged = [...generated, ...seriesIndex];
