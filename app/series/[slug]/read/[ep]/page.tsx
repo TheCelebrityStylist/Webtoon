@@ -1,98 +1,96 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getEpisode, getSeriesBySlug } from "@/lib/data";
-import { absoluteUrl } from "@/lib/seo";
 
-// Next.js 15.5+ App Router typechecks `params` as a Promise in `PageProps`.
-type Props = { params: Promise<{ slug: string; ep: string }> };
+type RouteParams = { slug: string; ep: string };
+type Props = { params: Promise<RouteParams> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, ep } = await params;
+  const epNum = Number(ep);
 
   const series = getSeriesBySlug(slug);
-  if (!series) return {};
+  const episode = Number.isFinite(epNum) ? getEpisode(slug, epNum) : null;
 
-  const epNum = Number(ep);
-  const episode = getEpisode(series, epNum);
-  if (!episode) return {};
+  if (!series || !episode) return { title: "Episode not found" };
 
   const title = `${series.title} — Episode ${episode.ep}: ${episode.title}`;
-  const description = episode.summary;
 
   return {
-    title,
-    description,
-    alternates: {
-      canonical: absoluteUrl(`/series/${series.slug}/read/${episode.ep}`),
-    },
+    title: `${title} — EU Webtoon`,
+    description: series.tagline ?? series.synopsis,
     openGraph: {
-      title,
-      description,
-      url: absoluteUrl(`/series/${series.slug}/read/${episode.ep}`),
-      images: [{ url: absoluteUrl(series.coverUrl) }],
+      title: `${title} — EU Webtoon`,
+      description: series.tagline ?? series.synopsis,
+      type: "article",
     },
   };
 }
 
-export default async function EpisodePage({ params }: Props) {
+export default async function ReadEpisodePage({ params }: Props) {
   const { slug, ep } = await params;
+  const epNum = Number(ep);
+
+  if (!Number.isFinite(epNum)) notFound();
 
   const series = getSeriesBySlug(slug);
-  if (!series) return notFound();
+  if (!series) notFound();
 
-  const epNum = Number(ep);
-  const episode = getEpisode(series, epNum);
-  if (!episode) return notFound();
+  const episode = getEpisode(slug, epNum);
+  if (!episode) notFound();
+
+  const isFree = episode.kind === "free";
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center gap-3">
         <Link
           href={`/series/${series.slug}`}
-          className="text-sm text-neutral-600 hover:text-neutral-900"
+          className="rounded-full border px-4 py-2 text-sm font-medium hover:bg-slate-50"
         >
-          ← Back to series
+          ← Back to {series.title}
         </Link>
-        <div className="text-sm text-neutral-500">
-          Episode {episode.ep} / {series.episodes.length}
-        </div>
+
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-medium ${
+            isFree ? "bg-emerald-50 text-emerald-700" : "bg-indigo-50 text-indigo-700"
+          }`}
+        >
+          {isFree ? "Free" : "Fast Pass"}
+        </span>
+
+        <span className="text-sm text-slate-500">
+          Episode {episode.ep} • {episode.date}
+        </span>
       </div>
 
-      <h1 className="text-3xl font-semibold tracking-tight">{episode.title}</h1>
-      <p className="mt-2 text-neutral-600">{episode.summary}</p>
+      <header className="rounded-3xl border bg-white p-6 shadow-sm">
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+          {episode.title}
+        </h1>
+        <p className="mt-2 text-slate-600">{series.tagline}</p>
+      </header>
 
-      <article className="prose prose-neutral mt-8 max-w-none">
-        {episode.panels.map((p, idx) => (
-          <section key={idx} className="mb-10">
-            <p className="whitespace-pre-wrap leading-relaxed">{p}</p>
-          </section>
-        ))}
+      <article className="prose prose-slate mt-8 max-w-none rounded-3xl border bg-white p-6 shadow-sm">
+        <div dangerouslySetInnerHTML={{ __html: episode.contentHtml }} />
       </article>
 
-      <div className="mt-10 flex items-center justify-between">
-        {epNum > 1 ? (
-          <Link
-            className="rounded-full border px-4 py-2 text-sm hover:bg-neutral-50"
-            href={`/series/${series.slug}/read/${epNum - 1}`}
-          >
-            ← Prev
-          </Link>
-        ) : (
-          <span />
-        )}
+      <nav className="mt-8 flex items-center justify-between">
+        <Link
+          href={epNum > 1 ? `/series/${series.slug}/read/${epNum - 1}` : `/series/${series.slug}`}
+          className="rounded-full border px-5 py-2.5 text-sm font-medium hover:bg-slate-50"
+        >
+          {epNum > 1 ? "← Previous" : "Back to series"}
+        </Link>
 
-        {epNum < series.episodes.length ? (
-          <Link
-            className="rounded-full border px-4 py-2 text-sm hover:bg-neutral-50"
-            href={`/series/${series.slug}/read/${epNum + 1}`}
-          >
-            Next →
-          </Link>
-        ) : (
-          <span />
-        )}
-      </div>
+        <Link
+          href={`/series/${series.slug}/read/${epNum + 1}`}
+          className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800"
+        >
+          Next →
+        </Link>
+      </nav>
     </main>
   );
 }
