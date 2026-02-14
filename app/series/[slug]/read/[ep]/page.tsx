@@ -70,25 +70,16 @@ export default async function EpisodeReaderPage({ params }: Props) {
   };
 
   return (
-    <div className="stack" style={{ gap: "24px" }}>
+    <div className="page">
       <JsonLd data={jsonLd} />
-      <div
-        style={{
-          position: "sticky",
-          top: 72,
-          background: "rgba(255,255,255,0.9)",
-          backdropFilter: "blur(10px)",
-          padding: "12px 0",
-          zIndex: 2,
-        }}
-      >
+      <div className="readerSticky">
         <Link href={`/series/${series.slug}`} className="btn btnGhost">
           Back to series
         </Link>
       </div>
 
       <section className="stack">
-        <p style={{ margin: 0, color: "#64748b", fontSize: "0.85rem", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+        <p className="tagline" style={{ margin: 0 }}>
           {series.title}
         </p>
         <h1 className="heroTitle" style={{ fontSize: "2rem" }}>
@@ -102,11 +93,11 @@ export default async function EpisodeReaderPage({ params }: Props) {
         </div>
       </section>
 
-      <section className="card" style={{ padding: "24px", maxWidth: "60rem" }}>
+      <section className="card readerContent" style={{ padding: "24px" }}>
         <StoryRender content={episode.content} />
       </section>
 
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
+      <div className="readerActions">
         <span className="btn btnGhost" aria-disabled="true" style={{ opacity: 0.6 }}>
           Next episode
         </span>

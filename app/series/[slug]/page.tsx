@@ -50,11 +50,14 @@ export default async function SeriesPage({ params }: Props) {
   };
 
   return (
-    <div className="stack" style={{ gap: "24px" }}>
+    <div className="page">
       <JsonLd data={jsonLd} />
       <section className="hero" style={{ padding: "32px" }}>
-        <div className="grid" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: "24px" }}>
+        <div className="heroGrid">
           <div className="stack">
+            <p className="tagline" style={{ margin: 0 }}>
+              By {series.creatorName}
+            </p>
             <h1 className="heroTitle" style={{ fontSize: "2.25rem" }}>
               {series.title}
             </h1>
@@ -67,16 +70,17 @@ export default async function SeriesPage({ params }: Props) {
               ))}
               <span className="chip">{series.language.toUpperCase()}</span>
             </div>
-            <p style={{ marginTop: "16px", color: "#4b5563" }}>{series.description}</p>
+            <p style={{ marginTop: "16px", color: "var(--muted)" }}>{series.description}</p>
           </div>
           <div
             className="cardCover"
             style={{
-              height: "220px",
+              height: "260px",
               backgroundImage: `linear-gradient(135deg, rgba(17, 24, 39, 0.85), rgba(67, 56, 202, 0.85)), url(${series.coverUrl})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
               borderRadius: "16px",
+              boxShadow: "var(--shadow-md)",
             }}
             aria-hidden="true"
           />

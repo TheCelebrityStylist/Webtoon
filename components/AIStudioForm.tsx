@@ -89,84 +89,96 @@ export function AIStudioForm() {
   }
 
   return (
-    <div className="grid" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: "24px" }}>
-      <form className="card" style={{ display: "grid", gap: "16px" }}>
-        <h2 style={{ margin: 0 }}>Series generator</h2>
-        <label>
+    <div className="twoColumn">
+      <form className="card form">
+        <div className="stack">
+          <p className="tagline" style={{ margin: 0 }}>
+            Generator
+          </p>
+          <h2 style={{ margin: 0 }}>Series generator</h2>
+          <p style={{ margin: 0, color: "var(--muted)" }}>
+            Provide a few inputs to generate a ready-to-publish pilot episode.
+          </p>
+        </div>
+        <label className="formField">
           Title (optional)
           <input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Let the AI propose a title"
-            style={{ width: "100%", marginTop: "6px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0" }}
+            className="input"
           />
         </label>
-        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px" }}>
-          <label>
+        <div className="formGrid">
+          <label className="formField">
             Genre
-            <select value={genre} onChange={(event) => setGenre(event.target.value)} style={{ width: "100%", marginTop: "6px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+            <select value={genre} onChange={(event) => setGenre(event.target.value)} className="select">
               {genres.map((g) => (
                 <option key={g}>{g}</option>
               ))}
             </select>
           </label>
-          <label>
+          <label className="formField">
             Tone
-            <select value={tone} onChange={(event) => setTone(event.target.value)} style={{ width: "100%", marginTop: "6px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+            <select value={tone} onChange={(event) => setTone(event.target.value)} className="select">
               {tones.map((t) => (
                 <option key={t}>{t}</option>
               ))}
             </select>
           </label>
-          <label>
+          <label className="formField">
             Language
-            <select value={language} onChange={(event) => setLanguage(event.target.value)} style={{ width: "100%", marginTop: "6px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+            <select value={language} onChange={(event) => setLanguage(event.target.value)} className="select">
               {languages.map((l) => (
                 <option key={l}>{l}</option>
               ))}
             </select>
           </label>
         </div>
-        <label>
+        <label className="formField">
           Setting
           <input
             value={setting}
             onChange={(event) => setSetting(event.target.value)}
             placeholder="City, era, mood"
-            style={{ width: "100%", marginTop: "6px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0" }}
+            className="input"
           />
         </label>
-        <label>
+        <label className="formField">
           Main character
           <input
             value={mainCharacter}
             onChange={(event) => setMainCharacter(event.target.value)}
             placeholder="Who leads the story?"
-            style={{ width: "100%", marginTop: "6px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0" }}
+            className="input"
           />
         </label>
-        <label>
+        <label className="formField">
           Core conflict
           <input
             value={coreConflict}
             onChange={(event) => setCoreConflict(event.target.value)}
             placeholder="What threatens everything?"
-            style={{ width: "100%", marginTop: "6px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0" }}
+            className="input"
           />
         </label>
-        <label>
+        <label className="formField">
           Target length
-          <select value={targetLength} onChange={(event) => setTargetLength(event.target.value)} style={{ width: "100%", marginTop: "6px", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+          <select value={targetLength} onChange={(event) => setTargetLength(event.target.value)} className="select">
             {lengths.map((l) => (
               <option key={l}>{l}</option>
             ))}
           </select>
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <input type="checkbox" checked={verticalPacing} onChange={(event) => setVerticalPacing(event.target.checked)} />
+        <label className="formField" style={{ flexDirection: "row", alignItems: "center" }}>
+          <input
+            type="checkbox"
+            checked={verticalPacing}
+            onChange={(event) => setVerticalPacing(event.target.checked)}
+          />
           Make it Webtoon-style vertical pacing
         </label>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+        <div className="formActions">
           <button
             type="button"
             className="btn btnPrimary"
@@ -196,7 +208,7 @@ export function AIStudioForm() {
             <div className="stack">
               <div className="cardCover" />
               <strong>{payload.series.title}</strong>
-              <p style={{ margin: 0, color: "#4b5563" }}>{payload.series.logline}</p>
+              <p style={{ margin: 0, color: "var(--muted)" }}>{payload.series.logline}</p>
               <div className="chipRow">
                 {payload.series.genres.map((g) => (
                   <span key={g} className="chip">
@@ -208,25 +220,25 @@ export function AIStudioForm() {
               <button type="button" className="btn btnPrimary" onClick={handlePublish}>
                 Publish to MVP Library
               </button>
-              {publishStatus && <p style={{ margin: 0, color: "#4b5563" }}>{publishStatus}</p>}
+              {publishStatus && <p style={{ margin: 0, color: "var(--muted)" }}>{publishStatus}</p>}
               {!publishStatus && (
-                <p style={{ margin: 0, color: "#4b5563" }}>
+                <p style={{ margin: 0, color: "var(--muted)" }}>
                   On Vercel, file writes may be blocked. Download JSON if needed.
                 </p>
               )}
             </div>
           ) : (
-            <p style={{ margin: 0, color: "#4b5563" }}>Generate a series to preview here.</p>
+            <p style={{ margin: 0, color: "var(--muted)" }}>Generate a series to preview here.</p>
           )}
         </div>
       </aside>
 
       {payload && (
         <section className="surface" style={{ gridColumn: "1 / -1" }}>
-          <div className="grid" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: "24px" }}>
+          <div className="twoColumn">
             <div className="stack">
               <h2 style={{ marginTop: 0 }}>Episode 1</h2>
-              <p style={{ color: "#4b5563" }}>{payload.series.episodes[0]?.excerpt}</p>
+              <p style={{ color: "var(--muted)" }}>{payload.series.episodes[0]?.excerpt}</p>
               <div className="stack" style={{ gap: "12px" }}>
                 {payload.series.episodes[0]?.content?.split(/\n\n+/).map((block, idx) => (
                   <p key={idx} style={{ margin: 0, lineHeight: 1.7 }}>
@@ -246,7 +258,7 @@ export function AIStudioForm() {
                   ))}
                 </ul>
               ) : (
-                <p style={{ margin: 0, color: "#4b5563" }}>Generate an outline to view here.</p>
+                <p style={{ margin: 0, color: "var(--muted)" }}>Generate an outline to view here.</p>
               )}
             </div>
           </div>
@@ -256,12 +268,10 @@ export function AIStudioForm() {
       {payloadJson && (
         <section className="card" style={{ gridColumn: "1 / -1" }}>
           <h3 style={{ marginTop: 0 }}>Generated JSON</h3>
-          <p style={{ color: "#4b5563" }}>
+          <p style={{ color: "var(--muted)" }}>
             If file storage is unavailable, copy/paste this into <code>data/generated.json</code>.
           </p>
-          <pre style={{ whiteSpace: "pre-wrap", background: "#0f172a", color: "#f8fafc", padding: "16px", borderRadius: "12px" }}>
-            {payloadJson}
-          </pre>
+          <pre className="codeBlock">{payloadJson}</pre>
         </section>
       )}
     </div>

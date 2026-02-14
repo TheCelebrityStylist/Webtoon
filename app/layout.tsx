@@ -11,9 +11,9 @@ export const metadata: Metadata = baseMetadata();
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang={site.locale}>
-      <body style={{ minHeight: "100vh", background: "#ffffff", color: "#111111" }}>
+      <body className="appBody">
         <Header />
-        <main style={{ maxWidth: "72rem", margin: "0 auto", padding: "40px 16px" }}>
+        <main className="container main">
           {children}
         </main>
         <Footer />

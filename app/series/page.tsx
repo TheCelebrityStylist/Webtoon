@@ -33,35 +33,39 @@ export default async function SeriesIndexPage({ searchParams }: Props) {
   });
 
   return (
-    <div className="stack" style={{ gap: "32px" }}>
-      <section className="stack">
-        <h1 style={{ fontSize: "2rem", margin: 0 }}>Series</h1>
-        <p style={{ color: "#4b5563", margin: 0 }}>
-          Browse vertical webtoons and serialized fiction from European creators.
-        </p>
+    <div className="page">
+      <section className="hero" style={{ padding: "32px" }}>
+        <div className="stack">
+          <p className="tagline" style={{ margin: 0 }}>
+            Browse the library
+          </p>
+          <h1 className="heroTitle" style={{ fontSize: "2.25rem" }}>
+            Series
+          </h1>
+          <p className="heroSubtitle">
+            Browse vertical webtoons and serialized fiction from European creators.
+          </p>
+        </div>
       </section>
 
-      <form className="card" action="/series" method="get">
-        <label htmlFor="series-search" style={{ fontWeight: 600 }}>
-          Search series
-        </label>
-        <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
-          <input
-            id="series-search"
-            name="q"
-            defaultValue={query}
-            placeholder="Search by title, genre, or creator"
-            style={{
-              flex: 1,
-              borderRadius: "999px",
-              border: "1px solid #e2e8f0",
-              padding: "10px 14px",
-              fontSize: "0.95rem",
-            }}
-          />
-          <button className="btn btnPrimary" type="submit">
-            Search
-          </button>
+      <form className="card searchForm" action="/series" method="get">
+        <div className="formRow">
+          <label htmlFor="series-search" className="formField">
+            Search series
+            <span className="formHint">Search by title, genre, or creator.</span>
+          </label>
+          <div className="inputGroup">
+            <input
+              id="series-search"
+              name="q"
+              defaultValue={query}
+              placeholder="Try “mystery”, “romance”, or a creator name"
+              className="input"
+            />
+            <button className="btn btnPrimary" type="submit">
+              Search
+            </button>
+          </div>
         </div>
       </form>
 

@@ -4,21 +4,30 @@ import Link from "next/link";
 export function Header() {
   return (
     <header className="header">
-      <div
-        className="container"
-        style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px 0" }}
-      >
-        <Link href="/" style={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
+      <div className="container headerInner">
+        <Link href="/" className="brand">
           EU Webtoon
+          <span className="brandBadge">MVP</span>
         </Link>
-        <nav className="nav" style={{ marginLeft: "auto" }} aria-label="Primary">
-          <Link href="/series">Series</Link>
-          <Link href="/ai-stylist">AI Studio</Link>
-          <Link href="/about">About</Link>
+        <nav className="nav" aria-label="Primary">
+          <Link href="/series" className="navLink">
+            Series
+          </Link>
+          <Link href="/ai-stylist" className="navLink">
+            AI Studio
+          </Link>
+          <Link href="/about" className="navLink">
+            About
+          </Link>
         </nav>
-        <Link href="/series" className="btn btnPrimary">
-          Start reading
-        </Link>
+        <div className="headerActions">
+          <Link href="/series" className="btn btnGhost">
+            Browse library
+          </Link>
+          <Link href="/ai-stylist" className="btn btnPrimary">
+            Create a series
+          </Link>
+        </div>
       </div>
     </header>
   );

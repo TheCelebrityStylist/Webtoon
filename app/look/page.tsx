@@ -11,14 +11,21 @@ export const metadata: Metadata = {
 
 export default function LookPage() {
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">AI Stylist</h1>
-        <p className="text-neutral-700">
-          Describe your vibe, budget, and occasion. We’ll curate real, shoppable
-          pieces across premium EU retailers.
-        </p>
-      </div>
+    <div className="page">
+      <section className="hero" style={{ padding: "32px" }}>
+        <div className="stack">
+          <p className="tagline" style={{ margin: 0 }}>
+            AI Stylist
+          </p>
+          <h1 className="heroTitle" style={{ fontSize: "2.4rem" }}>
+            Premium EU styling, instantly curated
+          </h1>
+          <p className="heroSubtitle">
+            Describe your vibe, budget, and occasion. We’ll curate real, shoppable pieces
+            across premium EU retailers.
+          </p>
+        </div>
+      </section>
       <StylistClient />
     </div>
   );

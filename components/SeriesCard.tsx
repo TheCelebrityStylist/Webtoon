@@ -15,12 +15,15 @@ export function SeriesCard({ s }: { s: Series }) {
         aria-hidden="true"
       />
       <div className="stack">
-        <h3 style={{ margin: 0, fontSize: "1.1rem" }}>
+        <p className="tagline" style={{ margin: 0 }}>
+          {s.language.toUpperCase()} · {s.genres[0]}
+        </p>
+        <h3 style={{ margin: 0, fontSize: "1.2rem" }}>
           <Link href={`/series/${s.slug}`} aria-label={`View ${s.title}`}>
             {s.title}
           </Link>
         </h3>
-        <p style={{ margin: 0, color: "#4b5563" }}>{s.logline}</p>
+        <p style={{ margin: 0, color: "var(--muted)" }}>{s.logline}</p>
         <p className="cardMeta">
           {s.genres.join(" · ")} · {s.language.toUpperCase()} · by {s.creatorName}
         </p>

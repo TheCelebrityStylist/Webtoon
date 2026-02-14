@@ -80,84 +80,87 @@ export function StylistClient() {
   const elapsed = startedAt ? Math.min((Date.now() - startedAt) / 1000, 8) : 0;
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-neutral-200 p-5">
-        <div>
-          <label className="text-sm font-medium text-neutral-800">Your style prompt</label>
+    <div className="stack">
+      <form onSubmit={handleSubmit} className="card form">
+        <div className="stack">
+          <h2 style={{ margin: 0 }}>Describe your look</h2>
+          <p style={{ margin: 0, color: "var(--muted)" }}>
+            Share the occasion, vibe, and budget. We’ll curate a complete outfit.
+          </p>
+        </div>
+        <label className="formField">
+          Your style prompt
           <textarea
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
             rows={3}
-            className="mt-2 w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm"
+            className="textarea"
           />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-neutral-800">Budget (€)</label>
+        </label>
+        <label className="formField">
+          Budget (€)
           <input
             value={budget}
             onChange={(event) => setBudget(event.target.value)}
-            className="mt-2 w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm"
+            className="input"
             type="number"
           />
-        </div>
-        <button
-          type="submit"
-          className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white"
-        >
+        </label>
+        <button type="submit" className="btn btnPrimary">
           Style my look
         </button>
       </form>
 
       {jobId && (
-        <section className="space-y-3">
-          <p className="text-sm text-neutral-700">{opening}</p>
+        <section className="stack">
+          <p style={{ margin: 0, color: "var(--muted)" }}>{opening}</p>
           {!hasResults && !timedOut && (
-            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
-              <p>{loadingLine(loadingStep)}</p>
-              <p className="mt-2 text-xs text-neutral-500">
+            <div className="card" style={{ background: "var(--surface-alt)" }}>
+              <p style={{ margin: 0 }}>{loadingLine(loadingStep)}</p>
+              <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: "var(--muted)" }}>
                 {elapsed.toFixed(1)}s
               </p>
             </div>
           )}
           {timedOut && !hasResults && (
-            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
-              <p>Here’s the edit as it stands right now—fresh picks coming in fast.</p>
+            <div className="card" style={{ background: "var(--surface-alt)" }}>
+              <p style={{ margin: 0 }}>Here’s the edit as it stands right now—fresh picks coming in fast.</p>
             </div>
           )}
         </section>
       )}
 
       {hasResults && job && (
-        <section className="space-y-6">
+        <section className="stack">
           {Object.entries(job.productsBySlot).map(([slot, items]) => (
-            <div key={slot} className="space-y-3">
-              <h3 className="text-lg font-semibold tracking-tight">{slot}</h3>
-              <div className="grid gap-4 md:grid-cols-2">
+            <div key={slot} className="stack">
+              <h3 style={{ marginBottom: 0 }}>{slot}</h3>
+              <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
                 {items.map((item) => (
-                  <article key={item.url} className="rounded-2xl border border-neutral-200 p-4">
-                    <div className="flex gap-3">
-                      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+                  <article key={item.url} className="card">
+                    <div style={{ display: "flex", gap: "12px" }}>
+                      <div
+                        style={{
+                          height: "80px",
+                          width: "80px",
+                          flexShrink: 0,
+                          overflow: "hidden",
+                          borderRadius: "12px",
+                          background: "#e2e8f0",
+                        }}
+                      >
                         {item.image && (
-                          <img
-                            src={item.image}
-                            alt={item.title}
-                            className="h-full w-full object-cover"
-                          />
+                          <img src={item.image} alt={item.title} style={{ height: "100%", width: "100%", objectFit: "cover" }} />
                         )}
                       </div>
-                      <div className="space-y-1">
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm font-medium hover:underline"
-                        >
+                      <div className="stack" style={{ gap: "6px" }}>
+                        <a href={item.url} target="_blank" rel="noreferrer" style={{ fontWeight: 600 }}>
                           {item.title}
                         </a>
-                        <p className="text-xs text-neutral-600">
+                        <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--muted)" }}>
                           {item.retailer} · €{item.price.toFixed(0)}
                         </p>
-                        <p className="text-xs text-neutral-600">
+                        <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--muted)" }}>
                           {itemCommentary(item.title)}
                         </p>
                       </div>
@@ -168,7 +171,7 @@ export function StylistClient() {
             </div>
           ))}
 
-          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-800">
+          <div className="card" style={{ background: "var(--surface-alt)" }}>
             {summaryLine(job.result?.total ?? 0, "EUR")}
           </div>
         </section>
