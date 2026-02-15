@@ -36,7 +36,6 @@ function buildDemo(inputs: Inputs, mode: "series+episode" | "outline"): Generate
   const series: Series = {
     slug,
     title,
-    logline: `${inputs.mainCharacter} faces ${inputs.coreConflict} in ${inputs.setting}.`,
     hook: `${inputs.mainCharacter} gets one chance to expose ${inputs.coreConflict} before the city closes ranks.`,
     description: `A ${inputs.tone.toLowerCase()} ${inputs.genre.toLowerCase()} story engineered for vertical reading.`,
     longDescription: `Built by AI Studio demo mode: ${inputs.mainCharacter} navigates ${inputs.coreConflict} across ${inputs.setting} while each episode escalates stakes and emotional consequence.`,
