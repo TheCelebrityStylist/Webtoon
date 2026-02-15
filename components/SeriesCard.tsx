@@ -21,8 +21,8 @@ export function SeriesCard({ s }: { s: Series }) {
         <h3 className="text-lg font-semibold leading-tight tracking-tight text-slate-900">
           <Link href={`/series/${s.slug}`} onClick={() => trackEvent("series_card_click", { slug: s.slug })}>{s.title}</Link>
         </h3>
-        <p className="text-sm text-slate-600">{s.logline}</p>
-        <p className="text-xs text-slate-500">By {s.creatorName} · ⭐ {s.stats.betaRating.toFixed(2)} · {s.stats.betaReads.toLocaleString()} beta reads</p>
+        <p className="text-sm text-slate-600">{s.hook}</p>
+        <p className="text-xs text-slate-500">By {s.creatorName} · ⭐ {s.stats.ratingBeta.toFixed(2)} · {s.stats.readsBeta.toLocaleString()} beta reads</p>
         <div className="flex flex-wrap gap-2">
           {s.tags.slice(0, 3).map((tag) => (
             <span key={tag} className="pill">#{tag}</span>

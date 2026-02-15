@@ -114,8 +114,8 @@ export default async function HomePage() {
         <div className="mt-4 grid gap-3 md:grid-cols-4">
           <div className="rounded-xl bg-slate-50 p-4"><p className="text-2xl font-bold">{allSeries.length}</p><p className="text-xs text-slate-500">Live pilot series</p></div>
           <div className="rounded-xl bg-slate-50 p-4"><p className="text-2xl font-bold">{allSeries.reduce((sum, s) => sum + s.episodes.length, 0)}</p><p className="text-xs text-slate-500">Published episodes</p></div>
-          <div className="rounded-xl bg-slate-50 p-4"><p className="text-2xl font-bold">{allSeries.reduce((sum, s) => sum + s.stats.betaReads, 0).toLocaleString()}</p><p className="text-xs text-slate-500">Cumulative beta reads</p></div>
-          <div className="rounded-xl bg-slate-50 p-4"><p className="text-2xl font-bold">{(allSeries.reduce((sum, s) => sum + s.stats.betaRating, 0) / allSeries.length).toFixed(2)}</p><p className="text-xs text-slate-500">Average beta rating</p></div>
+          <div className="rounded-xl bg-slate-50 p-4"><p className="text-2xl font-bold">{allSeries.reduce((sum, s) => sum + s.stats.readsBeta, 0).toLocaleString()}</p><p className="text-xs text-slate-500">Cumulative beta reads</p></div>
+          <div className="rounded-xl bg-slate-50 p-4"><p className="text-2xl font-bold">{(allSeries.reduce((sum, s) => sum + s.stats.ratingBeta, 0) / allSeries.length).toFixed(2)}</p><p className="text-xs text-slate-500">Average beta rating</p></div>
         </div>
       </section>
 

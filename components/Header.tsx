@@ -8,6 +8,7 @@ const links = [
   { href: "/series", label: "Browse library" },
   { href: "/ai-stylist", label: "AI Studio" },
   { href: "/about", label: "How it works" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/creators", label: "For creators" },
 ];
 

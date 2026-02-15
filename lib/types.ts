@@ -10,23 +10,24 @@ export type Episode = {
 };
 
 export type SeriesStats = {
-  betaReads: number;
-  betaRating: number;
+  ratingBeta: number;
+  readsBeta: number;
+  likesBeta: number;
 };
 
 export type Series = {
   slug: string;
   title: string;
-  logline: string;
-  description: string;
-  longDescription: string;
+  hook: string;
+  creatorName: string;
   language: string;
   genres: string[];
   tags: string[];
-  creatorName: string;
-  coverAlt: string;
-  coverUrl: string;
+  description: string;
+  longDescription: string;
   updatedAt: string;
+  coverUrl: string;
+  coverAlt: string;
   contentWarnings?: string[];
   stats: SeriesStats;
   episodes: Episode[];
@@ -41,13 +42,16 @@ export type CollectionKey =
   | "mystery"
   | "fantasy"
   | "sliceOfLife"
-  | "dutchSpotlight"
-  | "frenchSpotlight"
-  | "germanSpotlight";
+  | "dutch"
+  | "french"
+  | "german";
 
 export type GeneratedSeriesPayload = {
   series: Series;
-  outline?: { title: string; summary: string }[];
+  outline?: {
+    title: string;
+    summary: string;
+  }[];
   storyBible?: {
     themes: string[];
     characterArcs: string[];

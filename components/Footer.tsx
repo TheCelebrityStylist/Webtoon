@@ -12,6 +12,8 @@ export function Footer() {
           <Link href="/series" className="block hover:text-slate-900">Browse library</Link>
           <Link href="/ai-stylist" className="block hover:text-slate-900">AI Studio</Link>
           <Link href="/about" className="block hover:text-slate-900">How it works</Link>
+          <Link href="/pricing" className="block hover:text-slate-900">Pricing</Link>
+          <Link href="/faq" className="block hover:text-slate-900">FAQ</Link>
           <Link href="/creators" className="block hover:text-slate-900">Creator Program</Link>
         </div>
         <div className="space-y-2 text-sm text-slate-600">

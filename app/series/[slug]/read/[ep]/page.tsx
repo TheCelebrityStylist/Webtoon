@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: { slug: string; ep:
   if (!series) return {};
 
   const ep = Number(params.ep);
-  const episode = getEpisode(series, ep);
+  const episode = await getEpisode(series.slug, ep);
   if (!episode) return {};
 
   return {
@@ -27,7 +27,7 @@ export default async function ReaderPage({ params }: { params: { slug: string; e
   if (!series) return notFound();
 
   const ep = Number(params.ep);
-  const episode = getEpisode(series, ep);
+  const episode = await getEpisode(series.slug, ep);
   if (!episode) return notFound();
 
   const episodes = series.episodes.slice().sort((a, b) => a.ep - b.ep);
@@ -70,10 +70,11 @@ export default async function ReaderPage({ params }: { params: { slug: string; e
         <section className="section-shell border-amber-200 bg-amber-50">
           <h2 className="text-xl font-semibold text-amber-900">Fast Pass episode</h2>
           <p className="mt-2 text-sm text-amber-800">Unlock this episode with credits. No subscription required. Choose unlocks only when you want early access.</p>
-          <div className="mt-4 grid gap-2 md:grid-cols-3">
+          <div className="mt-4 grid gap-2 md:grid-cols-4">
             <button className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-900">10 credits · €4.99</button>
             <button className="rounded-xl border-2 border-indigo-500 bg-white px-3 py-2 text-sm font-semibold text-slate-900">30 credits · €12.99</button>
             <button className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-900">80 credits · €29.99</button>
+            <button className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-900">200 credits · €59.99</button>
           </div>
           <button className="cta-primary mt-4">Unlock now (mock)</button>
           <p className="mt-4 text-sm text-slate-700">Preview: {episode.excerpt}</p>

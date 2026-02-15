@@ -37,6 +37,7 @@ function buildDemo(inputs: Inputs, mode: "series+episode" | "outline"): Generate
     slug,
     title,
     logline: `${inputs.mainCharacter} faces ${inputs.coreConflict} in ${inputs.setting}.`,
+    hook: `${inputs.mainCharacter} gets one chance to expose ${inputs.coreConflict} before the city closes ranks.`,
     description: `A ${inputs.tone.toLowerCase()} ${inputs.genre.toLowerCase()} story engineered for vertical reading.`,
     longDescription: `Built by AI Studio demo mode: ${inputs.mainCharacter} navigates ${inputs.coreConflict} across ${inputs.setting} while each episode escalates stakes and emotional consequence.`,
     language: (inputs.language || "en").toLowerCase(),
@@ -46,7 +47,7 @@ function buildDemo(inputs: Inputs, mode: "series+episode" | "outline"): Generate
     coverAlt: `${title} cover`,
     coverUrl: "/covers/afterlight.svg",
     updatedAt: now,
-    stats: { betaReads: 1200, betaRating: 4.5 },
+    stats: { readsBeta: 1200, ratingBeta: 4.5, likesBeta: 340 },
     episodes: [
       {
         ep: 1,
