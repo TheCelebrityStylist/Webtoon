@@ -1,283 +1,349 @@
-import type { Episode, Series } from "@/lib/types";
 import { getGeneratedSeries } from "@/lib/generatedStore";
+import type { CollectionKey, Episode, Series } from "@/lib/types";
 
-const now = new Date();
-const iso = (d: Date) => d.toISOString();
+const now = Date.now();
+const day = 86_400_000;
 
-const canalEpisodeOne = `At 23:58, the Maastricht canal looked like black glass. Livia stood on the bridge with a backpack full of lecture notes she had promised herself she would read and a heart she had promised herself she would not break again. Under the sodium lamps, the water refused to behave. It didn’t drift. It seemed to wait.
+const longEpisodeA = `The canal looked like polished obsidian when Livia arrived, except obsidian doesn't breathe.
 
-A bike bell rang behind her. She stepped aside. The same rider passed her twice in less than a minute, same yellow scarf, same bent wheel, same muttered apology. Livia laughed once, then looked at her phone. Her lock screen showed Monday. She could swear this was Tuesday.
+At 23:58, the water rose by a centimeter and settled like it had changed its mind. She checked the weather app, checked it again, and then checked the bridge clock that was always wrong by two minutes. Tonight it was perfect.
 
-At midnight, the church bell struck once. A ripple moved against the current like a hand sweeping crumbs off a table. Streetlights blinked out and back on. A tram in the distance paused, jerked backward, and continued forward as if nothing happened.
+A cyclist in a yellow scarf passed her, rung a bell, apologized in Dutch, and disappeared around the corner.
 
-Livia opened her messages. A conversation with her ex appeared unread: *Can we talk tomorrow?* She had answered it yesterday. The answer was gone.
+Twenty seconds later, the same cyclist returned from the same direction, repeated the same bell, repeated the same apology, and looked through Livia like she was a window.
 
-She walked the quay, counting painted house numbers, forcing logic over panic. Number 14 had a flower box in bloom this morning. Now it was empty soil. A bakery she bought coffee from every day had today’s chalkboard menu replaced with yesterday’s soup.
+The church clock struck midnight. The canal rippled against the current.
 
-When she reached the old stone steps by the water, she saw someone leaning there in a deep green coat. Not a student. Not a tourist. Their face stayed in shadow.
+Livia's phone buzzed with a message she had answered yesterday: *Can we rewind this conversation?*
 
-“You noticed,” they said, not asking.
+She laughed once, then stopped. Number 14 on the quay had petunias this morning; tonight it was bare soil. A bakery menu she photographed for a class project yesterday now advertised Monday soup.
 
-“Noticed what?” Livia heard her voice shake and hated it.
+On the stone steps, a stranger in a green coat watched the water with the patience of someone waiting for a train that never runs late.
 
-“The city borrows a day when someone asks hard enough.”
+"You noticed," they said.
 
-“I didn’t ask for anything.”
+"Noticed what?"
 
-The stranger tilted their head. “That’s what everyone says the first night.”
+"That the city borrows days when someone asks hard enough."
 
-Livia should have left. Instead she crouched by the edge, fingertips hovering over the surface. The canal reflected her face a half-second too late, like a lagging video feed. Then it reflected someone older, with silver in their hair and a scar above their lip.
+Livia wanted to leave, call a friend, tell herself this was stress plus bad sleep. Instead she crouched, hovering her fingers above the water. Her reflection lagged behind her movement by half a second.
 
-She jerked back. Her pulse roared in her ears.
+Then it changed.
 
-“Every rewind has a receipt,” the green-coat stranger said. “Memory. Chance. Someone else’s good day. The water never gives a discount.”
+In the water, Livia's face was older. A pale scar crossed her upper lip. Her expression was not fear. It was regret with excellent posture.
 
-Livia stared at the canal and, against every sensible instinct, whispered, “What if I only need one more chance?”
+She jerked away.
 
-The water answered with concentric rings that spread to both banks and climbed the stone like breath on glass. Somewhere across the river, every church bell rang at once though none of the clocks struck midnight.
+"Every rewind has a receipt," the stranger said. "Memory. Chance. Someone else's ordinary happiness. The canal never gives discount trials."
 
-The stranger finally stepped into the light. Their eyes were pale and tired and familiar in a way that made Livia’s stomach drop.
+"I didn't ask for this."
 
-“Then choose carefully,” they said. “Tomorrow, someone will forget your name.”`;
+"No one does the first night."
 
-const atelierEpisodeOne = `Iris used to say that paper was kinder than people. Paper forgave mistakes if you layered enough paint and kept your hand steady. People remembered your worst line forever.
+Across the river, bells rang from three churches at once. The lights in the tram depot blinked in sequence, backward, then normal.
 
-In a narrow studio above a Rotterdam tram stop, she painted fake portraits for restaurants that wanted “heritage atmosphere” without museum prices. Tuesday morning, a courier delivered an unmarked tube and an envelope with thick cream paper.
+Livia swallowed. "What if I only need one more chance?"
 
-Inside: a miniature portrait of a royal grandmother and a note written in impatient fountain-pen strokes.
+The water formed concentric circles that climbed the stone like breath on glass.
 
-*Your version makes her look brave. Ours makes her look obedient. We prefer brave. Report to Noordhaven Palace at 09:00. Bring your brushes. —A.*
+The stranger stepped into the light. Their eyes were Livia's, ten years older.
 
-Iris laughed, called her best friend Noor, read it out loud, and laughed again when Noor swore it had to be a prank. Then a black car arrived at 08:15 and waited downstairs with diplomatic plates.
+"Then choose carefully," the older Livia whispered. "Tomorrow, someone will forget your name."`;
 
-The palace studio smelled like turpentine and old cedar. Gold-framed canvases lined the walls, all technically flawless and emotionally sterile. A man in his late twenties stood by the window in a navy suit with paint on one cuff.
+const longEpisodeB = `Iris always believed paper was kinder than people.
 
-“I’m Adrian,” he said. “Officially, I’m here to review procurement. Unofficially, I asked for you.”
+Paper let you layer mistakes. People framed them.
 
-She narrowed her eyes. “You’re the note?”
+Her Rotterdam studio lived above a tram stop and smelled like coffee, graphite, and rental anxiety. At 08:12, a courier dropped a cardboard tube and an envelope sealed with a crest she had only seen in history books.
 
-He smiled like he knew the smile would be disarming and was tired of using it. “Guilty.”
+Inside: a tiny portrait of a royal grandmother and a note in impatient fountain pen.
 
-Over tea she did not touch, he explained the job: a new portrait cycle before spring diplomatic season. “We need honesty that still photographs well,” he said.
+*Your version made her look brave. Ours made her look obedient. We prefer brave. Come to Noordhaven Palace at 09:00. Bring brushes. — A*
 
-“Honesty rarely photographs well,” Iris replied.
+At 08:20, Iris called Noor to read it aloud and laugh.
 
-“Exactly why we hired you.”
+At 08:42, a black car with diplomatic plates arrived downstairs and waited.
 
-The contract arrived with three pages of confidentiality clauses and one short line that made her pause: *Artist retains moral rights and original studies.*
+The palace studio was immaculate and joyless. Gold frames. Soft light. Paintings with flawless technique and no pulse.
+
+A man in a navy suit stood by the window. Paint on one cuff. Tired smile. "Adrian," he said. "Officially procurement. Unofficially the person who sent that note."
+
+The contract included strict confidentiality and one line that stopped her cold: *Artist retains moral rights and original studies.*
 
 She signed.
 
-By week two, she noticed things no one mentioned aloud. The queen’s personal aide never stayed in the same doorway for long. A junior footman delivered letters to the wrong rooms and cried in stairwells. Adrian skipped two sittings, then arrived with a split lip and an apology he refused to explain.
+Week one: formal portraits.
+Week two: private family studies.
+Week three: friction.
 
-During a rainstorm, Iris found an old canvas in storage covered by muslin. It showed the palace dock thirty years earlier, crowded with people carrying handmade signs. At the edge stood the same grandmother from the miniature portrait, holding a megaphone, soaked and grinning.
+A communications advisor circled Iris's sketch in red. "Too much tension in his hand. Make him look inevitable."
 
-A maid appeared behind her. “That one was removed from public rooms,” she whispered. “Too political.”
+Iris folded her arms. "He's not inevitable. He's human."
 
-“Who removed it?”
+Adrian entered mid-argument, scanned the page, and said, "Leave it."
 
-The maid didn’t answer. She pressed a folded note into Iris’s palm and left.
+The advisor forced a smile and left.
 
-The note read: *If they ask you to flatten us, paint us sharper.*
+Later, in the wash room, a maid slipped Iris a folded note: *If they ask you to flatten us, paint us sharper.*
 
-That night, Iris repainted Adrian’s posture from upright and ceremonial to subtly defensive, one hand curled around the back of a chair as if bracing for impact. It was truthful. It was also dangerous.
+That evening Iris found a covered canvas in storage: the royal grandmother leading a rainy workers' protest, megaphone raised, laughing like thunder. A piece of official history someone had politely erased.
 
-At final review, a communications advisor circled that hand with a red pencil. “Too tense. Make him look inevitable.”
+The next morning Adrian arrived with a split lip and no explanation.
 
-Iris crossed her arms. “He isn’t inevitable. He’s human.”
+"Tomorrow I'm announcing an open creator fund," he said quietly. "They'll call it disloyal. I need the portrait unveiled before the speech."
 
-Silence stretched. Adrian entered midway through the argument, looked at the marked-up draft, then at Iris.
+"Then we paint all night," Iris replied.
 
-“Leave it,” he said quietly.
+By dawn, they finished. By 08:57, the press room was full. At 08:59, a security officer whispered in Adrian's ear and he went still.
 
-The advisor frowned. “Sir, this will be interpreted—”
+He found Iris in the crowd and mouthed two words.
 
-“Good,” Adrian said.
+*They know.*`;
 
-After everyone else left, he stood beside the canvas for a long time. “You made me look like someone who can still choose,” he said. “No one has done that here in years.”
+const longEpisodeC = `Mara's newsroom badge stopped opening doors at 10:04.
 
-Iris cleaned her brushes at the stone sink, pretending not to feel the room tilt.
+At 10:05, her landlord texted that annual maintenance had been moved up to "today, urgently." At 10:06, an unknown number offered her a consulting contract triple her salary.
 
-“Then choose,” she said.
+At 10:07, she finally accepted she wasn't in a bad week. She was in a campaign.
 
-He turned to her, eyes rimmed with sleeplessness. “If I do, they’ll come for the painter first.”
+The file on her phone began as a transportation audit and ended as a map of favors: rezoning signatures, late-night permits, and one youth center closure hidden under a line item called "night safety optimization." Her mother's street appeared on page six.
 
-Somewhere in the palace, an alarm chimed once and stopped. Adrian stepped closer, voice barely above breath.
+Theo, her oldest friend and occasional legal realist, called from a stairwell. "You have action. You need intent."
 
-“Tomorrow I’m announcing an open creator fund for independent artists. They will call it reckless. They will call it disloyal. I need the portrait unveiled before the speech.”
+"How long?"
 
-Iris looked at the canvas, at the red pencil marks, at the wet city beyond stained glass.
+"Hours, if we burn everything."
 
-“Then we paint all night,” she said.
+By noon, Mara posted one verified screenshot with context and pinned a calm thread explaining what it did and did not prove. She disabled replies from new accounts and enabled archive mode on all evidence.
 
-By dawn, the portrait was finished. By eight, the palace press room was full. At 08:57, a staff member ran in and whispered in Adrian’s ear. His face drained.
+Public reaction arrived in four predictable waves: disbelief, outrage, opportunism, and people quietly sending corroborating documents at 2 a.m.
 
-He looked across the crowd, found Iris in the back row, and mouthed two words she felt more than heard: *They know.*`;
+At 13:41, she was invited to a "constructive dialogue" in a glass conference room overlooking the river.
 
-function episode(ep: number, title: string, isFree: boolean, excerpt: string, content: string): Episode {
+"Let's keep this practical," said a man with perfect diction and unnervingly soft shoes.
+
+"Practical for who?" Mara asked.
+
+He smiled. "For everyone."
+
+"Everyone never means everyone."
+
+The wall display filled with charts proving fiscal necessity, projected stability, unavoidable trade-offs. Then he zoomed into one neighborhood block and tapped her family building with a laser pointer.
+
+"These decisions are emotional for you," he said, as if compassion were a bargaining chip.
+
+Mara asked for water, stepped out, and used six seconds by the dispenser to trigger a scheduled release to three journalists who disagreed on almost everything except contempt for corruption.
+
+By 17:58, Theo arrived with a thumb drive and one bleeding knuckle.
+
+"I got intent," he said. "Board audio."
+
+Mara looked at the drive, then at the door, where three precise knocks landed.
+
+Not loud. Not rushed.
+
+Professional.
+
+The lock turned from the outside.`;
+
+const longEpisodeD = `Niki's drone flipped at Gate 3, clipped a sponsor banner, and died in a shower of carbon fiber and embarrassment.
+
+The crowd at the underground Athens port race loved a failure they could post.
+
+Niki loved a failure she could diagnose.
+
+She stripped the frame on a plastic table while her grandmother sent voice notes from the olive farm: weather updates, irrigation worries, and one gentle reminder that pride doesn't pay workers.
+
+A man in a white shirt approached with the relaxed confidence of someone who had never soldered his own motor mount.
+
+"Your control logic is elegant," he said. "Your hardware is poor. I can fix one of those for you."
+
+He offered sponsorship. Money upfront. Travel support. Replacement parts by morning.
+
+The contract looked clean until clause 14: sponsor retains adaptive telemetry and derivative optimization rights.
+
+"You own my race brain forever," Niki said.
+
+"We own what we improve," he replied.
+
+She declined.
+
+At midnight, an official notice arrived: her league registration was suspended pending compliance review.
+
+At 00:06, a second message arrived from an encrypted address with one line: *If the top league shuts its door, race under the waterline. Saturday. Bring courage and spare batteries.*
+
+Niki packed both.`;
+
+const longEpisodeE = `At Aurora Market, customers paid in memories.
+
+Not metaphorically. Literally.
+
+Sanni inherited Stall 19 from an aunt she barely knew and a ledger she couldn't read. Every sale left a tiny blankness behind the eyes. One woman bought a lantern and forgot the smell of pine forests. A teen bought a silver ring and lost the melody of his favorite lullaby.
+
+Sanni kept receipts anyway.
+
+A city auditor appeared on Friday with legal forms and a polite smile. "We're reviewing unauthorized emotional commerce," he said.
+
+"We sell handmade objects," Sanni answered.
+
+"Then why does your inventory change when no deliveries arrive?"
+
+That night, she opened the ledger under the awning light and discovered entries writing themselves: customer names, memory categories, and one line in ink that hadn't dried.
+
+*Outstanding debt: one happiest day.*
+
+Her name sat beside it.
+
+The market bells rang closing time. None of the stalls closed.`;
+
+const longEpisodeF = `The pirate station lived in an abandoned Berlin cinema where velvet seats held dust and old laughter.
+
+Leonie, unpaid intern by title and overqualified producer by reality, accidentally routed her private test playlist to FM. Twelve minutes later, strangers were calling in to say the city felt warmer.
+
+She expected a warning.
+
+She got a cease-and-desist.
+
+Milo, retired DJ and patron saint of unnecessary confidence, grinned. "If they heard us, they need us."
+
+"If they sue us, they bury us," Leonie said.
+
+They compromised by doing both: better signal discipline and bolder programming.
+
+The second broadcast asked listeners what they needed to hear at 01:13. A nurse requested silence between songs because silence proved she was still awake. A taxi driver requested anything without algorithmic sameness. A city councillor called under a fake name and requested a protest anthem banned from municipal events.
+
+The station became a map of people refusing to be optimized.
+
+At 02:47, power dropped.
+
+Backup lights switched on. Milo checked the breaker and came back pale.
+
+"We're not alone," he whispered.
+
+From the projection booth above, an old reel began to spin by itself, filling the wall with static and one phrase in block letters:
+
+*PAY RENT OR SURRENDER THE SIGNAL.*`;
+
+const longBodies: string[] = [longEpisodeA, longEpisodeB, longEpisodeC, longEpisodeD, longEpisodeE, longEpisodeF];
+
+const languageMap = ["en", "fr", "de", "nl", "es", "it", "pt", "pl", "sv", "fi", "el", "cs"];
+const genrePools = [
+  ["Romance", "Drama"],
+  ["Mystery", "Thriller"],
+  ["Fantasy", "Slice of Life"],
+  ["Sci-Fi", "Drama"],
+];
+
+const seedSeries = [
+  ["midnight-canal", "Midnight Canal", "Studio Lumen", "Moonlit canal with electric ripples"],
+  ["paper-crown", "Paper Crown", "Mira Vale", "Paper crown on a painter's desk"],
+  ["glass-harbor", "Glass Harbor", "Noor Atelier", "Rain over modern harbor lights"],
+  ["olive-circuit", "Olive Circuit", "Helios Lab", "Racing drone above olive fields"],
+  ["aurora-market", "Aurora Market", "Northline Stories", "Lantern market in winter"],
+  ["vinyl-hearts", "Vinyl Hearts", "Kai Morgen", "Turntable in a retro cinema"],
+  ["tram-17", "Tram 17", "Lotte de Vries", "Night tram with fogged windows"],
+  ["atlas-of-rain", "Atlas of Rain", "Ria Oeste", "Weather map over city rooftops"],
+  ["neon-mosaic", "Neon Mosaic", "Atelier Delta", "Mural artist under neon signs"],
+  ["quiet-fire", "Quiet Fire", "Celine Dubois", "Kitchen flame in dark service"],
+  ["winter-index", "Winter Index", "Aino K", "Notebook and snow-lit street"],
+  ["signal-bridge", "Signal Bridge", "Rafa Costa", "Bridge antennas at sunset"],
+  ["hollow-garden", "Hollow Garden", "Iris Kohn", "Overgrown greenhouse at dusk"],
+  ["night-bakery", "Night Bakery", "Emma Rossi", "Fresh pastries at midnight"],
+  ["river-laws", "River Laws", "Pavel S", "Courthouse by a river"],
+  ["copper-stars", "Copper Stars", "Ines Moreau", "Copper observatory dome"],
+  ["slow-comet", "Slow Comet", "Greta Holm", "Comet trail above old city"],
+  ["afterlight", "Afterlight", "Theo Marin", "Neon skyline after rain"],
+] as const;
+
+function makeEpisode(seriesTitle: string, ep: number, isFree: boolean, body: string): Episode {
   return {
     ep,
-    title,
-    publishedAt: iso(new Date(now.getTime() - ep * 86400000 * 7)),
+    title: ep === 1 ? "Pilot" : ep === 2 ? "Pressure Line" : ep === 3 ? "Countermove" : ep === 4 ? "Quiet Cost" : "Threshold",
+    publishedAt: new Date(now - (ep + 2) * day).toISOString(),
     isFree,
     fastPass: !isFree,
-    readingTime: Math.max(4, Math.min(18, Math.round(content.split(" ").length / 220))),
-    excerpt,
-    content,
+    readingTime: Math.max(4, Math.round(body.split(" ").length / 210)),
+    excerpt: `${seriesTitle} escalates in episode ${ep} with sharper stakes and a stronger cliffhanger.`,
+    content: body,
   };
 }
 
-const short = (line: string) => `${line}\n\nThe episode closes on a sharp turn: a secret call, a missed train, or a confession that lands too late.`;
+function shortBody(title: string, ep: number) {
+  return `${title} episode ${ep} opens on a decisive choice and closes on an even harder one.\n\nA new ally appears with useful information and inconvenient timing.\n\nBy the final panel, the protagonist gains leverage but loses safety.\n\nThe next episode begins with consequences already in motion.`;
+}
 
-export const seriesIndex: Series[] = [
-  {
-    slug: "midnight-canal",
-    title: "Midnight Canal",
-    logline: "A Maastricht student finds a canal that rewinds time, but every rewind invoices someone else.",
-    description: "Mystery romance with folklore rules, moral cost, and cliffhangers built for vertical reading.",
-    longDescription: "Livia discovers that the canal can return yesterday for a price. Every episode asks the same question in new ways: what are you willing to sacrifice for one more chance?",
-    language: "en",
-    genres: ["Mystery", "Urban Fantasy", "Romance"],
-    tags: ["Time loop", "Slow-burn", "European folklore"],
-    creatorName: "Studio Lumen",
-    coverAlt: "Moonlit canal with glowing ripples",
-    coverUrl: "/covers/midnight-canal.svg",
-    updatedAt: iso(now),
-    episodes: [
-      episode(1, "The Ripple", true, "The city slips backward by a day after midnight.", canalEpisodeOne),
-      episode(2, "Borrowed Hours", true, "Livia tracks what each rewind steals from the city.", short("A classmate forgets her entirely after a rewind.")),
-      episode(3, "The Price", false, "She pays to save a friend and loses a memory she cannot replace.", short("The canal offers one final bargain.")),
-    ],
-  },
-  {
-    slug: "paper-crown",
-    title: "Paper Crown",
-    logline: "A freelance illustrator gets hired by a royal household that needs truth more than propaganda.",
-    description: "Character-driven palace drama with romantic tension, ethics, and creative rebellion.",
-    longDescription: "Iris paints people as they are, not as institutions want them to appear. Inside a modern monarchy, that makes her both essential and dangerous.",
-    language: "en",
-    genres: ["Drama", "Romance", "Slice of Life"],
-    tags: ["Court intrigue", "Artist lead", "Slow burn"],
-    creatorName: "Mira Vale",
-    coverAlt: "Paper crown and paintbrushes on a velvet chair",
-    coverUrl: "/covers/paper-crown.svg",
-    updatedAt: iso(new Date(now.getTime() - 3600000)),
-    episodes: [
-      episode(1, "Commission of a Lifetime", true, "An unofficial palace request changes Iris's career overnight.", atelierEpisodeOne),
-      episode(2, "Red Pencil Notes", true, "A political advisor demands safer art; Iris refuses.", short("The portrait reveals a hidden family fracture.")),
-      episode(3, "Speech Day", false, "Adrian goes public, and the backlash begins before he reaches the podium.", short("Someone leaks Iris's private drafts.")),
-    ],
-  },
-  {
-    slug: "tram-17",
-    title: "Tram 17",
-    logline: "Three strangers relive the same commute until they solve who never gets off at the terminal.",
-    description: "High-concept mystery thriller told in tight, visual beats.",
-    longDescription: "Every morning at 07:42, Tram 17 departs. Every morning one seat remains occupied by someone no one can remember afterward.",
-    language: "en",
-    genres: ["Thriller", "Mystery"],
-    tags: ["Transit noir", "Puzzle", "Short arcs"],
-    creatorName: "Lotte de Vries",
-    coverAlt: "Night tram crossing a wet city street",
-    coverUrl: "/covers/tram-17.svg",
-    updatedAt: iso(new Date(now.getTime() - 7200000)),
-    episodes: [
-      episode(1, "07:42", true, "A skipped stop starts a chain of impossible déjà vu.", short("The driver swears the route map changed mid-ride.")),
-      episode(2, "Last Passenger", true, "They finally see the mystery rider's reflection.", short("Security footage records everyone except seat 23.")),
-      episode(3, "Terminal", false, "The loop breaks only if one of them stays behind.", short("A name appears on the window fog.")),
-    ],
-  },
-  {
-    slug: "salt-and-neon",
-    title: "Salt & Neon",
-    logline: "A Marseille line cook moonlights as a hacker to pay his sister's legal fees.",
-    description: "Kinetic crime drama with food culture and family stakes.",
-    longDescription: "Chef by day, ghost coder by night, Ilias has 30 days to clear a debt before the people he loves become collateral.",
-    language: "fr",
-    genres: ["Crime", "Drama"],
-    tags: ["Kitchen life", "Heist", "Family"],
-    creatorName: "Atelier Rue Sud",
-    coverAlt: "Neon sign reflecting in seawater",
-    coverUrl: "/covers/salt-and-neon.svg",
-    updatedAt: iso(new Date(now.getTime() - 10800000)),
-    episodes: [episode(1, "Service", true, "Dinner rush, then an encrypted job offer.", short("The kitchen ticket printer outputs a bank account number.")), episode(2, "Ghost Shift", true, "A simple breach turns into a trap.", short("Someone in the brigade is feeding intel.")), episode(3, "Forty-Two Minutes", false, "He has one window to erase the debt ledger.", short("His sister's case file vanishes."))],
-  },
-  {
-    slug: "aurora-market",
-    title: "Aurora Market",
-    logline: "At a Helsinki night market, vendors trade in memories disguised as handmade goods.",
-    description: "Cozy fantasy with emotional stakes and found-family energy.",
-    longDescription: "Sanni inherits a small lantern stall and discovers customers pay with moments from their past.",
-    language: "en",
-    genres: ["Fantasy", "Slice of Life"],
-    tags: ["Cozy", "Magic realism", "Found family"],
-    creatorName: "Northline Stories",
-    coverAlt: "Snowy market lights and paper lanterns",
-    coverUrl: "/covers/aurora-market.svg",
-    updatedAt: iso(new Date(now.getTime() - 14400000)),
-    episodes: [episode(1, "Lantern Debt", true, "Sanni sells her first lantern and loses a childhood smell.", short("A customer asks for a memory she never lived.")), episode(2, "Warm Hands", true, "She learns to price joy without exploiting grief.", short("Her ledger writes entries by itself.")), episode(3, "Closing Bell", false, "The market demands she auction her happiest day.", short("Someone bids with her mother's laugh."))],
-  },
-  {
-    slug: "vinyl-hearts",
-    title: "Vinyl Hearts",
-    logline: "A Berlin radio intern and a retired DJ rebuild a pirate station from an abandoned cinema.",
-    description: "Warm comedy-drama with music scenes and romantic sparks.",
-    longDescription: "When city permits shut down indie venues, two unlikely collaborators launch midnight broadcasts that become a movement.",
-    language: "de",
-    genres: ["Drama", "Comedy", "Romance"],
-    tags: ["Music", "Community", "Workplace"],
-    creatorName: "Kai Morgen",
-    coverAlt: "Turntable glowing under stage lights",
-    coverUrl: "/covers/vinyl-hearts.svg",
-    updatedAt: iso(new Date(now.getTime() - 18000000)),
-    episodes: [episode(1, "Dead Air", true, "An accidental broadcast goes viral overnight.", short("A city councillor calls in under a fake name.")), episode(2, "B-Side", true, "They crowdsource the next set list live.", short("The station receives a cease-and-desist.")), episode(3, "Signal Loss", false, "To stay on-air, someone must reveal their identity.", short("The cinema owner returns unexpectedly."))],
-  },
-  {
-    slug: "atlas-of-rain",
-    title: "Atlas of Rain",
-    logline: "A Lisbon climate cartographer maps storms that follow emotions, not weather models.",
-    description: "Speculative drama balancing science, grief, and hope.",
-    longDescription: "Marta's predictive maps save districts from floods, but each successful forecast amplifies one storm she cannot explain: her own.",
-    language: "pt",
-    genres: ["Sci-Fi", "Drama"],
-    tags: ["Climate fiction", "Data", "Emotional mystery"],
-    creatorName: "Ria Oeste",
-    coverAlt: "Rain map overlay on city rooftops",
-    coverUrl: "/covers/atlas-of-rain.svg",
-    updatedAt: iso(new Date(now.getTime() - 21600000)),
-    episodes: [episode(1, "Blue Grid", true, "Her model predicts sunshine; hail arrives.", short("A handwritten correction appears on her monitor.")), episode(2, "Pressure Line", true, "She links anomalies to unresolved memories.", short("The mayor requests a private forecast.")), episode(3, "Storm Archive", false, "Marta opens a sealed weather vault.", short("Inside is a map in her own handwriting."))],
-  },
-  {
-    slug: "olive-circuit",
-    title: "Olive Circuit",
-    logline: "In Athens, a robotics student enters underground drone races to fund her grandmother's olive farm.",
-    description: "Sports-tech underdog story with family warmth.",
-    longDescription: "Niki designs elegant machines for impossible tracks, racing against sponsors who can buy better hardware but not better instincts.",
-    language: "el",
-    genres: ["Action", "Sports", "Family"],
-    tags: ["Underdog", "Tech", "Rural roots"],
-    creatorName: "Helios Lab",
-    coverAlt: "Drone streaking over olive groves at sunset",
-    coverUrl: "/covers/olive-circuit.svg",
-    updatedAt: iso(new Date(now.getTime() - 25200000)),
-    episodes: [episode(1, "Practice Lap", true, "Niki's prototype crashes in public and wins a private sponsor.", short("The sponsor's contract includes a hidden ownership clause.")), episode(2, "No Fly Zone", true, "Officials ban her from the main league overnight.", short("She is invited to a secret race under the port.")), episode(3, "Final Gate", false, "The last race decides the farm's future.", short("Her rival offers to split the prize for a favor."))],
-  },
-];
+export const seriesIndex: Series[] = seedSeries.map((entry, index) => {
+  const [slug, title, creatorName, coverAlt] = entry;
+  const lang = languageMap[index % languageMap.length];
+  const genres = genrePools[index % genrePools.length];
+  const tags = ["Vertical", "Weekly", genres[0], index % 2 === 0 ? "Character-driven" : "High-stakes"];
+  const longBody = longBodies[index % longBodies.length];
 
-// Backward-compatible alias for older imports
+  return {
+    slug,
+    title,
+    creatorName,
+    language: lang,
+    genres,
+    tags,
+    coverAlt,
+    coverUrl: `/covers/${slug}.svg`,
+    logline: `${title} follows a lead character navigating public pressure, private loyalty, and irreversible decisions.`,
+    description: `${title} is a premium vertical serial with cinematic pacing and clear weekly episode momentum.`,
+    longDescription: `${title} blends ${genres.join(" + ")} with a European editorial lens. Readers start free and decide when to unlock early with Fast Pass credits. Every chapter ends with a meaningful choice and measurable consequence.`,
+    updatedAt: new Date(now - index * 3 * 60 * 60 * 1000).toISOString(),
+    stats: {
+      betaReads: 1200 + index * 340,
+      betaRating: Number((4.2 + (index % 6) * 0.11).toFixed(2)),
+    },
+    contentWarnings: index % 4 === 0 ? ["Mild language", "Emotional conflict"] : undefined,
+    episodes: [
+      makeEpisode(title, 1, true, longBody),
+      makeEpisode(title, 2, true, shortBody(title, 2)),
+      makeEpisode(title, 3, false, shortBody(title, 3)),
+      makeEpisode(title, 4, false, shortBody(title, 4)),
+      makeEpisode(title, 5, false, shortBody(title, 5)),
+    ],
+  };
+});
+
 export const series: Series[] = seriesIndex;
+
+export const collections: Record<CollectionKey, string[]> = {
+  trending: seriesIndex.slice(0, 12).map((s) => s.slug),
+  newThisWeek: seriesIndex.slice(6, 12).map((s) => s.slug),
+  staffPicks: ["paper-crown", "aurora-market", "vinyl-hearts", "atlas-of-rain", "night-bakery", "afterlight"],
+  under10: seriesIndex.filter((s) => s.episodes[0].readingTime <= 10).slice(0, 12).map((s) => s.slug),
+  romance: seriesIndex.filter((s) => s.genres.includes("Romance")).map((s) => s.slug),
+  mystery: seriesIndex.filter((s) => s.genres.includes("Mystery")).map((s) => s.slug),
+  fantasy: seriesIndex.filter((s) => s.genres.includes("Fantasy")).map((s) => s.slug),
+  sliceOfLife: seriesIndex.filter((s) => s.genres.includes("Slice of Life")).map((s) => s.slug),
+  dutchSpotlight: seriesIndex.filter((s) => s.language === "nl").map((s) => s.slug),
+  frenchSpotlight: seriesIndex.filter((s) => s.language === "fr").map((s) => s.slug),
+  germanSpotlight: seriesIndex.filter((s) => s.language === "de").map((s) => s.slug),
+};
+
+function byUpdatedDesc(a: Series, b: Series) {
+  return a.updatedAt < b.updatedAt ? 1 : -1;
+}
 
 export async function getAllSeries(): Promise<Series[]> {
   const generated = await getGeneratedSeries();
-  const merged = [...generated, ...seriesIndex];
-  return merged.slice().sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+  return [...generated, ...seriesIndex].sort(byUpdatedDesc);
 }
 
 export async function getSeriesBySlug(slug: string): Promise<Series | null> {
   const generated = await getGeneratedSeries();
-  return generated.find((item) => item.slug === slug) ?? seriesIndex.find((item) => item.slug === slug) ?? null;
+  return generated.find((s) => s.slug === slug) ?? seriesIndex.find((s) => s.slug === slug) ?? null;
 }
 
 export function getEpisode(seriesItem: Series, ep: number): Episode | null {
-  return seriesItem.episodes.find((entry) => entry.ep === ep) ?? null;
+  return seriesItem.episodes.find((e) => e.ep === ep) ?? null;
+}
+
+export async function getCollectionSeries(key: CollectionKey, limit?: number): Promise<Series[]> {
+  const all = await getAllSeries();
+  const slugs = collections[key];
+  const ordered = slugs.map((slug) => all.find((s) => s.slug === slug)).filter(Boolean) as Series[];
+  return typeof limit === "number" ? ordered.slice(0, limit) : ordered;
 }

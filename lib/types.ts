@@ -9,6 +9,11 @@ export type Episode = {
   content: string;
 };
 
+export type SeriesStats = {
+  betaReads: number;
+  betaRating: number;
+};
+
 export type Series = {
   slug: string;
   title: string;
@@ -22,15 +27,27 @@ export type Series = {
   coverAlt: string;
   coverUrl: string;
   updatedAt: string;
+  contentWarnings?: string[];
+  stats: SeriesStats;
   episodes: Episode[];
 };
 
+export type CollectionKey =
+  | "trending"
+  | "newThisWeek"
+  | "staffPicks"
+  | "under10"
+  | "romance"
+  | "mystery"
+  | "fantasy"
+  | "sliceOfLife"
+  | "dutchSpotlight"
+  | "frenchSpotlight"
+  | "germanSpotlight";
+
 export type GeneratedSeriesPayload = {
   series: Series;
-  outline?: {
-    title: string;
-    summary: string;
-  }[];
+  outline?: { title: string; summary: string }[];
   storyBible?: {
     themes: string[];
     characterArcs: string[];
