@@ -8,14 +8,11 @@ import { buildMockReaderProgress, getArcForEpisode, getArcPassCost, getEpisodeLo
 import { getEpisode, getSeriesBySlug } from "@/lib/data";
 import { absoluteUrl } from "@/lib/seo";
 
-type Props = { params: Promise<{ slug: string; ep: string }> };
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug, ep } = await params;
-  const series = await getSeriesBySlug(slug);
+export async function generateMetadata({ params }: { params: { slug: string; ep: string } }): Promise<Metadata> {
+  const series = await getSeriesBySlug(params.slug);
   if (!series) return {};
 
-  const epNum = Number(ep);
+  const epNum = Number(params.ep);
   const episode = await getEpisode(series.slug, epNum);
   if (!episode) return {};
 
@@ -32,12 +29,11 @@ function teaserFromContent(content: string, words = 420): string {
   return `${list.join(" ")}\n\n…unlock to continue.`;
 }
 
-export default async function ReaderPage({ params }: Props) {
-  const { slug, ep } = await params;
-  const series = await getSeriesBySlug(slug);
+export default async function ReaderPage({ params }: { params: { slug: string; ep: string } }) {
+  const series = await getSeriesBySlug(params.slug);
   if (!series) return notFound();
 
-  const epNum = Number(ep);
+  const epNum = Number(params.ep);
   const episode = await getEpisode(series.slug, epNum);
   if (!episode) return notFound();
 

@@ -9,9 +9,13 @@ export function Footer() {
           <p className="mt-2 text-sm text-slate-600">Premium vertical storytelling for readers and creators across Europe.</p>
         </div>
         <div className="space-y-2 text-sm text-slate-600">
+          <Link href="/readers" className="block hover:text-slate-900">For Readers</Link>
+          <Link href="/creators" className="block hover:text-slate-900">For Creators</Link>
           <Link href="/webtoons" className="block hover:text-slate-900">Webtoons library</Link>
+          <Link href="/compare" className="block hover:text-slate-900">Compare platforms</Link>
+          <Link href="/community" className="block hover:text-slate-900">Community</Link>
           <Link href="/ai-studio" className="block hover:text-slate-900">AI Studio</Link>
-          <Link href="/about" className="block hover:text-slate-900">How it works</Link>
+          <Link href="/how-it-works" className="block hover:text-slate-900">How it works</Link>
           <Link href="/pricing" className="block hover:text-slate-900">Pricing</Link>
           <Link href="/faq" className="block hover:text-slate-900">FAQ</Link>
           <Link href="/creators" className="block hover:text-slate-900">Creator Program</Link>

@@ -29,12 +29,8 @@ export function SeriesCover({ series, priority = false }: { series: Series; prio
           onError={() => setErrored(true)}
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-fuchsia-500 to-cyan-500 p-4 text-white">
-          <p className="text-xs uppercase tracking-[0.12em]">Generating cover…</p>
-          <p className="mt-2 text-lg font-semibold leading-tight">{series.title}</p>
-          <p className="mt-2 text-xs opacity-90">{series.genres.join(" · ")}</p>
-        </div>
-      )}
+        <Image src="/illustrations/reading-momentum.svg" alt={`${series.title} placeholder cover`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 30vw" />
+      )
     </div>
   );
 }

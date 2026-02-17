@@ -9,11 +9,8 @@ import { ARC_DEFINITIONS, buildMockReaderProgress, getArcPassCost } from "@/lib/
 import { getAllSeries, getSeriesBySlug } from "@/lib/data";
 import { absoluteUrl } from "@/lib/seo";
 
-type Props = { params: Promise<{ slug: string }> };
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const series = await getSeriesBySlug(slug);
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const series = await getSeriesBySlug(params.slug);
   if (!series) return {};
 
   return {
@@ -29,9 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function SeriesDetailPage({ params }: Props) {
-  const { slug } = await params;
-  const [series, all] = await Promise.all([getSeriesBySlug(slug), getAllSeries()]);
+export default async function SeriesDetailPage({ params }: { params: { slug: string } }) {
+  const [series, all] = await Promise.all([getSeriesBySlug(params.slug), getAllSeries()]);
   if (!series) return notFound();
 
   const firstFree = series.episodes.find((e) => e.isFree);
@@ -120,6 +116,16 @@ export default async function SeriesDetailPage({ params }: Props) {
           <li>• Streak protection windows</li>
           <li>• Bonus POV scenes and creator notes</li>
         </ul>
+      </section>
+
+      <section className="section-shell rounded-2xl border border-slate-200 bg-white">
+        <h2 className="text-xl font-semibold">Community actions</h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button className="cta-secondary px-3 py-2 text-xs">Write a review</button>
+          <button className="cta-secondary px-3 py-2 text-xs">Add to shelf</button>
+          <button className="cta-secondary px-3 py-2 text-xs">Follow creator</button>
+          <button className="cta-secondary px-3 py-2 text-xs">Follow series</button>
+        </div>
       </section>
 
       <section>
