@@ -9,8 +9,9 @@ import { ARC_DEFINITIONS, buildMockReaderProgress, getArcPassCost } from "@/lib/
 import { getAllSeries, getSeriesBySlug } from "@/lib/data";
 import { absoluteUrl } from "@/lib/seo";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const series = await getSeriesBySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const series = await getSeriesBySlug(slug);
   if (!series) return {};
 
   return {
@@ -26,8 +27,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function SeriesDetailPage({ params }: { params: { slug: string } }) {
-  const [series, all] = await Promise.all([getSeriesBySlug(params.slug), getAllSeries()]);
+export default async function SeriesDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const [series, all] = await Promise.all([getSeriesBySlug(slug), getAllSeries()]);
   if (!series) return notFound();
 
   const firstFree = series.episodes.find((e) => e.isFree);

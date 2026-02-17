@@ -30,7 +30,7 @@ export function SeriesCover({ series, priority = false }: { series: Series; prio
         />
       ) : (
         <Image src="/illustrations/reading-momentum.svg" alt={`${series.title} placeholder cover`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 30vw" />
-      )
+      )}
     </div>
   );
 }

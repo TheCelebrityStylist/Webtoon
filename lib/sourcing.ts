@@ -1,4 +1,3 @@
-import * as cheerio from "cheerio";
 import type { LookProduct } from "@/lib/lookJob";
 
 const GLOBAL_TIMEOUT_MS = 8000;
@@ -41,35 +40,39 @@ function ensureAbsolute(url: string, baseUrl: string) {
   return new URL(url, baseUrl).toString();
 }
 
+function findScriptJsonLd(html: string): string[] {
+  const matches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) ?? [];
+  return matches
+    .map((tag) => tag.replace(/^.*?>/s, "").replace(/<\/script>$/i, "").trim())
+    .filter(Boolean);
+}
+
 function parseJsonLdProducts(html: string, baseUrl: string): LookProduct[] {
-  const $ = cheerio.load(html);
   const results: LookProduct[] = [];
 
-  $("script[type='application/ld+json']").each((_, el) => {
-    const raw = $(el).contents().text();
-    if (!raw) return;
+  for (const raw of findScriptJsonLd(html)) {
     try {
       const data = JSON.parse(raw);
       const nodes = Array.isArray(data) ? data : [data];
-      nodes.forEach((node) => {
-        if (!node) return;
+
+      for (const node of nodes) {
+        if (!node) continue;
+
         if (node["@type"] === "ItemList" && Array.isArray(node.itemListElement)) {
-          node.itemListElement.forEach((item: any) => {
-            const product = item.item || item;
-            if (product && product.name && product.offers) {
-              results.push({
-                retailer: "",
-                title: product.name,
-                price: Number(product.offers.price || 0),
-                currency: product.offers.priceCurrency || "EUR",
-                image: Array.isArray(product.image)
-                  ? product.image[0]
-                  : product.image || "",
-                url: ensureAbsolute(product.url, baseUrl),
-              });
-            }
-          });
+          for (const item of node.itemListElement) {
+            const product = item?.item ?? item;
+            if (!product?.name || !product?.offers) continue;
+            results.push({
+              retailer: "",
+              title: product.name,
+              price: Number(product.offers.price || 0),
+              currency: product.offers.priceCurrency || "EUR",
+              image: Array.isArray(product.image) ? product.image[0] : product.image || "",
+              url: ensureAbsolute(product.url, baseUrl),
+            });
+          }
         }
+
         if (node["@type"] === "Product" && node.name && node.offers) {
           results.push({
             retailer: "",
@@ -80,25 +83,29 @@ function parseJsonLdProducts(html: string, baseUrl: string): LookProduct[] {
             url: ensureAbsolute(node.url, baseUrl),
           });
         }
-      });
+      }
     } catch {
       // ignore invalid JSON-LD
     }
-  });
+  }
 
   return results.filter((item) => item.title && item.url);
 }
 
 function parseTileProducts(html: string, baseUrl: string): LookProduct[] {
-  const $ = cheerio.load(html);
   const products: LookProduct[] = [];
-  $("a").each((_, link) => {
-    const href = $(link).attr("href") || "";
-    const title = $(link).attr("title") || $(link).text().trim();
-    if (!href || !title) return;
-    if (!/product|p\//i.test(href)) return;
-    const image = $(link).find("img").attr("src") || "";
-    const priceText = $(link).find("[class*='price']").text() || "";
+  const anchorTags = html.match(/<a\b[^>]*>[\s\S]*?<\/a>/gi) ?? [];
+
+  for (const tag of anchorTags) {
+    const href = tag.match(/href=["']([^"']+)["']/i)?.[1] ?? "";
+    if (!href || !/product|p\//i.test(href)) continue;
+
+    const title = tag.match(/title=["']([^"']+)["']/i)?.[1] ?? tag.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (!title) continue;
+
+    const image = tag.match(/<img[^>]*src=["']([^"']+)["']/i)?.[1] ?? "";
+    const priceText = tag.match(/(?:€|EUR|\$)\s?\d+[\d.,]*/i)?.[0] ?? "";
+
     products.push({
       retailer: "",
       title,
@@ -107,9 +114,9 @@ function parseTileProducts(html: string, baseUrl: string): LookProduct[] {
       image: ensureAbsolute(image, baseUrl),
       url: ensureAbsolute(href, baseUrl),
     });
-  });
+  }
 
-  return products.filter((p) => p.title && p.url);
+  return products.filter((product) => product.title && product.url);
 }
 
 async function fetchHtml(url: string, timeoutMs: number) {
@@ -133,16 +140,19 @@ async function fetchHtml(url: string, timeoutMs: number) {
 async function verifyProduct(product: LookProduct, timeoutMs: number) {
   const html = await fetchHtml(product.url, timeoutMs);
   if (!html) return false;
-  const $ = cheerio.load(html);
-  const ogTitle = $("meta[property='og:title']").attr("content") || "";
-  const ogImage = $("meta[property='og:image']").attr("content") || "";
-  if (ogImage && !product.image) product.image = ogImage;
+
+  const ogTitle = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i)?.[1] ?? "";
+  const ogImage = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)?.[1] ?? "";
+
+  if (ogImage && !product.image) {
+    product.image = ogImage;
+  }
+
   if (!ogTitle) return true;
-  const matches = ogTitle.toLowerCase().includes(product.title.toLowerCase().slice(0, 10));
-  return matches;
+  return ogTitle.toLowerCase().includes(product.title.toLowerCase().slice(0, 10));
 }
 
-async function sourceRetailer(name: string, searchUrl: string, baseUrl: string, query: string) {
+async function sourceRetailer(name: string, searchUrl: string, baseUrl: string) {
   const html = await fetchHtml(searchUrl, RETAILER_TIMEOUT_MS);
   if (!html) return [] as LookProduct[];
 
@@ -183,20 +193,12 @@ function assignSlots(products: LookProduct[]) {
 
 export async function sourceProducts(prompt: string) {
   const query = `${prompt} ${neutralBoost}`.trim();
-  const tasks = retailers.map((retailer) =>
-    sourceRetailer(retailer.name, retailer.search(query), retailer.baseUrl, query),
-  );
+  const tasks = retailers.map((retailer) => sourceRetailer(retailer.name, retailer.search(query), retailer.baseUrl));
 
-  const globalTimeout = new Promise<LookProduct[]>((resolve) =>
-    setTimeout(() => resolve([]), GLOBAL_TIMEOUT_MS),
-  );
+  const globalTimeout = new Promise<LookProduct[]>((resolve) => setTimeout(() => resolve([]), GLOBAL_TIMEOUT_MS));
 
   const results = await Promise.race([
-    Promise.allSettled(tasks).then((settled) =>
-      settled.flatMap((result) =>
-        result.status === "fulfilled" ? result.value : [],
-      ),
-    ),
+    Promise.allSettled(tasks).then((settled) => settled.flatMap((result) => (result.status === "fulfilled" ? result.value : []))),
     globalTimeout,
   ]);
 

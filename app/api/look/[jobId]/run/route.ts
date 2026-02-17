@@ -7,9 +7,9 @@ export const runtime = "nodejs";
 
 export async function POST(
   _request: Request,
-  { params }: { params: { jobId: string } },
+  { params }: { params: Promise<{ jobId: string }> },
 ) {
-  const jobId = params.jobId;
+  const { jobId } = await params;
   const job = await getJob(jobId);
 
   if (!job) {
