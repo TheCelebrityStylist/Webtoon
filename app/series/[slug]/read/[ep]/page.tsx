@@ -50,10 +50,11 @@ export default async function ReaderPage({ params }: { params: { slug: string; e
           ],
         }}
       />
+
       <div className="sticky top-16 z-30 rounded-xl border border-slate-200 bg-white/95 p-3 backdrop-blur">
         <div className="flex items-center justify-between gap-2">
           <Link href={`/series/${series.slug}`} className="text-sm font-semibold text-indigo-700">← Back to series</Link>
-          <span className="text-xs text-slate-500">Episode {episode.ep}/{episodes.length} · {progress}%</span>
+          <span className="text-xs text-slate-500">Episode {episode.ep}/{episodes.length} · {progress}% complete</span>
         </div>
         <div className="mt-2 h-2 rounded-full bg-slate-200"><div className="h-2 rounded-full bg-indigo-600" style={{ width: `${progress}%` }} /></div>
       </div>
@@ -68,18 +69,31 @@ export default async function ReaderPage({ params }: { params: { slug: string; e
         <StoryRender content={episode.content} />
       ) : (
         <section className="section-shell border-amber-200 bg-amber-50">
-          <h2 className="text-xl font-semibold text-amber-900">Fast Pass episode</h2>
-          <p className="mt-2 text-sm text-amber-800">Unlock this episode with credits. No subscription required. Choose unlocks only when you want early access.</p>
+          <h2 className="text-xl font-semibold text-amber-900">Next episode is locked</h2>
+          <p className="mt-2 text-sm text-amber-800">Continue now with Access Pass credits to stay ahead and keep your reading streak active.</p>
           <div className="mt-4 grid gap-2 md:grid-cols-4">
             <button className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-900">10 credits · €4.99</button>
             <button className="rounded-xl border-2 border-indigo-500 bg-white px-3 py-2 text-sm font-semibold text-slate-900">30 credits · €12.99</button>
             <button className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-900">80 credits · €29.99</button>
             <button className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-900">200 credits · €59.99</button>
           </div>
-          <button className="cta-primary mt-4">Unlock now (mock)</button>
-          <p className="mt-4 text-sm text-slate-700">Preview: {episode.excerpt}</p>
+          <button className="cta-primary mt-4">Unlock now with Access Pass (mock)</button>
+          <p className="mt-3 text-sm text-slate-700">Unlocking supports the creator directly. Your unlock funds the next episode.</p>
+          <p className="mt-2 text-sm text-slate-700">Preview: {episode.excerpt}</p>
         </section>
       )}
+
+      <section className="section-shell rounded-2xl border border-slate-200 bg-slate-50">
+        <h2 className="text-xl font-semibold tracking-tight">Next Episode: {next?.isFree ? "Free" : "Locked"}</h2>
+        <p className="mt-2 text-sm text-slate-700">Continue now with 3 Access Pass credits</p>
+        <p className="mt-1 text-sm text-slate-700">Release: Public in 5 days</p>
+        <p className="mt-1 text-sm text-slate-700">Reading Streak: 3 weeks</p>
+        <p className="mt-1 text-sm font-medium text-indigo-700">Maintain streak by unlocking early</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {next ? <Link href={`/series/${series.slug}/read/${next.ep}`} className="cta-primary px-4 py-2 text-xs">Continue now</Link> : <Link href={`/series/${series.slug}`} className="cta-primary px-4 py-2 text-xs">Finish arc</Link>}
+          <Link href="/pricing" className="cta-secondary px-4 py-2 text-xs">Get Access Pass</Link>
+        </div>
+      </section>
 
       <nav className="flex flex-wrap items-center justify-between gap-2">
         {prev ? <Link href={`/series/${series.slug}/read/${prev.ep}`} className="cta-secondary px-4 py-2 text-xs">← Episode {prev.ep}</Link> : <span />}
