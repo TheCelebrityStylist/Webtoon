@@ -18,7 +18,7 @@ export function HomeHero() {
           Start your next series in under 10 seconds.
         </h1>
         <p className="mt-4 max-w-2xl text-base text-slate-700">
-          Free first episodes. Unlock the next drop before anyone else with Fast Pass.
+          Free first episodes. Unlock the next drop before anyone else with Arc Pass.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/series" className="cta-primary" onClick={() => trackEvent("hero_start_reading_click")}>Start reading free</Link>
@@ -27,7 +27,7 @@ export function HomeHero() {
         <ul className="mt-6 grid gap-2 text-sm text-slate-700 md:grid-cols-3">
           <li>• Free episodes available now</li>
           <li>• Weekly locked drops</li>
-          <li>• Early access via credits</li>
+          <li>• Early arc access via Arc Pass</li>
         </ul>
       </div>
     </section>

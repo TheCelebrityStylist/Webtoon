@@ -10,11 +10,11 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "EU Webtoon — Start free, stay ahead, finish arcs",
   description:
-    "Start reading free episodes now, continue your progression, and unlock early drops with Access Pass before public release.",
+    "Start reading free episodes now, continue your progression, and unlock early drops with Arc Pass before public release.",
   alternates: { canonical: absoluteUrl("/") },
   openGraph: {
     title: "EU Webtoon",
-    description: "Start free, continue your arc, and stay ahead of weekly drops with Access Pass.",
+    description: "Start free, continue your arc, and stay ahead of weekly drops with Arc Pass.",
     url: absoluteUrl("/"),
   },
 };
@@ -67,7 +67,7 @@ export default async function HomePage() {
           {[
             ["Episode 1", "Free", "Start now"],
             ["Episode 2", "Free", "Continue now"],
-            ["Episode 3", "Locked", "Unlock early with 5 credits"],
+            ["Episode 3", "Locked", "Unlock early with 1 Arc Pass"],
           ].map(([label, status, cta]) => (
             <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4">
               <p className="text-sm font-semibold text-slate-900">{label}</p>
@@ -93,8 +93,8 @@ export default async function HomePage() {
       </section>
 
       <section className="section-shell">
-        <h2 className="text-2xl font-semibold tracking-tight">Access Pass (Access Tokens) = Progression</h2>
-        <p className="mt-2 text-sm text-slate-600">Access Pass is how readers stay ahead, finish what they start, and fund the next episode.</p>
+        <h2 className="text-2xl font-semibold tracking-tight">Arc Pass = Narrative Progression</h2>
+        <p className="mt-2 text-sm text-slate-600">Arc Pass keeps continuity active so readers finish arcs, protect streak bonuses, and unlock bonus POV scenes before expiry.</p>
         <ul className="mt-4 grid gap-2 text-sm text-slate-700 md:grid-cols-2">
           <li>• Finish arcs instantly</li>
           <li>• Read future episodes early</li>
@@ -104,9 +104,9 @@ export default async function HomePage() {
         </ul>
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           {[
-            ["Starter Access Pass", "10 credits", "€4.99"],
-            ["Reader Access Pass", "30 credits", "€12.99"],
-            ["Binge Access Pass", "80 credits", "€29.99"],
+            ["Starter Arc Pass", "1 Arc", "€4.99"],
+            ["Reader Arc Pass", "3 Arcs", "€12.99"],
+            ["Binge Arc Pass", "8 Arcs", "€29.99"],
           ].map(([name, credits, price]) => (
             <div key={name} className="rounded-xl border border-slate-200 bg-white p-4">
               <p className="font-semibold">{name}</p>
@@ -127,7 +127,7 @@ export default async function HomePage() {
         <p className="mt-2 text-lg text-slate-700">Start reading free now.</p>
         <div className="mt-5 flex justify-center gap-3">
           <Link href="/series" className="cta-primary">Start reading free</Link>
-          <Link href="/pricing" className="cta-secondary">Unlock with Access Pass</Link>
+          <Link href="/pricing" className="cta-secondary">Unlock with Arc Pass</Link>
         </div>
       </section>
 
