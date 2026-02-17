@@ -1,5 +1,6 @@
 import { getGeneratedSeries } from "@/lib/generatedStore";
 import { loadEpisodeMarkdown, markdownToSafeText } from "@/lib/markdown";
+import { coverExists, coverPublicUrl, generateCoverImage } from "@/lib/coverGenerator";
 import type { CollectionKey, Episode, Series } from "@/lib/types";
 
 const DAY = 86_400_000;
@@ -123,7 +124,7 @@ export const seriesIndex: Series[] = seeds.map((seed, index) => {
           : `${title} is a premium vertical serial with free entry and paid momentum.`,
     longDescription: createLongDescription(slug, title),
     updatedAt: episodes[episodes.length - 1]?.publishedAt ?? new Date(now - index * DAY).toISOString(),
-    coverUrl: `/covers/${slug}.svg`,
+    coverUrl: coverExists(slug) ? coverPublicUrl(slug) : `/covers/${slug}.svg`,
     coverAlt: `${title} cover art`,
     stats: {
       ratingBeta: Number((4.3 + (index % 5) * 0.1).toFixed(2)),
@@ -150,13 +151,37 @@ export const collections: Record<CollectionKey, string[]> = {
   german: seriesIndex.filter((s) => s.language === "de").map((s) => s.slug),
 };
 
+
+async function ensureMissingCovers(items: Series[]): Promise<void> {
+  if (!process.env.OPENAI_API_KEY) return;
+
+  await Promise.all(
+    items.map(async (item) => {
+      if (coverExists(item.slug)) return;
+      try {
+        await generateCoverImage({
+          title: item.title,
+          genre: item.genres.join(", "),
+          tone: item.tags[0] ?? "Cinematic",
+          setting: item.longDescription.slice(0, 140),
+          tagline: item.hook,
+          slug: item.slug,
+        });
+      } catch {
+        // no-op in MVP fallback mode
+      }
+    }),
+  );
+}
 function sortByUpdated(a: Series, b: Series) {
   return a.updatedAt < b.updatedAt ? 1 : -1;
 }
 
 export async function getAllSeries(): Promise<Series[]> {
   const generated = await getGeneratedSeries();
-  return [...generated, ...seriesIndex].sort(sortByUpdated);
+  const merged = [...generated, ...seriesIndex].sort(sortByUpdated);
+  await ensureMissingCovers(merged);
+  return merged.map((item) => ({ ...item, coverUrl: coverExists(item.slug) ? coverPublicUrl(item.slug) : item.coverUrl }));
 }
 
 export async function getSeries(slug: string): Promise<Series | null> {

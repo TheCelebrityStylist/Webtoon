@@ -5,8 +5,8 @@ import { WalletDemo } from "@/components/WalletDemo";
 import { absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Pricing, Credits & Subscription | EU Webtoon",
-  description: "Buy credits, start subscription perks, tip creators, unlock bundles, and keep your reading continuity lane active.",
+  title: "Pricing for readers and creators | EU Webtoon",
+  description: "Credits, Continuity+ subscription, arc bundles, tips, and Creator Pro plans with AI Studio Pro and cover generation.",
   alternates: { canonical: absoluteUrl("/pricing") },
 };
 
@@ -17,55 +17,53 @@ export default function PricingPage() {
         data={{
           "@context": "https://schema.org",
           "@type": "Product",
-          name: "EU Webtoon Credits & Subscription",
-          description: "Credits and subscription perks for early unlocks, continuity retention, and bonus scenes.",
+          name: "EU Webtoon Reader and Creator Plans",
+          description: "Reader credits/subscription and creator plans for publishing and monetization.",
           offers: [
-            { "@type": "Offer", name: "Starter Credits", priceCurrency: "EUR", price: "4.99", availability: "https://schema.org/InStock" },
-            { "@type": "Offer", name: "Reader Credits", priceCurrency: "EUR", price: "12.99", availability: "https://schema.org/InStock" },
-            { "@type": "Offer", name: "Monthly Subscription", priceCurrency: "EUR", price: "9.99", availability: "https://schema.org/InStock" },
+            { "@type": "Offer", name: "Continuity+", priceCurrency: "EUR", price: "9.99" },
+            { "@type": "Offer", name: "Credit Pack 30", priceCurrency: "EUR", price: "12.99" },
+            { "@type": "Offer", name: "Creator Pro", priceCurrency: "EUR", price: "19.99" },
           ],
         }}
       />
 
       <section className="section-shell">
-        <h1 className="text-3xl font-semibold tracking-tight">Credits + subscription = uninterrupted momentum</h1>
-        <p className="mt-2 text-sm text-slate-600">Free episodes start your arc. Credits and subscription perks keep your streak, continuity bonus, and bonus scene access active.</p>
+        <h1 className="text-3xl font-semibold tracking-tight">Revenue streams for readers and writers</h1>
+        <p className="mt-2 text-sm text-slate-600">Use credits to continue instantly, subscribe to protect streaks, and choose creator plans to scale publishing output.</p>
 
-        <h2 className="mt-6 text-xl font-semibold">Credits packs</h2>
+        <h2 className="mt-5 text-xl font-semibold">Reader plans</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
-          {[
-            ["Starter", "10 credits", "€4.99", "Unlock key cliffhangers"],
-            ["Reader", "30 credits", "€12.99", "Best for weekly progression", true],
-            ["Binge", "80 credits", "€29.99", "Best value for multi-series runs"],
-          ].map(([name, credits, price, note, popular]) => (
-            <div key={String(name)} className={`rounded-xl border p-4 ${popular ? "border-indigo-500 bg-indigo-50" : "border-slate-200 bg-white"}`}>
-              <p className="font-semibold">{name}</p>
-              <p className="mt-1 text-xl font-bold">{credits}</p>
-              <p className="text-sm text-slate-600">{price}</p>
-              <p className="mt-1 text-xs text-slate-500">{note}</p>
-            </div>
-          ))}
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="font-semibold">Free</p>
+            <p className="mt-1 text-sm text-slate-600">Start episodes, community access, standard release timing.</p>
+          </div>
+          <div className="rounded-xl border border-indigo-500 bg-indigo-50 p-4">
+            <p className="font-semibold">Continuity+ · €9.99/mo</p>
+            <ul className="mt-1 list-disc pl-5 text-sm text-slate-700">
+              <li>Monthly credit drip</li>
+              <li>Streak protection</li>
+              <li>Discounted unlocks</li>
+            </ul>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <p className="font-semibold">Credit Packs</p>
+            <p className="mt-1 text-sm text-slate-600">10 credits (€4.99), 30 credits (€12.99), 80 credits (€29.99).</p>
+          </div>
         </div>
 
-        <h2 className="mt-6 text-xl font-semibold">Subscription tier (monthly)</h2>
-        <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-lg font-semibold">Continuity Plus · €9.99/month</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
-            <li>Monthly credit drip</li>
-            <li>Discounted unlocks</li>
-            <li>Early drops on selected arcs</li>
-            <li>Bonus chapters and creator commentary</li>
-          </ul>
+        <h2 className="mt-6 text-xl font-semibold">Creator plans</h2>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="font-semibold">Creator Basic</p><p className="mt-1 text-sm text-slate-600">Publishing dashboard, unlock analytics, tip jar.</p></div>
+          <div className="rounded-xl border border-indigo-500 bg-indigo-50 p-4"><p className="font-semibold">Creator Pro · €19.99/mo</p><p className="mt-1 text-sm text-slate-700">AI Studio Pro, cover generator, pacing assistant, marketing kit, localization drafts.</p></div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="font-semibold">Creator Studio+ · €49/mo</p><p className="mt-1 text-sm text-slate-600">Team seats, paid season launches, premium POV add-ons, subscriber-only episodes.</p></div>
         </div>
 
-        <h2 className="mt-6 text-xl font-semibold">Additional revenue streams</h2>
+        <h2 className="mt-6 text-xl font-semibold">Additional streams</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">Tip the creator (micro-support)</div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">Season bundle unlocks</div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">Limited drops and premium bonus scenes</div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">Sponsored placements (clearly labeled)</div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">Affiliate merch shop (off by default)</div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">AI Studio Pro tools plan for creators</div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">Arc bundles / season unlocks</div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">Creator tipping and bonus scene unlocks</div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">Premium POV add-ons</div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">Sponsored placements (labeled) and optional affiliate shop</div>
         </div>
 
         <WalletDemo />
