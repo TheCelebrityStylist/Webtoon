@@ -19,6 +19,23 @@ export const metadata: Metadata = {
   },
 };
 
+
+const seoEssay = `European webtoons are entering a decisive phase where reader experience, creator economics, and product design must work together. EU Webtoon focuses on that intersection: vertical storytelling built for phones, free-first onboarding, and clear progression mechanics that reward continuation. The core reading challenge in serialized comics is not discovery alone, but momentum. Readers start many stories and finish few when there is no strong continuity framework. That is why this platform emphasizes predictable arc structures, transparent unlock logic, and clear incentives to continue before spoilers spread.
+
+Vertical comics succeed when visual rhythm and narrative rhythm align. In practical terms, each episode needs strong beat transitions, readable pacing, and emotional anchors that make the next chapter feel necessary. A high-performing webtoon app in Europe should help readers start quickly, return consistently, and feel ownership over their progress. It should also help creators monetize without forcing confusing bundles or opaque rules.
+
+EU Webtoon positions itself as a webtoon alternative in Europe for readers who want premium originals and for creators who need transparent monetization. Credits and subscription are presented as continuity tools: unlock cliffhangers, maintain weekly streaks, and access bonus scenes tied to arc completion. This model mirrors strong retention patterns seen in game systems and serial media platforms, while staying readable and respectful for story-first audiences.
+
+Why does narrative continuity matter for retention? Because waiting introduces friction in memory and motivation. When a reader pauses at a cliffhanger for too long, they lose emotional context, social momentum, and often the urge to return. By reducing that waiting friction, progression products increase completion rate and long-term engagement. In webcomics, completion is one of the strongest predictors of future conversion because readers who finish arcs are more likely to start another series immediately.
+
+For creators, support should map directly to output quality and release consistency. Unlock-based revenue, tipping, and limited drops provide diversified income streams. Optional creator tooling plans, such as AI Studio Pro, can reduce production overhead by accelerating outlines, marketing kits, and localization drafts. The objective is not to replace creator voice, but to shorten repetitive workflows so writers and artists can spend more time on core storytelling.
+
+From an SEO perspective, topical authority comes from depth, structure, and internal linking. A best-in-class webtoon platform should publish substantial guides about vertical comics, reader psychology, arc design, and creator monetization while connecting them to live product journeys. It should include clean metadata, canonical URLs, valid structured data, coherent navigation, and crawl-friendly route architecture for series and episodes.
+
+European audiences are multilingual and culturally diverse. A strong platform must support that through language-aware discovery, localized metadata, and editor-curated collections that help readers find stories matching tone, genre, and reading length. Discovery should not be a random feed. It should be a guided path from first click to first completion, then into repeat reading habits.
+
+In short, the future of webtoons in Europe is product-led storytelling: start free, continue with momentum, and support creators in ways readers understand immediately. EU Webtoon is built around that principle.`;
+
 export default async function HomePage() {
   const [trending, recentlyStarted, bingeNow] = await Promise.all([
     getCollectionSeries("trending", 6),
@@ -117,6 +134,25 @@ export default async function HomePage() {
         </div>
       </section>
 
+
+      <section className="section-shell">
+        <h2 className="text-2xl font-semibold tracking-tight">Free vs Credits vs Subscription</h2>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[640px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 text-slate-500">
+                <th className="py-2">Plan</th><th className="py-2">What you get now</th><th className="py-2">What you lose by waiting</th>
+              </tr>
+            </thead>
+            <tbody className="text-slate-700">
+              <tr className="border-b border-slate-100"><td className="py-2">Free</td><td>Episode 1-2 access</td><td>Arc continuity and bonus scenes expire</td></tr>
+              <tr className="border-b border-slate-100"><td className="py-2">Credits</td><td>Unlock cliffhangers on demand</td><td>Pay per unlock without monthly drip perks</td></tr>
+              <tr><td className="py-2">Subscription</td><td>Monthly credit drip + early drops</td><td>None during active month</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section className="section-shell grid gap-4 md:grid-cols-2">
         <WaitlistCapture type="reader" />
         <WaitlistCapture type="creator" />
@@ -126,9 +162,14 @@ export default async function HomePage() {
         <h2 className="text-3xl font-semibold tracking-tight">Don’t wait for public release.</h2>
         <p className="mt-2 text-lg text-slate-700">Start reading free now.</p>
         <div className="mt-5 flex justify-center gap-3">
-          <Link href="/series" className="cta-primary">Start reading free</Link>
+          <Link href="/webtoons" className="cta-primary">Start reading free</Link>
           <Link href="/pricing" className="cta-secondary">Unlock with Arc Pass</Link>
         </div>
+      </section>
+
+      <section className="section-shell">
+        <h2 className="text-2xl font-semibold tracking-tight">European webtoons guide</h2>
+        <div className="prose prose-slate mt-3 max-w-none whitespace-pre-line text-sm text-slate-700">{seoEssay}</div>
       </section>
 
       <section className="section-shell">

@@ -21,8 +21,8 @@ export function HomeHero() {
           Free first episodes. Unlock the next drop before anyone else with Arc Pass.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/series" className="cta-primary" onClick={() => trackEvent("hero_start_reading_click")}>Start reading free</Link>
-          <Link href="/series" className="cta-secondary" onClick={() => trackEvent("hero_continue_trending_click")}>Continue a trending series</Link>
+          <Link href="/webtoons" className="cta-primary" onClick={() => trackEvent("hero_start_reading_click")}>Start reading free</Link>
+          <Link href="/webtoons" className="cta-secondary" onClick={() => trackEvent("hero_continue_trending_click")}>Continue a trending series</Link>
         </div>
         <ul className="mt-6 grid gap-2 text-sm text-slate-700 md:grid-cols-3">
           <li>• Free episodes available now</li>

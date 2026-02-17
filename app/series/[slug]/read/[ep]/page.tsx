@@ -7,12 +7,15 @@ import { buildMockReaderProgress, getArcForEpisode, getArcPassCost, getEpisodeLo
 import { getEpisode, getSeriesBySlug } from "@/lib/data";
 import { absoluteUrl } from "@/lib/seo";
 
-export async function generateMetadata({ params }: { params: { slug: string; ep: string } }): Promise<Metadata> {
-  const series = await getSeriesBySlug(params.slug);
+type Props = { params: Promise<{ slug: string; ep: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug, ep } = await params;
+  const series = await getSeriesBySlug(slug);
   if (!series) return {};
 
-  const ep = Number(params.ep);
-  const episode = await getEpisode(series.slug, ep);
+  const epNum = Number(ep);
+  const episode = await getEpisode(series.slug, epNum);
   if (!episode) return {};
 
   return {
@@ -23,12 +26,13 @@ export async function generateMetadata({ params }: { params: { slug: string; ep:
   };
 }
 
-export default async function ReaderPage({ params }: { params: { slug: string; ep: string } }) {
-  const series = await getSeriesBySlug(params.slug);
+export default async function ReaderPage({ params }: Props) {
+  const { slug, ep } = await params;
+  const series = await getSeriesBySlug(slug);
   if (!series) return notFound();
 
-  const ep = Number(params.ep);
-  const episode = await getEpisode(series.slug, ep);
+  const epNum = Number(ep);
+  const episode = await getEpisode(series.slug, epNum);
   if (!episode) return notFound();
 
   const episodes = series.episodes.slice().sort((a, b) => a.ep - b.ep);
@@ -49,7 +53,7 @@ export default async function ReaderPage({ params }: { params: { slug: string; e
           "@type": "BreadcrumbList",
           itemListElement: [
             { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
-            { "@type": "ListItem", position: 2, name: "Series", item: absoluteUrl("/series") },
+            { "@type": "ListItem", position: 2, name: "Series", item: absoluteUrl("/webtoons") },
             { "@type": "ListItem", position: 3, name: series.title, item: absoluteUrl(`/series/${series.slug}`) },
             { "@type": "ListItem", position: 4, name: `Episode ${episode.ep}`, item: absoluteUrl(`/series/${series.slug}/read/${episode.ep}`) },
           ],

@@ -25,8 +25,8 @@ export function MobileActionBar() {
   return (
     <div className={`fixed inset-x-4 bottom-4 z-40 transition-transform duration-200 md:hidden ${visible ? "translate-y-0" : "translate-y-24"}`}>
       <div className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-        <Link href="/series" className="cta-primary px-3 py-2 text-xs" onClick={() => trackEvent("mobile_bar_start_reading")}>Start reading</Link>
-        <Link href="/series" className="cta-secondary px-3 py-2 text-xs" onClick={() => trackEvent("mobile_bar_browse")}>Browse library</Link>
+        <Link href="/webtoons" className="cta-primary px-3 py-2 text-xs" onClick={() => trackEvent("mobile_bar_start_reading")}>Start reading</Link>
+        <Link href="/webtoons" className="cta-secondary px-3 py-2 text-xs" onClick={() => trackEvent("mobile_bar_browse")}>Continue series</Link>
       </div>
     </div>
   );

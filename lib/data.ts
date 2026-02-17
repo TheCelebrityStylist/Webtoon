@@ -1,5 +1,6 @@
 import { getGeneratedSeries } from "@/lib/generatedStore";
 import type { CollectionKey, Episode, Series } from "@/lib/types";
+import { loadEpisodeMarkdown, markdownToSafeText } from "@/lib/markdown";
 
 const DAY = 86_400_000;
 const now = Date.now();
@@ -167,6 +168,21 @@ The editorial intent is simple: keep every scroll meaningful. Scenes are written
 For creators and critics, ${title} also models the EU Webtoon promise: multilingual discovery, transparent free-versus-Fast-Pass signaling, and a creator-first release structure where premium unlocks support the work without forcing a subscription habit. In MVP, this means cleaner economics, clearer communication, and stronger retention loops. In practice, it means readers start free, feel momentum fast, and choose to continue because the story earns it.`;
 }
 
+
+const markdownEpisodeOverrides = new Set(["afterlight:1", "afterlight:2", "afterlight:3", "paper-crown:1", "paper-crown:2", "paper-crown:3"]);
+
+function getEpisodeBodyFromContent(slug: string, seriesTitle: string, seedIndex: number, ep: number): string {
+  const key = `${slug}:${ep}`;
+  if (markdownEpisodeOverrides.has(key)) {
+    const md = loadEpisodeMarkdown(slug, ep);
+    if (md) return markdownToSafeText(md);
+  }
+
+  const longEligible = seedIndex < 8 && ep === 1;
+  return longEligible
+    ? longEpisodes[seedIndex % longEpisodes.length]
+    : `${seriesTitle} episode ${ep} opens with a tactical decision that forces the lead into public risk.\n\nA trusted ally offers useful help with hidden terms.\n\nBy mid-episode the stakes escalate from personal discomfort to structural danger.\n\nThe final beat closes on an unresolved choice that naturally drives the next chapter.`;
+}
 function episodeTitle(ep: number): string {
   if (ep === 1) return "Pilot";
   if (ep === 2) return "Pressure Line";
@@ -178,12 +194,9 @@ function episodeTitle(ep: number): string {
   return "Aftermath";
 }
 
-function makeEpisode(seriesTitle: string, seedIndex: number, ep: number): Episode {
+function makeEpisode(slug: string, seriesTitle: string, seedIndex: number, ep: number): Episode {
   const free = ep <= 2;
-  const longEligible = seedIndex < 8 && ep === 1;
-  const base = longEligible
-    ? longEpisodes[seedIndex % longEpisodes.length]
-    : `${seriesTitle} episode ${ep} opens with a tactical decision that forces the lead into public risk.\n\nA trusted ally offers useful help with hidden terms.\n\nBy mid-episode the stakes escalate from personal discomfort to structural danger.\n\nThe final beat closes on an unresolved choice that naturally drives the next chapter.`;
+  const base = getEpisodeBodyFromContent(slug, seriesTitle, seedIndex, ep);
 
   return {
     ep,
@@ -221,7 +234,7 @@ export const seriesIndex: Series[] = seeds.map((seed, index) => {
       readsBeta: 1400 + index * 310,
       likesBeta: 260 + index * 72,
     },
-    episodes: Array.from({ length: 8 }, (_, i) => makeEpisode(title, index, i + 1)),
+    episodes: Array.from({ length: 15 }, (_, i) => makeEpisode(slug, title, index, i + 1)),
   };
 });
 
@@ -279,7 +292,7 @@ export async function getAllEpisodeRoutes(): Promise<Array<{ slug: string; ep: n
     item.episodes.map((ep) => ({
       slug: item.slug,
       ep: ep.ep,
-      updatedAt: item.updatedAt,
+      updatedAt: ep.publishedAt,
       isFree: ep.isFree,
     })),
   );

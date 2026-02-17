@@ -50,9 +50,9 @@ export default function AboutPage() {
             During MVP, creator onboarding is invite-only. We review portfolio fit, release reliability, and audience intent. Accepted creators keep rights ownership and get support on launch packaging, pricing clarity, and collection placement. Start with the creator page to apply and join the pilot queue.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link href="/series" className="cta-secondary px-4 py-2 text-xs">Browse series</Link>
+            <Link href="/webtoons" className="cta-secondary px-4 py-2 text-xs">Continue series</Link>
             <Link href="/creators" className="cta-primary px-4 py-2 text-xs">Creator program</Link>
-            <Link href="/ai-stylist" className="cta-secondary px-4 py-2 text-xs">AI Studio</Link>
+            <Link href="/ai-studio" className="cta-secondary px-4 py-2 text-xs">AI Studio</Link>
           </div>
         </article>
       </section>
