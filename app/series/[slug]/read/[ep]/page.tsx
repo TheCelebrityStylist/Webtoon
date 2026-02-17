@@ -84,7 +84,7 @@ export default async function ReaderPage({ params }: { params: { slug: string; e
       )}
 
       <section className="section-shell rounded-2xl border border-slate-200 bg-slate-50">
-        <h2 className="text-xl font-semibold tracking-tight">Next Episode: {next?.isFree ? "Free" : "Locked"}</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Next Episode: Locked</h2>
         <p className="mt-2 text-sm text-slate-700">Continue now with 3 Access Pass credits</p>
         <p className="mt-1 text-sm text-slate-700">Release: Public in 5 days</p>
         <p className="mt-1 text-sm text-slate-700">Reading Streak: 3 weeks</p>

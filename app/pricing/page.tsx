@@ -12,7 +12,7 @@ export default function PricingPage() {
     <div className="space-y-6">
       <section className="section-shell">
         <h1 className="text-3xl font-semibold tracking-tight">Access Pass pricing</h1>
-        <p className="mt-2 text-sm text-slate-600">Access Pass is progression, not a subscription. Use credits when you want to stay ahead.</p>
+        <p className="mt-2 text-sm text-slate-600">Access Pass credits are access tokens for progression, not a subscription. Use them when you want to stay ahead.</p>
         <div className="mt-4 grid gap-3 md:grid-cols-4">
           {[
             ["Starter Access Pass", "10 credits", "€4.99", "Finish a key arc beat now"],

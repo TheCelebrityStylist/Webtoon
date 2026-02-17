@@ -93,7 +93,7 @@ export default async function HomePage() {
       </section>
 
       <section className="section-shell">
-        <h2 className="text-2xl font-semibold tracking-tight">Access Pass = Progression</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Access Pass (Access Tokens) = Progression</h2>
         <p className="mt-2 text-sm text-slate-600">Access Pass is how readers stay ahead, finish what they start, and fund the next episode.</p>
         <ul className="mt-4 grid gap-2 text-sm text-slate-700 md:grid-cols-2">
           <li>• Finish arcs instantly</li>
