@@ -10,7 +10,7 @@ import { absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "For readers | EU Webtoon",
-  description: "Wattpad-style discovery meets arc completion mechanics. Read free, keep continuity, and finish stories without waiting.",
+  description: "Finish arcs without losing momentum: free starts, continuity lane, spoiler shielding, and early unlock rewards.",
   alternates: { canonical: absoluteUrl("/readers") },
 };
 
@@ -19,45 +19,34 @@ export default async function ReadersPage() {
   return (
     <div className="space-y-8">
       <JsonLd data={{ "@context": "https://schema.org", "@type": "WebSite", name: "EU Webtoon Readers", url: absoluteUrl("/readers") }} />
-      <section className="section-shell grid gap-4 md:grid-cols-[1.1fr_1fr]">
+      <section className="section-shell premium-hero grid gap-4 md:grid-cols-[1.1fr_1fr]">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">Reader platform: discovery + completion</h1>
-          <p className="mt-3 text-slate-600">Think Wattpad community energy, but with a Foretelling-style progression layer: Arc Lane, streak continuity, spoiler protection, and rewards for finishing what you start.</p>
-          <div className="mt-4 flex gap-3">
+          <h1 className="text-4xl font-bold tracking-tight">Reader platform: finish arcs before spoilers do</h1>
+          <p className="mt-3 text-slate-600">EU Webtoon keeps you in continuity: arc lane progress, streak protection, bonus POV scenes, and unlock options when cliffhangers hit.</p>
+          <div className="mt-4 flex flex-wrap gap-3">
             <Link href="/webtoons" className="cta-primary">Start reading free</Link>
-            <Link href="/pricing" className="cta-secondary">See reader pricing</Link>
+            <Link href="/pricing" className="cta-secondary">Unlock your first Arc Pass</Link>
           </div>
         </div>
         <Image src="/illustrations/reading-momentum.svg" alt="Reading momentum illustration" width={1200} height={800} className="rounded-2xl border border-slate-200 bg-white" />
       </section>
 
       <section className="section-shell">
-        <h2 className="text-2xl font-semibold tracking-tight">Featured series</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Trending now</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {featured.map((series) => <SeriesCard key={series.slug} s={series} />)}
         </div>
       </section>
 
-      <section id="reader-flow">
-        <HowItWorksSection defaultTrack="reader" large />
-      </section>
+      <section id="reader-flow"><HowItWorksSection defaultTrack="reader" large /></section>
 
       <section className="section-shell rounded-2xl border border-slate-200 bg-slate-50">
-        <h2 className="text-2xl font-semibold tracking-tight">Arc Lane in plain language</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-[1fr_1fr]">
-          <Image src="/illustrations/arc-lane.svg" alt="Arc lane illustration" width={1200} height={800} className="rounded-xl border border-slate-200 bg-white" />
-          <div className="space-y-2 text-sm text-slate-700">
-            <p><strong>Arc Progress:</strong> see exactly how close you are to the next payoff.</p>
-            <p><strong>Spoiler Risk:</strong> know when waiting increases reveal exposure.</p>
-            <p><strong>Bonus Unlock Tier:</strong> unlock POV scenes, creator notes, and extras when you complete arcs.</p>
-            <p><strong>Continuity Lane:</strong> keep momentum across multiple active series instead of restarting context every week.</p>
-          </div>
-        </div>
+        <h2 className="text-2xl font-semibold tracking-tight">Pricing preview</h2>
+        <p className="mt-2 text-sm text-slate-700">Start free, then choose credits, Continuity+, or Superfan depending on how fast you want arc completion and bonus unlocks.</p>
+        <Link href="/pricing" className="cta-primary mt-4">Open reader pricing</Link>
       </section>
 
-      <section>
-        <ComparisonTable />
-      </section>
+      <section><ComparisonTable /></section>
     </div>
   );
 }

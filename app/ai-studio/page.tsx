@@ -15,10 +15,10 @@ export default function AIStudioPage() {
       <section className="section-shell">
         <p className="text-xs font-semibold uppercase tracking-[0.15em] text-indigo-700">AI Studio Pro</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Publish Pack in four guided steps</h1>
-        <p className="mt-3 max-w-3xl text-sm text-slate-700">Generate a complete production package: Series Bible + Episode blueprints + Character voice sheets + Panel pacing notes + Marketing kit.</p>
+        <p className="mt-3 max-w-3xl text-sm text-slate-700">Generate a complete production package: Series Bible + Episode blueprints + Script beats + Marketing pack, with quality controls for tone, audience, trope intensity, and content rating.</p>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <article className="rounded-xl border border-slate-200 bg-white p-4"><p className="font-semibold">Step 1 — Choose goal</p><p className="mt-1 text-sm text-slate-600">Series Bible, Outline, Script, Marketing Kit, Pitch Deck.</p></article>
+          <article className="rounded-xl border border-slate-200 bg-white p-4"><p className="font-semibold">Step 1 — Choose goal</p><p className="mt-1 text-sm text-slate-600">Series Bible, Episode Outline, Script Beats, Marketing Pack.</p></article>
           <article className="rounded-xl border border-slate-200 bg-white p-4"><p className="font-semibold">Step 2 — Advanced controls</p><p className="mt-1 text-sm text-slate-600">Audience, comp titles, tone sliders, continuity constraints, content warnings.</p></article>
           <article className="rounded-xl border border-slate-200 bg-white p-4"><p className="font-semibold">Step 3 — Generate outputs</p><p className="mt-1 text-sm text-slate-600">Narrative structure, voice consistency, scene pacing, localization draft hooks.</p></article>
           <article className="rounded-xl border border-slate-200 bg-white p-4"><p className="font-semibold">Step 4 — Export</p><p className="mt-1 text-sm text-slate-600">Markdown, print-ready HTML, JSON for production pipelines.</p></article>

@@ -1,58 +1,109 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
+type Track = "reader" | "creator";
+
+type Tier = {
+  name: string;
+  price: string;
+  forWho: string;
+  outcomes: string;
+  includes: string[];
+  cta: { label: string; href: string };
+  featured?: boolean;
+};
+
+const readerTiers: Tier[] = [
+  {
+    name: "Free",
+    price: "€0",
+    forWho: "New readers",
+    outcomes: "Start instantly, test stories, and build your shelf.",
+    includes: ["Free episode starts", "Community shelves + reviews", "Arc lane preview"],
+    cta: { label: "Start reading free", href: "/webtoons" },
+  },
+  {
+    name: "Continuity+",
+    price: "€9.99/mo",
+    forWho: "Weekly readers",
+    outcomes: "Protect streaks and unlock payoffs before spoilers spread.",
+    includes: ["Monthly credit drip", "Streak protection", "Bonus scene priority", "Cheaper early unlocks"],
+    cta: { label: "Get Continuity+", href: "/pricing#reader-faq" },
+    featured: true,
+  },
+  {
+    name: "Superfan",
+    price: "€19.99/mo",
+    forWho: "Binge completists",
+    outcomes: "Finish arcs fast and support creators directly.",
+    includes: ["Everything in Continuity+", "Monthly arc bundle", "Creator tip match credits"],
+    cta: { label: "Unlock your first Arc Pass", href: "/pricing#credit-packs" },
+  },
+];
+
+const creatorTiers: Tier[] = [
+  {
+    name: "Starter",
+    price: "€0",
+    forWho: "First launch",
+    outcomes: "Ship your first vertical series with reliable release controls.",
+    includes: ["Episode upload + scheduling", "Basic funnel analytics", "Tips + unlock monetization"],
+    cta: { label: "Apply to Creator Program", href: "/creators#apply" },
+  },
+  {
+    name: "Creator Pro",
+    price: "€29/mo",
+    forWho: "Weekly publishers",
+    outcomes: "Increase completion and unlock conversion with actionable tools.",
+    includes: ["Retention heatmaps", "Cliffhanger scoring", "Pricing experiments", "Studio tools"],
+    cta: { label: "Open creator portal", href: "/creator-portal" },
+    featured: true,
+  },
+  {
+    name: "Studio+",
+    price: "€79/mo",
+    forWho: "Teams and labels",
+    outcomes: "Run multi-series launches with predictable earnings dashboards.",
+    includes: ["Team seats", "Advanced promotion slots", "Localization workflow", "Revenue forecast exports"],
+    cta: { label: "Talk to partnerships", href: "/creators#apply" },
+  },
+];
+
+function TierCard({ tier }: { tier: Tier }) {
+  return (
+    <article className={`rounded-2xl border p-5 ${tier.featured ? "border-indigo-500 bg-indigo-50 shadow-lg" : "border-slate-200 bg-white"}`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{tier.forWho}</p>
+      <h3 className="mt-2 text-xl font-semibold">{tier.name}</h3>
+      <p className="mt-1 text-2xl font-bold">{tier.price}</p>
+      <p className="mt-3 text-sm text-slate-700">{tier.outcomes}</p>
+      <ul className="mt-3 space-y-1 text-sm text-slate-700">
+        {tier.includes.map((item) => <li key={item}>• {item}</li>)}
+      </ul>
+      <Link href={tier.cta.href} className="cta-primary mt-5">{tier.cta.label}</Link>
+    </article>
+  );
+}
+
 export function PricingToggle() {
-  const [tab, setTab] = useState<"reader" | "creator">("reader");
+  const [tab, setTab] = useState<Track>("reader");
+  const tiers = tab === "reader" ? readerTiers : creatorTiers;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="inline-flex rounded-full border border-slate-300 bg-slate-100 p-1">
-        <button className={`rounded-full px-3 py-1 text-xs font-semibold ${tab === "reader" ? "bg-white shadow" : "text-slate-600"}`} onClick={() => setTab("reader")}>Reader pricing</button>
-        <button className={`rounded-full px-3 py-1 text-xs font-semibold ${tab === "creator" ? "bg-white shadow" : "text-slate-600"}`} onClick={() => setTab("creator")}>Creator pricing</button>
+        <button className={`rounded-full px-4 py-1.5 text-xs font-semibold ${tab === "reader" ? "bg-white shadow" : "text-slate-600"}`} onClick={() => setTab("reader")}>For Readers</button>
+        <button className={`rounded-full px-4 py-1.5 text-xs font-semibold ${tab === "creator" ? "bg-white shadow" : "text-slate-600"}`} onClick={() => setTab("creator")}>For Creators</button>
       </div>
 
-      {tab === "reader" ? (
-        <div className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="font-semibold">Free</p><p className="mt-1 text-sm text-slate-600">Start episodes and community access.</p><p className="mt-2 text-xs">Who it’s for: new readers.</p></div>
-            <div className="rounded-xl border border-indigo-500 bg-indigo-50 p-4"><p className="font-semibold">Continuity+</p><p className="mt-1 text-sm text-slate-700">Monthly credit drip, streak protection, discounted unlocks.</p><p className="mt-2 text-xs">Who it’s for: weekly readers.</p></div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="font-semibold">Credit Packs</p><p className="mt-1 text-sm text-slate-600">10 / 30 / 80 credits, pay as needed.</p><p className="mt-2 text-xs">Who it’s for: selective unlockers.</p></div>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
-            <p className="font-semibold">Comparison rows</p>
-            <ul className="mt-2 list-disc pl-5 text-slate-700">
-              <li>Unlock speed: Free &lt; Credits &lt; Continuity+</li>
-              <li>Streak protection: Continuity+ best</li>
-              <li>Cost flexibility: Credits best</li>
-            </ul>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="font-semibold">Creator Basic</p><p className="mt-1 text-sm text-slate-600">Publishing + baseline analytics.</p><p className="mt-2 text-xs">Who it’s for: solo starters.</p></div>
-            <div className="rounded-xl border border-indigo-500 bg-indigo-50 p-4"><p className="font-semibold">Creator Pro</p><p className="mt-1 text-sm text-slate-700">AI Studio Pro, cover generation, pacing assistant, marketing kit.</p><p className="mt-2 text-xs">Who it’s for: weekly launch teams.</p></div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="font-semibold">Creator Studio+</p><p className="mt-1 text-sm text-slate-600">Team seats, featured launches, advanced analytics and localization support.</p><p className="mt-2 text-xs">Who it’s for: studio operators.</p></div>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
-            <p className="font-semibold">Comparison rows</p>
-            <ul className="mt-2 list-disc pl-5 text-slate-700">
-              <li>Tool depth: Basic &lt; Pro &lt; Studio+</li>
-              <li>Launch support: Studio+ strongest</li>
-              <li>Cost efficiency: Pro strongest for growing creators</li>
-            </ul>
-          </div>
-        </div>
-      )}
+      <div className="grid gap-4 md:grid-cols-3">
+        {tiers.map((tier) => <TierCard key={tier.name} tier={tier} />)}
+      </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
-        <p className="font-semibold">Pricing FAQ</p>
-        <ul className="mt-2 list-disc pl-5 text-slate-700">
-          <li>Can readers cancel Continuity+ anytime? Yes.</li>
-          <li>Do creators keep rights? Yes, with clear contract terms.</li>
-          <li>Can creators add premium POV scenes? Yes, as optional add-ons.</li>
-        </ul>
+      <div id="credit-packs" className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
+        <p className="font-semibold text-slate-900">Credits, bundles, tips, and subscriptions</p>
+        <p className="mt-2">Reader credit packs: 10 (€4.99), 30 (€12.99), 80 (€29.99). Arc bundles unlock full mini-arcs at a discount. Tips go directly to creators, and creator subscriptions unlock behind-the-scenes drops.</p>
       </div>
     </div>
   );

@@ -12,10 +12,25 @@ html {
 
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
+  background-image: radial-gradient(circle at 10% -20%, rgba(99, 102, 241, 0.08), transparent 36%), radial-gradient(circle at 90% -10%, rgba(217, 70, 239, 0.08), transparent 30%);
 }
 
 .section-shell {
   @apply rounded-3xl border border-slate-200 bg-white p-5 shadow-sm md:p-8;
+}
+
+.premium-hero {
+  @apply relative border-slate-200 bg-gradient-to-br from-white via-indigo-50/40 to-fuchsia-50/30;
+}
+
+.premium-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(15, 23, 42, 0.03) 0.7px, transparent 0.7px);
+  background-size: 3px 3px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), transparent 60%);
 }
 
 .pill {
