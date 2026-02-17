@@ -62,6 +62,7 @@ export default async function SeriesDetailPage({ params }: Props) {
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">{series.title}</h1>
           <p className="mt-1 text-sm text-slate-500">By {series.creatorName}</p>
           <p className="mt-4 text-sm text-slate-700">{series.hook}</p>
+          <p className="mt-2 text-sm text-slate-600">Finish arcs without waiting: spoiler-proof your binge and keep momentum across series.</p>
 
           <div className="mt-5 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
@@ -109,6 +110,16 @@ export default async function SeriesDetailPage({ params }: Props) {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="section-shell rounded-2xl border border-slate-200 bg-slate-50">
+        <h2 className="text-2xl font-semibold tracking-tight">What you get with credits</h2>
+        <ul className="mt-3 grid gap-2 text-sm text-slate-700 md:grid-cols-2">
+          <li>• Continue locked arcs instantly</li>
+          <li>• Spoiler Shield during weekly drops</li>
+          <li>• Streak protection windows</li>
+          <li>• Bonus POV scenes and creator notes</li>
+        </ul>
       </section>
 
       <section>

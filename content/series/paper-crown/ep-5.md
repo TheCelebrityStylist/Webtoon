@@ -1,6 +1,6 @@
-# Paper Crown — Episode 3
+# Paper Crown — Episode 5
 
-A gala rehearsal reveals who intends to weaponize the final reveal.
+A sealed family codicil appears hours before the national address.
 
 ### Beat 1
 

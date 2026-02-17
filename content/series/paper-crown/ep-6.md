@@ -1,6 +1,6 @@
-# Paper Crown — Episode 3
+# Paper Crown — Episode 6
 
-A gala rehearsal reveals who intends to weaponize the final reveal.
+The final canvas exposes the only heir no committee can control.
 
 ### Beat 1
 

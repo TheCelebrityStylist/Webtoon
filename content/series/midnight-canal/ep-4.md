@@ -1,6 +1,6 @@
-# Paper Crown — Episode 3
+# Midnight Canal — Episode 4
 
-A gala rehearsal reveals who intends to weaponize the final reveal.
+The team trades one memory to buy six hours of uninterrupted time.
 
 ### Beat 1
 

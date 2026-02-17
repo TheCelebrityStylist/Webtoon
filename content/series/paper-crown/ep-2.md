@@ -1,81 +1,58 @@
 # Paper Crown — Episode 2
 
+Iris discovers pigment samples tied to an erased branch of succession.
+
 ### Beat 1
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 2
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 3
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 4
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 5
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 6
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 7
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 8
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 9
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 10
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 11
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 12
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 13
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 14
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 15
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 16
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 17
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.
 ### Beat 18
 
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
-### Beat 19
-
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
-
-### Beat 20
-
-This episode deepens stakes, sharpens character conflict, and closes with a forced question that pushes continuation. The protagonist chooses under pressure, loses certainty, and gains leverage at a real emotional cost.
+The scene advances plot and character at the same time: a negotiation turns into a threat, a promise becomes leverage, and the protagonist chooses movement over safety. The chapter ends on a forced decision that points directly into the next episode.

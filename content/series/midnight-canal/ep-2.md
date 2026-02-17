@@ -1,6 +1,6 @@
-# Paper Crown — Episode 3
+# Midnight Canal — Episode 2
 
-A gala rehearsal reveals who intends to weaponize the final reveal.
+Livia traces a falsified border crossing and realizes the loop favors one district.
 
 ### Beat 1
 

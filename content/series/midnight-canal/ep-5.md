@@ -1,6 +1,6 @@
-# Paper Crown — Episode 3
+# Midnight Canal — Episode 5
 
-A gala rehearsal reveals who intends to weaponize the final reveal.
+The price of protecting one person becomes a citywide blackout.
 
 ### Beat 1
 

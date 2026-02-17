@@ -1,6 +1,6 @@
-# Paper Crown — Episode 3
+# Midnight Canal — Episode 3
 
-A gala rehearsal reveals who intends to weaponize the final reveal.
+A survivor remembers a day no archive admits existed.
 
 ### Beat 1
 

@@ -1,6 +1,6 @@
-# Paper Crown — Episode 3
+# Paper Crown — Episode 4
 
-A gala rehearsal reveals who intends to weaponize the final reveal.
+Court counsel offers immunity in exchange for silence and one revised brushstroke.
 
 ### Beat 1
 

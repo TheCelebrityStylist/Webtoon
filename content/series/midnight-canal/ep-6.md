@@ -1,6 +1,6 @@
-# Paper Crown — Episode 3
+# Midnight Canal — Episode 6
 
-A gala rehearsal reveals who intends to weaponize the final reveal.
+At the lock gate, each character chooses which truth to keep alive.
 
 ### Beat 1
 
