@@ -1,19 +1,14 @@
 # Delivery plan
 
-## Current acceptance criteria: Foundation + First Creator Project
+## Current slice acceptance
 
-- Repository installs, lints, typechecks, tests, and builds in CI.
-- A person can create an account, sign in/out, and cannot enter `/studio` anonymously.
-- An owner can create, reopen, validate, edit, and soft-delete a draft project.
-- An authorized creator can add structured characters, locations, and world rules; characters may link only to locations in the same project.
-- Project search covers the first story-bible record types.
-- Empty, loading, error, not-found, and permission-safe states exist.
-- PostgreSQL migration, environment contract, seed, authorization helpers, and setup documentation exist.
+- Private account/workspace/project with separate interface and writing locales.
+- Project type, regional variant, genre, POV, tense, premise, bible records.
+- Chapters/episodes, scenes, ordered beats, TipTap drafting, debounced conflict-safe autosave, versions, reopen and scoped search.
+- Grounded scene-purpose/continuity analysis with context IDs and accept/reject decisions.
+- Authenticated Markdown export.
+- Five typed interface dictionaries, security headers, documentation, CI and automated checks.
 
-## Next slices
+## Next slice
 
-1. Character state and knowledge timeline with deterministic continuity checks.
-2. Episode → scene → beat planning and version history.
-3. Panel planning, uploads, vertical preview, review, and approvals.
-4. Publishing and entitlement-protected reader delivery.
-
+Time-aware character state/knowledge, deterministic continuity, scene reordering, DOCX export, full UI localization, and database-backed browser E2E.

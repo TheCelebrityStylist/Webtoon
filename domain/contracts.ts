@@ -7,7 +7,16 @@ export const projectInput = z.object({
   genre: z.enum(["ACTION", "COMEDY", "DRAMA", "FANTASY", "HORROR", "MYSTERY", "ROMANCE", "SCI_FI", "SLICE_OF_LIFE"]),
   language: z.string().trim().regex(/^[a-z]{2}(-[A-Z]{2})?$/, "Use a language code such as en or nl-NL"),
   audience: z.string().trim().min(2).max(120),
+  projectType: z.enum(["NOVEL","SCREENPLAY","WEBTOON","SERIAL_FICTION","COMIC","NARRATIVE_DESIGN"]),
+  regionalVariant: z.enum(["en-GB","en-US","nl-NL","nl-BE","de-DE","de-AT","de-CH","es-ES","es-MX","pt-PT","pt-BR"]),
+  pointOfView: z.enum(["FIRST_PERSON","SECOND_PERSON","THIRD_LIMITED","THIRD_OMNISCIENT","MULTIPLE"]),
+  narrativeTense: z.enum(["PAST","PRESENT","MIXED"]),
+  premise: z.string().trim().min(20).max(3000),
 });
+
+export const chapterInput=z.object({title:z.string().trim().min(1).max(160),kind:z.enum(["CHAPTER","EPISODE"])});
+export const sceneInput=z.object({title:z.string().trim().min(1).max(160),purpose:z.string().trim().min(5).max(1000),conflict:z.string().trim().max(1000),stakes:z.string().trim().max(1000),outcome:z.string().trim().max(1000)});
+export const beatInput=z.object({type:z.enum(["ACTION","REACTION","DECISION","DISCOVERY","DIALOGUE","THOUGHT","REVEAL","REVERSAL","TRANSITION","VISUAL"]),summary:z.string().trim().min(2).max(1000)});
 
 export const characterInput = z.object({
   name: z.string().trim().min(1).max(100), aliases: z.string().trim().max(300),
@@ -21,4 +30,3 @@ export const characterInput = z.object({
 export const locationInput = z.object({ name: z.string().trim().min(2).max(120), description: z.string().trim().max(3000) });
 export const worldRuleInput = z.object({ title: z.string().trim().min(2).max(120), description: z.string().trim().min(10).max(3000) });
 export type ProjectInput = z.infer<typeof projectInput>;
-

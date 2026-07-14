@@ -1,20 +1,7 @@
 # Domain model
 
-`User` has one `Profile` and memberships in `Workspace`. A `WorkspaceMember` has one explicit role. A `Series` (called project in creator-facing language) belongs to a workspace and owns its story graph.
+User → Profile (including interface locale) → WorkspaceMembership → private Project (`Series` is the legacy persistence name). A project holds language/variant, type, premise, POV, tense, characters, locations, rules, chapters, and AI suggestions.
 
-This migration establishes the first graph edges:
+Chapter → ordered Scene → ordered StoryBeat. A scene contains structural purpose, conflict, stakes, outcome, TipTap JSON, searchable text, and revision number. Every successful save creates `ManuscriptVersion` attributed to a user. `AiSuggestion` records operation, locale, model, template version, result, exact context IDs, and decision.
 
-- Series → Characters
-- Series → Locations
-- Series → World rules
-- Character → current Location (optional, validated to the same project)
-
-All project records have stable IDs, ownership, timestamps, canon status where relevant, scoped indexes, and soft deletion where user history matters. Later migrations add episodes, scenes, beats, panels, state snapshots, knowledge facts, timeline events, and version records without replacing these roots.
-
-Invariants:
-
-1. Every studio read requires membership in the owning workspace.
-2. Writer/editor/owner may mutate project and bible data; only owner may delete a project.
-3. A relationship cannot cross projects unless a future explicit shared-universe model permits it.
-4. Creator-approved canon is authoritative; generated suggestions are separate records.
-
+Canon states are DRAFT, PROPOSED, CANON, DEPRECATED, ALTERNATE, and ARCHIVED. AI output is never canon. Project isolation and same-project links are invariants.
