@@ -1,9 +1,12 @@
 // lib/site.ts
 export const site = {
-  name: "EU Webtoon",
-  shortName: "EU Webtoon",
+  name: "PanelForge",
+  shortName: "PanelForge",
   description:
-    "Read European webtoons and serialized stories. Mobile-first vertical reading with optional Fast Pass credits.",
-  url: "https://your-domain.vercel.app", // TODO: replace with your real domain
+    "A creator-first platform for publishing, reading, and monetizing vertical webtoons and serialized stories.",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://panelforge.app",
   locale: "en",
+  twitterHandle: "@panelforge",
+  themeColor: "#111827",
+  creatorEmail: "creators@panelforge.app",
 };
