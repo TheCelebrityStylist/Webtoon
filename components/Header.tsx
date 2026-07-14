@@ -9,10 +9,7 @@ export function Header() {
           PanelForge
         </Link>
         <nav className="flex items-center gap-4 text-sm">
-          <Link href="/discover" className="hover:underline">
-            Discover
-          </Link>
-          <Link href="/studio" className="nav-cta">Open studio</Link>
+          <Link href="/studio" className="nav-cta">Writing studio</Link>
           <Link href="/about" className="hover:underline">
             About
           </Link>

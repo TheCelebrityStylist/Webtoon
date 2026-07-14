@@ -14,9 +14,9 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: npm run test:e2e
       - run: npm run build
         env:
           DATABASE_URL: postgresql://build:build@localhost:5432/build
           AUTH_SECRET: build-only-secret-that-is-at-least-32-characters
           NEXT_PUBLIC_APP_URL: http://localhost:3000
-

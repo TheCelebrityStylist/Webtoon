@@ -11,9 +11,7 @@ export function Footer() {
             <Link href="/about" className="hover:underline">
               About
             </Link>
-            <Link href="/discover" className="hover:underline">
-              Discover
-            </Link>
+            <Link href="/studio" className="hover:underline">Writing studio</Link>
           </div>
         </div>
       </div>
