@@ -6,13 +6,13 @@ export function Footer() {
     <footer className="border-t border-neutral-200">
       <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-neutral-600">
         <div className="flex flex-col gap-2">
-          <p>© {new Date().getFullYear()} EU Webtoon MVP</p>
+          <p>© {new Date().getFullYear()} PanelForge</p>
           <div className="flex gap-4">
             <Link href="/about" className="hover:underline">
               About
             </Link>
-            <Link href="/series" className="hover:underline">
-              Browse
+            <Link href="/discover" className="hover:underline">
+              Discover
             </Link>
           </div>
         </div>

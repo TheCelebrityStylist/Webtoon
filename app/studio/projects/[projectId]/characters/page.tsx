@@ -1,0 +1,1 @@
+import { redirect } from "next/navigation"; export default async function Characters({ params }: { params: Promise<{ projectId: string }> }) { const { projectId } = await params; redirect(`/studio/projects/${projectId}/bible`); }

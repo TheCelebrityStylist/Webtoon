@@ -1,11 +1,1 @@
-export default function NotFound() {
-  return (
-    <main style={{ padding: 24, fontFamily: "system-ui" }}>
-      <h1 style={{ fontSize: 24 }}>App 404 (Next.js)</h1>
-      <p>
-        If you see this page, Next.js is running and the route doesn’t exist.
-        (This is different from Vercel’s NOT_FOUND page.)
-      </p>
-    </main>
-  );
-}
+export default function NotFound() { return <main className="public-page"><p className="eyebrow">404</p><h1>This panel is missing.</h1><p>The route may have moved, or you may not have access to this project.</p></main>; }
