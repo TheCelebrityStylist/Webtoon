@@ -1,0 +1,2 @@
+CREATE TABLE "IntegrationConnection" ("id" TEXT PRIMARY KEY,"userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,"provider" TEXT NOT NULL,"accountEmail" TEXT,"encryptedRefreshToken" TEXT NOT NULL,"grantedScopes" TEXT[],"lastSyncedAt" TIMESTAMP(3),"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL,"revokedAt" TIMESTAMP(3),UNIQUE("userId","provider"));
+CREATE INDEX "IntegrationConnection_userId_revokedAt_idx" ON "IntegrationConnection"("userId","revokedAt");

@@ -75,13 +75,31 @@ enum AiDecision {
 }
 
 model User {
-  id           String            @id @default(cuid())
-  email        String            @unique
+  id           String                  @id @default(cuid())
+  email        String                  @unique
   passwordHash String
   profile      Profile?
   memberships  WorkspaceMember[]
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  integrations IntegrationConnection[]
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+}
+
+model IntegrationConnection {
+  id                    String    @id @default(cuid())
+  userId                String
+  provider              String
+  accountEmail          String?
+  encryptedRefreshToken String
+  grantedScopes         String[]
+  lastSyncedAt          DateTime?
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  revokedAt             DateTime?
+
+  @@unique([userId, provider])
+  @@index([userId, revokedAt])
 }
 
 model Profile {

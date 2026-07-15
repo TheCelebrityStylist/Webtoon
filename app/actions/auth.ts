@@ -25,3 +25,4 @@ export async function signInAction(_: FormState, formData: FormData): Promise<Fo
   return {};
 }
 export async function signOutAction() { await signOut({ redirectTo: "/" }); }
+export async function signInGoogle(){await signIn("google",{redirectTo:"/studio"})}
