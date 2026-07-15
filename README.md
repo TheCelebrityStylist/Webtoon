@@ -1,6 +1,6 @@
-# PanelForge
+# Asterism
 
-Connected story planning and production for vertical visual stories.
+Private story intelligence connecting manuscript, canon, causality, continuity, and revision. Asterism is a working name; trademark and domain availability are unverified.
 
 ## Local setup
 

@@ -1,0 +1,7 @@
+# Delivery report
+
+This repository contains a secure product foundation, not the entire requested commercial system. Implemented foundations include email and Google authentication configuration, workspace-scoped projects, format and regional-variant selection, a TipTap scene editor, optimistic manuscript revisions, characters, locations, world rules, chapter/scene/beat structure, project search, evidence-oriented scene analysis, Markdown export, encrypted Google refresh-token storage, public editorial content, metadata, RSS, sitemap, and interactive marketing demonstrations.
+
+The July 15 brand and public-system pass selected the unverified working name Asterism, centralized brand tokens and copy, removed unfinished public pricing language, expanded required public routes, introduced eight page composition families, added deterministic product-proof controls, and documented naming, brand, interaction, conversion, and architecture decisions.
+
+Not implemented: full graph domain, relationship and knowledge ledgers, reader knowledge, emotional/object continuity, background job infrastructure, Docs/Sheets/Drive/Calendar API operations, DOCX export, payments, analytics provider, collaboration, all translated public/application strings, advanced revision studio, full adaptive format editors, and the exhaustive workflow/test matrix. These remain explicit next-build work and must not be marketed as available.

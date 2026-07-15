@@ -1,2 +1,7 @@
-import "./globals.css";import type{Metadata}from"next";import{baseMetadata}from"@/lib/seo";import{site}from"@/lib/site";
-export const metadata:Metadata=baseMetadata();export default function RootLayout({children}:{children:React.ReactNode}){return <html lang={site.locale}><body>{children}</body></html>}
+import "./globals.css";
+import "./brand.css";
+import type { Metadata } from "next";
+import { baseMetadata } from "@/lib/seo";
+import { site } from "@/lib/site";
+export const metadata:Metadata=baseMetadata();
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang={site.locale}><body>{children}</body></html>}
