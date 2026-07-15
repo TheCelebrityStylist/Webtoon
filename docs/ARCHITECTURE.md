@@ -1,6 +1,6 @@
 # Architecture
 
-Asterism is a private-writing modular monolith. Server components read scoped data; server actions and typed route handlers validate, authenticate, authorize, and mutate. PostgreSQL/Prisma is canonical.
+Morrow is a private-writing modular monolith. Server components read scoped data; server actions and typed route handlers validate, authenticate, authorize, and mutate. PostgreSQL/Prisma is canonical.
 
 Boundaries: `domain/` owns contracts and deterministic policies; `server/` owns access checks; `app/actions/` orchestrates mutations; `app/api/` handles autosave, AI, and exports; `lib/` configures infrastructure/localization; UI components contain interaction only.
 

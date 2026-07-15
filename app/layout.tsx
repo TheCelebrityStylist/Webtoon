@@ -1,5 +1,7 @@
 import "./globals.css";
 import "./brand.css";
+import "./editorial.css";
+import "./refine.css";
 import type { Metadata } from "next";
 import { baseMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";

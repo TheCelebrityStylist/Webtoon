@@ -1,6 +1,6 @@
-# Asterism
+# Morrow
 
-Private story intelligence connecting manuscript, canon, causality, continuity, and revision. Asterism is a working name; trademark and domain availability are unverified.
+Warm, private writing software for planning, drafting, revising, and translating long stories. Morrow is a working name; trademark and domain availability are unverified.
 
 ## Local setup
 
