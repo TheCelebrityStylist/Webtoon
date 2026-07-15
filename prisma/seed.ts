@@ -1,4 +1,4 @@
-import { PrismaClient, WorkspaceRole, Genre } from "@prisma/client";
+import { PrismaClient, WorkspaceRole, Genre } from "@/generated/prisma";
 import { hash } from "bcryptjs";
 const prisma = new PrismaClient();
 async function main() {

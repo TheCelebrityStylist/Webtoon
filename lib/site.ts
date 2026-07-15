@@ -3,7 +3,6 @@ export const brand = {
   shortName: "Morrow",
   descriptor: "A beautiful place to build, write, and finish your story",
   promise: "Everything you need to build, write, and finish a story that stays consistent.",
-  legalStatus: "Working name — trademark and domain availability unverified",
   marks: { symbol: "m", wordmark: "morrow" },
   colors: {
     ink: "#231b2b", cream: "#fff9ed", plum: "#54304f", coral: "#e86f61",

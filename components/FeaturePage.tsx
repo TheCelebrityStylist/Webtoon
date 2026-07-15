@@ -4,10 +4,12 @@ import { useState } from "react";
 import type { MarketingPage } from "@/lib/marketing";
 import { pricingConfig } from "@/lib/marketing";
 import { brand } from "@/lib/site";
+import { majorExperienceSlugs, ProductExperience } from "@/components/ProductExperiences";
 
 type Currency=keyof typeof pricingConfig.currencies;
 export function FeaturePage({page:p}:{page:MarketingPage}){
   const[active,setActive]=useState(0);const[billing,setBilling]=useState<"monthly"|"annual">("annual");const[currency,setCurrency]=useState<Currency>("EUR");
+  if(majorExperienceSlugs.has(p.slug as never))return <ProductExperience slug={p.slug}/>;
   return <main className={`feature-page feature-page--${p.kind}`}>
     <nav aria-label="Breadcrumb"><Link href="/">Home</Link><span aria-hidden="true"> / </span><span>{p.eyebrow}</span></nav>
     <header className="feature-hero"><div><p className="eyebrow">{p.eyebrow}</p><h1>{p.title}</h1><p>{p.description}</p><div className="hero-actions"><Link className="button warm" href="/sign-up">Start writing free</Link><a href="#proof">Try it here ↓</a></div></div><div className="feature-orbit" aria-hidden="true"><strong>{brand.marks.symbol}</strong></div></header>
