@@ -1,0 +1,3 @@
+"use server";
+import { cookies } from "next/headers"; import { redirect } from "next/navigation"; import { resolveLocale } from "@/lib/i18n"; import { prisma } from "@/lib/prisma"; import { requireUser } from "@/server/session";
+export async function setInterfaceLocale(data: FormData) { const locale=resolveLocale(String(data.get("locale"))); const returnTo=String(data.get("returnTo")||"/studio"); const user=await requireUser(); await prisma.profile.update({where:{userId:user.id},data:{interfaceLocale:locale}}); (await cookies()).set("interface-locale",locale,{sameSite:"lax",httpOnly:true,secure:process.env.NODE_ENV==="production"}); redirect(returnTo.startsWith("/studio")?returnTo:"/studio"); }

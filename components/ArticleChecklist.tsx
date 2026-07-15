@@ -1,0 +1,4 @@
+"use client";
+import { useState } from "react";
+const items=["The premise names a person, action, cost, and urgency","The reader promise is clear","Major turns are choices with consequences","The middle changes the kind of problem","Every subplot touches a decisive moment","Each scene changes something the next scene inherits","Important knowledge and objects are traceable","Some discoveries remain open for drafting"];
+export function ArticleChecklist(){const[checked,setChecked]=useState<string[]>([]);return <section className="interactive-checklist"><small>INTERACTIVE CHECKLIST</small><h2>Is your plan ready to help?</h2>{items.map(item=><label key={item}><input type="checkbox" checked={checked.includes(item)} onChange={()=>setChecked(current=>current.includes(item)?current.filter(value=>value!==item):[...current,item])}/><span>{item}</span></label>)}<strong>{checked.length} of {items.length} ready</strong></section>}

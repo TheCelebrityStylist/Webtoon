@@ -1,0 +1,312 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorkspaceRole {
+  OWNER
+  WRITER
+  EDITOR
+  ARTIST
+  LETTERER
+  TRANSLATOR
+  PRODUCER
+  VIEWER
+}
+
+enum SeriesStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum Genre {
+  ACTION
+  COMEDY
+  DRAMA
+  FANTASY
+  HORROR
+  MYSTERY
+  ROMANCE
+  SCI_FI
+  SLICE_OF_LIFE
+}
+
+enum CanonStatus {
+  DRAFT
+  PROPOSED
+  CANON
+  DEPRECATED
+  ALTERNATE
+  ARCHIVED
+}
+
+enum ProjectType {
+  NOVEL
+  SCREENPLAY
+  WEBTOON
+  SERIAL_FICTION
+  COMIC
+  NARRATIVE_DESIGN
+}
+
+enum PointOfView {
+  FIRST_PERSON
+  SECOND_PERSON
+  THIRD_LIMITED
+  THIRD_OMNISCIENT
+  MULTIPLE
+}
+
+enum NarrativeTense {
+  PAST
+  PRESENT
+  MIXED
+}
+
+enum AiDecision {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id           String                  @id @default(cuid())
+  email        String                  @unique
+  passwordHash String
+  profile      Profile?
+  memberships  WorkspaceMember[]
+  integrations IntegrationConnection[]
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+}
+
+model IntegrationConnection {
+  id                    String    @id @default(cuid())
+  userId                String
+  provider              String
+  accountEmail          String?
+  encryptedRefreshToken String
+  grantedScopes         String[]
+  lastSyncedAt          DateTime?
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  revokedAt             DateTime?
+
+  @@unique([userId, provider])
+  @@index([userId, revokedAt])
+}
+
+model Profile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  displayName     String
+  interfaceLocale String   @default("en")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Workspace {
+  id        String            @id @default(cuid())
+  name      String
+  members   WorkspaceMember[]
+  series    Series[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  deletedAt DateTime?
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model Series {
+  id              String         @id @default(cuid())
+  workspaceId     String
+  title           String
+  slug            String
+  logline         String
+  synopsis        String
+  genre           Genre
+  language        String
+  audience        String
+  projectType     ProjectType    @default(NOVEL)
+  regionalVariant String         @default("en-US")
+  pointOfView     PointOfView    @default(THIRD_LIMITED)
+  narrativeTense  NarrativeTense @default(PAST)
+  premise         String         @default("")
+  status          SeriesStatus   @default(DRAFT)
+  workspace       Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  characters      Character[]
+  locations       Location[]
+  worldRules      WorldRule[]
+  chapters        Chapter[]
+  aiSuggestions   AiSuggestion[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, deletedAt])
+}
+
+model Chapter {
+  id        String    @id @default(cuid())
+  seriesId  String
+  title     String
+  number    Int
+  kind      String    @default("CHAPTER")
+  series    Series    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  scenes    Scene[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([seriesId, number])
+  @@index([seriesId, deletedAt])
+}
+
+model Scene {
+  id             String              @id @default(cuid())
+  chapterId      String
+  title          String
+  position       Int
+  purpose        String              @default("")
+  conflict       String              @default("")
+  stakes         String              @default("")
+  outcome        String              @default("")
+  manuscriptJson Json                @default("{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}")
+  manuscriptText String              @default("")
+  revision       Int                 @default(0)
+  chapter        Chapter             @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  beats          StoryBeat[]
+  versions       ManuscriptVersion[]
+  aiSuggestions  AiSuggestion[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  deletedAt      DateTime?
+
+  @@unique([chapterId, position])
+  @@index([chapterId, deletedAt])
+}
+
+model StoryBeat {
+  id          String      @id @default(cuid())
+  sceneId     String
+  position    Int
+  type        String
+  summary     String
+  canonStatus CanonStatus @default(DRAFT)
+  scene       Scene       @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([sceneId, position])
+}
+
+model ManuscriptVersion {
+  id             String   @id @default(cuid())
+  sceneId        String
+  userId         String
+  revision       Int
+  manuscriptJson Json
+  manuscriptText String
+  scene          Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@unique([sceneId, revision])
+  @@index([userId])
+}
+
+model AiSuggestion {
+  id               String     @id @default(cuid())
+  seriesId         String
+  sceneId          String
+  requestedById    String
+  operation        String
+  requestedLocale  String
+  contextRecordIds String[]
+  result           Json
+  explanation      String
+  model            String
+  promptVersion    String
+  decision         AiDecision @default(PENDING)
+  series           Series     @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  scene            Scene      @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  createdAt        DateTime   @default(now())
+  decidedAt        DateTime?
+
+  @@index([seriesId, sceneId])
+}
+
+model Character {
+  id          String      @id @default(cuid())
+  seriesId    String
+  name        String
+  aliases     String      @default("")
+  pronouns    String      @default("")
+  role        String
+  lifeStage   String      @default("")
+  appearance  String      @default("")
+  personality String      @default("")
+  speechStyle String      @default("")
+  motivations String      @default("")
+  goals       String      @default("")
+  fears       String      @default("")
+  secrets     String      @default("")
+  canonStatus CanonStatus @default(DRAFT)
+  locationId  String?
+  series      Series      @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  location    Location?   @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  @@index([seriesId, deletedAt])
+}
+
+model Location {
+  id          String      @id @default(cuid())
+  seriesId    String
+  name        String
+  description String      @default("")
+  canonStatus CanonStatus @default(DRAFT)
+  series      Series      @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  characters  Character[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  @@unique([seriesId, name])
+  @@index([seriesId, deletedAt])
+}
+
+model WorldRule {
+  id          String      @id @default(cuid())
+  seriesId    String
+  title       String
+  description String
+  canonStatus CanonStatus @default(DRAFT)
+  series      Series      @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  @@index([seriesId, deletedAt])
+}

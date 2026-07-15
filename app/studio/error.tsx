@@ -1,0 +1,1 @@
+"use client"; export default function ErrorPage({ reset }: { reset: () => void }) { return <main className="studio-content"><p className="eyebrow">STUDIO ERROR</p><h1>We couldn’t load this workspace.</h1><p>Your work has not been changed.</p><button className="button" onClick={reset}>Try again</button></main>; }

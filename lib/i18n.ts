@@ -1,0 +1,13 @@
+export const locales = ["en", "nl", "de", "es", "pt"] as const;
+export type InterfaceLocale = (typeof locales)[number];
+const en = { studio:"Writing studio",projects:"Projects",newProject:"New project",storyBible:"Story bible",chapters:"Chapters & scenes",settings:"Settings",signOut:"Sign out",search:"Search project",overview:"Command center",write:"Write",save:"Save",saving:"Saving…",saved:"Saved",addChapter:"Add chapter",addScene:"Add scene",addBeat:"Add beat",emptyScenes:"No scenes yet",language:"Interface language" } as const;
+type Keys = keyof typeof en; type Dictionary = Record<Keys,string>;
+export const dictionaries: Record<InterfaceLocale, Dictionary> = {
+  en,
+  nl:{studio:"Schrijfstudio",projects:"Projecten",newProject:"Nieuw project",storyBible:"Verhaalbijbel",chapters:"Hoofdstukken & scènes",settings:"Instellingen",signOut:"Uitloggen",search:"Project doorzoeken",overview:"Commandocentrum",write:"Schrijven",save:"Opslaan",saving:"Opslaan…",saved:"Opgeslagen",addChapter:"Hoofdstuk toevoegen",addScene:"Scène toevoegen",addBeat:"Beat toevoegen",emptyScenes:"Nog geen scènes",language:"Interfacetaal"},
+  de:{studio:"Schreibstudio",projects:"Projekte",newProject:"Neues Projekt",storyBible:"Story-Bibel",chapters:"Kapitel & Szenen",settings:"Einstellungen",signOut:"Abmelden",search:"Projekt durchsuchen",overview:"Kommandozentrale",write:"Schreiben",save:"Speichern",saving:"Wird gespeichert…",saved:"Gespeichert",addChapter:"Kapitel hinzufügen",addScene:"Szene hinzufügen",addBeat:"Beat hinzufügen",emptyScenes:"Noch keine Szenen",language:"Oberflächensprache"},
+  es:{studio:"Estudio de escritura",projects:"Proyectos",newProject:"Nuevo proyecto",storyBible:"Biblia narrativa",chapters:"Capítulos y escenas",settings:"Ajustes",signOut:"Cerrar sesión",search:"Buscar en el proyecto",overview:"Centro de mando",write:"Escribir",save:"Guardar",saving:"Guardando…",saved:"Guardado",addChapter:"Añadir capítulo",addScene:"Añadir escena",addBeat:"Añadir beat",emptyScenes:"Aún no hay escenas",language:"Idioma de la interfaz"},
+  pt:{studio:"Estúdio de escrita",projects:"Projetos",newProject:"Novo projeto",storyBible:"Bíblia narrativa",chapters:"Capítulos e cenas",settings:"Definições",signOut:"Terminar sessão",search:"Pesquisar no projeto",overview:"Centro de comando",write:"Escrever",save:"Guardar",saving:"A guardar…",saved:"Guardado",addChapter:"Adicionar capítulo",addScene:"Adicionar cena",addBeat:"Adicionar beat",emptyScenes:"Ainda não há cenas",language:"Idioma da interface"},
+};
+export function resolveLocale(value?: string | null): InterfaceLocale { return locales.includes(value as InterfaceLocale) ? value as InterfaceLocale : "en"; }
+

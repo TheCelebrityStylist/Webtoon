@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         // Add any internal paths you never want indexed:
-        disallow: ["/api/", "/_next/"],
+        disallow: ["/api/", "/_next/", "/studio/"],
       },
     ],
     sitemap: `${site.url}/sitemap.xml`,

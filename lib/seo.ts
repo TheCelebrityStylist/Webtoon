@@ -32,7 +32,6 @@ export function baseMetadata(): Metadata {
     },
     twitter: {
       card: "summary_large_image",
-      site: site.twitterHandle,
       title,
       description,
     },

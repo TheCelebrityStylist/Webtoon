@@ -1,0 +1,2 @@
+import { prisma } from "@/lib/prisma"; import { AuthorizationError,requireProjectAccess } from "./authorization";
+export async function requireSceneAccess(userId:string,projectId:string,sceneId:string,roles?:readonly string[]){await requireProjectAccess(userId,projectId,roles);const scene=await prisma.scene.findFirst({where:{id:sceneId,deletedAt:null,chapter:{seriesId:projectId,deletedAt:null}}});if(!scene)throw new AuthorizationError("Scene not found or inaccessible.");return scene;}

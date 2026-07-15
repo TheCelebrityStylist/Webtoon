@@ -26,10 +26,10 @@ export default async function OpenGraphImage() {
           {site.shortName}
         </div>
         <div style={{ marginTop: 24, fontSize: 28, lineHeight: 1.3 }}>
-          Read European webtoons and serialized stories
+          Private writing intelligence for long-form stories
         </div>
         <div style={{ marginTop: 28, fontSize: 20, opacity: 0.8 }}>
-          Free episodes · Fast Pass via credits · Creator-first
+          Canon · Scenes · Draft · Revision · Export
         </div>
       </div>
     ),
