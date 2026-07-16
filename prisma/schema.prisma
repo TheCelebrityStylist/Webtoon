@@ -234,6 +234,29 @@ model ManuscriptVersion {
   @@index([userId])
 }
 
+model SceneMutation {
+  id         String   @id @default(cuid())
+  userId     String
+  sceneId    String
+  mutationId String
+  revision   Int
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, mutationId])
+  @@index([sceneId, createdAt])
+}
+
+model OAuthState {
+  id        String    @id @default(cuid())
+  userId    String
+  nonceHash String    @unique
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, expiresAt])
+}
+
 model AiSuggestion {
   id               String     @id @default(cuid())
   seriesId         String
