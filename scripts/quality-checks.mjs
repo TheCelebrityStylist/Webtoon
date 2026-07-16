@@ -17,6 +17,11 @@ for(const[path,text]of publicCopy)if(unfinished.test(text))failures.push(`unfini
 const secretPatterns=[/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,/AIza[0-9A-Za-z_-]{35}/,/ghp_[0-9A-Za-z]{36}/,/sk-[A-Za-z0-9]{32,}/];
 for(const[path,text]of content)for(const pattern of secretPatterns)if(pattern.test(text))failures.push(`possible secret: ${path}`);
 
+for(const[path,text]of content){
+  if(/href\s*=\s*["']#["']/.test(text))failures.push(`fake internal link: ${path}`);
+  if(/onClick\s*=\s*\{\s*\(\s*\)\s*=>\s*\{\s*\}\s*\}/.test(text))failures.push(`empty click handler: ${path}`);
+}
+
 const i18n=content.get("lib/i18n.ts")??"";
 const requiredLocales=["en","nl","de","es","pt"];
 for(const locale of requiredLocales)if(!new RegExp(`(?:const ${locale}\\s*=|\\b${locale}:\\s*\\{)`).test(i18n))failures.push(`missing locale dictionary: ${locale}`);

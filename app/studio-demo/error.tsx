@@ -1,0 +1,1 @@
+"use client";export default function ErrorPage({reset}:{error:Error;reset:()=>void}){return <main className="workspace workspace-error"><small>THE PAGE LOST ITS PLACE</small><h1>This workspace could not open.</h1><p>Your browser-saved demo is still intact.</p><button onClick={reset}>Try again</button></main>}
