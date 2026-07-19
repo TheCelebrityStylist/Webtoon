@@ -1,0 +1,2 @@
+.studio-shell:has(.workspace-shell){display:block}
+.studio-shell:has(.workspace-shell)>.studio-main>header,.studio-shell:has(.workspace-shell)>aside{display:none}
