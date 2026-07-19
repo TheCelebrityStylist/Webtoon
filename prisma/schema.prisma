@@ -75,6 +75,24 @@ enum AiDecision {
   REJECTED
 }
 
+enum SubscriptionStatus {
+  INCOMPLETE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  PAUSED
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
 model User {
   id           String                  @id @default(cuid())
   email        String                  @unique
@@ -82,6 +100,8 @@ model User {
   profile      Profile?
   memberships  WorkspaceMember[]
   integrations IntegrationConnection[]
+  subscriptions Subscription[]
+  auditLogs     AuditLog[]
   createdAt    DateTime                @default(now())
   updatedAt    DateTime                @updatedAt
 }
@@ -158,6 +178,16 @@ model Series {
   worldRules      WorldRule[]
   chapters        Chapter[]
   aiSuggestions   AiSuggestion[]
+  branches        StoryBranch[]
+  continuityFacts ContinuityFact[]
+  continuityIssues ContinuityIssue[]
+  timelineEvents  TimelineEvent[]
+  storyObjects    StoryObject[]
+  plotThreads     PlotThread[]
+  promises        NarrativePromise[]
+  revisionFindings RevisionFinding[]
+  imports         ImportJob[]
+  exports         ExportJob[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   deletedAt       DateTime?
@@ -198,6 +228,10 @@ model Scene {
   beats          StoryBeat[]
   versions       ManuscriptVersion[]
   aiSuggestions  AiSuggestion[]
+  continuityFacts ContinuityFact[]
+  continuityIssues ContinuityIssue[]
+  timelineEvents TimelineEvent[]
+  revisionFindings RevisionFinding[]
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   deletedAt      DateTime?
@@ -297,6 +331,9 @@ model Character {
   locationId  String?
   series      Series      @relation(fields: [seriesId], references: [id], onDelete: Cascade)
   location    Location?   @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  states      CharacterState[]
+  knowledge   CharacterKnowledge[]
+  beliefs     CharacterBelief[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   deletedAt   DateTime?
@@ -332,4 +369,297 @@ model WorldRule {
   deletedAt   DateTime?
 
   @@index([seriesId, deletedAt])
+}
+
+model Plan {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  name            String
+  stripeProductId String   @unique
+  monthlyPriceId  String   @unique
+  annualPriceId   String   @unique
+  entitlements    Json
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  subscriptions   Subscription[]
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String
+  planId               String
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String             @unique
+  status               SubscriptionStatus
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                 Plan               @relation(fields: [planId], references: [id])
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([userId, status])
+}
+
+model StripeEvent {
+  id          String   @id
+  type        String
+  livemode    Boolean
+  payloadHash String
+  processedAt DateTime?
+  error       String?
+  createdAt   DateTime @default(now())
+}
+
+model StoryBranch {
+  id            String   @id @default(cuid())
+  seriesId      String
+  name          String
+  sourceVersion String?
+  active        Boolean  @default(false)
+  series        Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@unique([seriesId, name])
+}
+
+model CharacterState {
+  id          String    @id @default(cuid())
+  characterId String
+  sceneId     String?
+  kind        String
+  value       Json
+  validFrom   DateTime  @default(now())
+  validTo     DateTime?
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([characterId, kind, validTo])
+}
+
+model CharacterKnowledge {
+  id          String    @id @default(cuid())
+  characterId String
+  factKey     String
+  value       String
+  sourceSceneId String
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([characterId, factKey, sourceSceneId])
+}
+
+model CharacterBelief {
+  id          String    @id @default(cuid())
+  characterId String
+  factKey     String
+  belief      String
+  confidence  Float     @default(1)
+  sourceSceneId String
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([characterId, factKey, sourceSceneId])
+}
+
+model ContinuityFact {
+  id          String      @id @default(cuid())
+  seriesId    String
+  sceneId     String
+  subjectType String
+  subjectId   String?
+  predicate   String
+  value       Json
+  truthStatus String
+  sourceQuote String
+  intentional Boolean     @default(false)
+  series      Series      @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  scene       Scene       @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([seriesId, subjectType, subjectId, predicate])
+  @@index([sceneId])
+}
+
+model ContinuityIssue {
+  id             String   @id @default(cuid())
+  seriesId       String
+  sceneId        String
+  category       String
+  importance     String
+  confidence     Float
+  passage        String
+  explanation    String
+  evidence       Json
+  affectedRecords Json
+  status         String   @default("OPEN")
+  resolution     String?
+  series         Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  scene          Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  resolvedAt     DateTime?
+
+  @@index([seriesId, status, importance])
+  @@index([sceneId, status])
+}
+
+model TimelineEvent {
+  id          String   @id @default(cuid())
+  seriesId    String
+  sceneId     String?
+  title       String
+  chronology  Int
+  occurredAt  DateTime?
+  durationMin Int?
+  causeIds    String[]
+  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  scene       Scene?   @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  @@unique([seriesId, chronology])
+}
+
+model StoryObject {
+  id        String        @id @default(cuid())
+  seriesId  String
+  name      String
+  kind      String
+  series    Series        @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  states    ObjectState[]
+  createdAt DateTime      @default(now())
+  deletedAt DateTime?
+
+  @@unique([seriesId, name])
+}
+
+model ObjectState {
+  id            String      @id @default(cuid())
+  storyObjectId String
+  sceneId       String
+  ownerId       String?
+  locationId    String?
+  state         Json
+  storyObject   StoryObject @relation(fields: [storyObjectId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+
+  @@unique([storyObjectId, sceneId])
+}
+
+model PlotThread {
+  id          String   @id @default(cuid())
+  seriesId    String
+  title       String
+  status      String   @default("OPEN")
+  sourceSceneId String
+  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([seriesId, status])
+}
+
+model NarrativePromise {
+  id          String   @id @default(cuid())
+  seriesId    String
+  setupSceneId String
+  description String
+  status      String   @default("OPEN")
+  payoffSceneId String?
+  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([seriesId, status])
+}
+
+model RevisionFinding {
+  id            String   @id @default(cuid())
+  seriesId      String
+  sceneId       String
+  category      String
+  importance    String
+  confidence    Float
+  passage       String
+  evidence      Json
+  recommendation Json
+  status        String   @default("OPEN")
+  series        Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  scene         Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@index([seriesId, status, category])
+}
+
+model GoogleDocumentReference {
+  id          String   @id @default(cuid())
+  userId      String
+  seriesId    String
+  googleId    String
+  kind        String
+  title       String
+  lastExportedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, googleId])
+  @@index([seriesId, kind])
+}
+
+model GoogleCalendarReference {
+  id          String   @id @default(cuid())
+  userId      String
+  seriesId    String
+  eventId     String
+  calendarId  String   @default("primary")
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, calendarId, eventId])
+  @@index([seriesId])
+}
+
+model ImportJob {
+  id          String    @id @default(cuid())
+  seriesId    String
+  userId      String
+  provider    String
+  sourceId    String
+  status      JobStatus @default(PENDING)
+  mapping     Json?
+  result      Json?
+  error       String?
+  series      Series    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([seriesId, status])
+}
+
+model ExportJob {
+  id          String    @id @default(cuid())
+  seriesId    String
+  userId      String
+  format      String
+  status      JobStatus @default(PENDING)
+  reference   String?
+  checksum    String?
+  error       String?
+  series      Series    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([seriesId, status])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  workspaceId String?
+  seriesId    String?
+  action      String
+  targetType  String
+  targetId    String
+  metadata    Json
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([seriesId, createdAt])
 }
