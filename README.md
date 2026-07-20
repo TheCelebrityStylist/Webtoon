@@ -1,6 +1,6 @@
 # Morrow
 
-Warm, private writing software for planning, drafting, revising, and translating long stories. Morrow is a working name; trademark and domain availability are unverified.
+Warm, private writing software for planning, drafting, revising, and translating long stories.
 
 ## Local setup
 
@@ -16,3 +16,9 @@ Requirements: Node 22 and PostgreSQL 16+.
 Quality gate: `npm run lint && npm run typecheck && npm test && npm run build`.
 
 The seed refuses to run when `NODE_ENV=production`. Environment values are validated at startup. Never commit `.env`.
+
+## Deployment authentication
+
+- Production requires `AUTH_SECRET` and `DATABASE_URL`. Google sign-in appears only when both Google OAuth variables are configured.
+- Preview demo sign-in is enabled only when Vercel sets `VERCEL_ENV=preview`, `AUTH_SECRET` exists, and `AUTH_PREVIEW_DEMO=true` is scoped to Preview. It creates a signed temporary session, never a database account.
+- Register explicit Google callback URLs for production. Arbitrary preview domains do not receive wildcard OAuth redirects.

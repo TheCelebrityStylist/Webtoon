@@ -1,1 +1,1 @@
-export default function Loading() { return <main className="studio-content"><p className="eyebrow">LOADING STUDIO</p><div className="skeleton"/><div className="skeleton short"/></main>; }
+export default function StudioLoading() { return <main className="route-state" aria-live="polite"><span className="route-state-mark">m</span><p>Opening your writing studio…</p></main>; }

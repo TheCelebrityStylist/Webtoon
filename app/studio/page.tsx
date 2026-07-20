@@ -1,1 +1,1 @@
-import { redirect } from "next/navigation"; export default function StudioPage() { redirect("/studio/projects"); }
+import { redirect } from "next/navigation";import{requireUser}from"@/server/session";import{isPreviewDemoUser}from"@/lib/runtime-config";export default async function StudioPage(){const user=await requireUser();redirect(isPreviewDemoUser(user.id)?"/studio/demo":"/studio/projects")}

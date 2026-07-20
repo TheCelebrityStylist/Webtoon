@@ -1,0 +1,2 @@
+import{describe,expect,it}from"vitest";import{createDraft}from"@/lib/persistence/manuscript";
+describe("large manuscript safety baseline",()=>{it("journals a 200,000-word scene without truncation",()=>{const text=Array.from({length:200_000},(_,i)=>`word${i}`).join(" ");const started=performance.now();const draft=createDraft("project","scene",41,{type:"doc",content:[{type:"paragraph",text}]},text);expect(draft.text.split(" ")).toHaveLength(200_000);expect(performance.now()-started).toBeLessThan(1000)})});

@@ -4,7 +4,7 @@ import { belongsToProject, belongsToWorkspace, canDeleteProject, canEditProject 
 import sitemap, { publicRoutes } from "@/app/sitemap";
 import { dictionaries,locales } from "@/lib/i18n";
 import { decide,markdownExport,reorder,resolveAutosave } from "@/domain/writing";
-import { decryptToken,encryptToken,signOAuthState,verifyOAuthState } from "@/integrations/google/security";
+import { decryptToken,encryptToken,oauthNonceHash,oauthStatePayload,signOAuthState,verifyOAuthState } from "@/integrations/google/security";
 import { calendarDateTime,previewCharacterRows } from "@/integrations/google/validation";
 
 describe("studio authorization policy", () => {
@@ -40,6 +40,7 @@ describe("localization",()=>{
 
 describe("Google integration security and previews",()=>{
   it("signs user-bound expiring OAuth state",()=>{process.env.AUTH_SECRET="test-secret-that-is-at-least-thirty-two-characters";const state=signOAuthState("user-a","nonce",Date.now()+10000);expect(verifyOAuthState(state,"user-a")).toBe(true);expect(verifyOAuthState(state,"user-b")).toBe(false)});
+  it("recovers a signed nonce for one-time OAuth storage",()=>{process.env.AUTH_SECRET="test-secret-that-is-at-least-thirty-two-characters";const state=signOAuthState("user-a","single-use",Date.now()+10000);expect(oauthStatePayload(state,"user-a")?.nonce).toBe("single-use");expect(oauthNonceHash("single-use")).toHaveLength(64)});
   it("encrypts refresh tokens",()=>{process.env.INTEGRATION_ENCRYPTION_KEY=Buffer.alloc(32,7).toString("base64");const value=encryptToken("private-refresh-token");expect(value).not.toContain("private-refresh-token");expect(decryptToken(value)).toBe("private-refresh-token")});
   it("validates Sheet rows individually",()=>{expect(previewCharacterRows([{name:"Mara",role:"Protagonist"},{name:"",role:""}]).map(x=>x.valid)).toEqual([true,false])});
   it("validates Calendar timezone inputs",()=>{expect(calendarDateTime("2026-08-01T10:00:00Z","Europe/Amsterdam").timeZone).toBe("Europe/Amsterdam");expect(()=>calendarDateTime("bad","Europe/Amsterdam")).toThrow()});
