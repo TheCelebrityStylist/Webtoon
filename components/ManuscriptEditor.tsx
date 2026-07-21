@@ -1,15 +1,206 @@
 "use client";
-import{EditorContent,useEditor}from"@tiptap/react";import StarterKit from"@tiptap/starter-kit";import{useCallback,useEffect,useRef,useState}from"react";import{chooseRecoveryDraft,createDraft,deleteDraft,getDraft,listLocalVersions,putDraft,putLocalVersion,retryDelay,type LocalVersion,type ManuscriptDraft}from"@/lib/persistence/manuscript";
-type Doc=Record<string,unknown>;type SaveState="local"|"syncing"|"cloud"|"offline"|"unsynced"|"conflict"|"failed"|"recovered";
-const labels:Record<SaveState,string>={local:"Saved locally",syncing:"Saved locally · syncing",cloud:"Saved locally and to cloud",offline:"Saved locally · waiting to sync",unsynced:"Unsynced changes",conflict:"Conflict detected · local writing protected",failed:"Save failed · local writing protected",recovered:"Restored from recovery"};
-export function ManuscriptEditor({projectId,sceneId,initialDocument,initialRevision}:{projectId:string;sceneId:string;initialDocument:Doc;initialRevision:number}){
- const revision=useRef(initialRevision),timer=useRef<ReturnType<typeof setTimeout>|null>(null),latest=useRef<ManuscriptDraft|null>(null),syncing=useRef(false);const[state,setState]=useState<SaveState>("cloud"),[versions,setVersions]=useState<LocalVersion[]>([]),[showVersions,setShowVersions]=useState(false);const editor=useEditor({immediatelyRender:false,extensions:[StarterKit],content:initialDocument,onUpdate:({editor:e})=>void journal(e.getJSON(),e.getText())});
- const refreshVersions=useCallback(()=>void listLocalVersions(projectId,sceneId).then(setVersions).catch(()=>setVersions([])),[projectId,sceneId]);
- const sync=useCallback(async(draft?:ManuscriptDraft)=>{const queued=draft??latest.current;if(!queued||syncing.current)return;if(!navigator.onLine){setState("offline");return}syncing.current=true;setState("syncing");try{const response=await fetch(`/api/projects/${projectId}/scenes/${sceneId}`,{method:"PUT",headers:{"content-type":"application/json","x-morrow-mutation-id":`${queued.key}:${queued.updatedAt}`},body:JSON.stringify({revision:revision.current,document:queued.document,text:queued.text})});const body=await response.json()as{revision?:number};if(response.status===409){await putDraft({...queued,syncState:"conflict"});setState("conflict");return}if(!response.ok)throw new Error(`Save failed (${response.status})`);revision.current=body.revision??revision.current+1;latest.current=null;await deleteDraft(projectId,sceneId);setState("cloud")}catch{const failed={...queued,syncState:"failed"as const,attempts:queued.attempts+1};latest.current=failed;await putDraft(failed).catch(()=>undefined);setState(navigator.onLine?"failed":"offline");timer.current=setTimeout(()=>void sync(failed),retryDelay(failed.attempts))}finally{syncing.current=false}},[projectId,sceneId]);
- async function journal(document:Doc,text:string){const draft=createDraft(projectId,sceneId,revision.current,document,text);latest.current=draft;try{await putDraft(draft);setState(navigator.onLine?"local":"offline")}catch{try{localStorage.setItem(`morrow-emergency:${draft.key}`,JSON.stringify(draft));setState("local")}catch{setState("failed")}}if(timer.current)clearTimeout(timer.current);timer.current=setTimeout(()=>void sync(draft),900)}
- useEffect(()=>{if(!editor)return;void getDraft(projectId,sceneId).then(draft=>{const recovered=chooseRecoveryDraft(initialRevision,draft);if(recovered&&recovered.text!==editor.getText()){editor.commands.setContent(recovered.document,false);latest.current=recovered;setState("recovered")}}).catch(()=>{const raw=localStorage.getItem(`morrow-emergency:${projectId}:${sceneId}`);if(raw)try{const draft=JSON.parse(raw)as ManuscriptDraft;editor.commands.setContent(draft.document,false);latest.current=draft;setState("recovered")}catch{}});refreshVersions()},[editor,initialRevision,projectId,sceneId,refreshVersions]);
- useEffect(()=>{const online=()=>void sync();const offline=()=>latest.current&&setState("offline");addEventListener("online",online);addEventListener("offline",offline);return()=>{removeEventListener("online",online);removeEventListener("offline",offline);if(timer.current)clearTimeout(timer.current)}},[sync]);
- const snapshot=async(label:string)=>{if(!editor)return;await putLocalVersion({id:`${projectId}:${sceneId}:${Date.now()}`,key:`${projectId}:${sceneId}`,label,document:editor.getJSON(),text:editor.getText(),createdAt:new Date().toISOString(),baseRevision:revision.current});refreshVersions();setShowVersions(true)};
- const restore=async(version:LocalVersion)=>{if(!editor)return;await snapshot("Before version restore");editor.commands.setContent(version.document);setState("local")};
- const backup=()=>{if(!editor)return;const data=JSON.stringify({schemaVersion:1,projectId,sceneId,revision:revision.current,createdAt:new Date().toISOString(),document:editor.getJSON(),text:editor.getText()},null,2);const link=document.createElement("a");link.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));link.download=`morrow-${sceneId}-backup.json`;link.click();URL.revokeObjectURL(link.href)};
- if(!editor)return <div className="editor-loading">Loading protected editor…</div>;return <section className="manuscript"><div className="editor-toolbar"><button onClick={()=>editor.chain().focus().toggleBold().run()} aria-pressed={editor.isActive("bold")}>Bold</button><button onClick={()=>editor.chain().focus().toggleItalic().run()} aria-pressed={editor.isActive("italic")}>Italic</button><button onClick={()=>editor.chain().focus().toggleHeading({level:2}).run()}>Heading</button><button onClick={()=>void snapshot("Named version")}>Create version</button><button onClick={()=>{refreshVersions();setShowVersions(v=>!v)}} aria-expanded={showVersions}>Version history</button><button onClick={backup}>Download backup</button><span role="status" className={`save-${state}`}>{labels[state]}</span></div>{showVersions&&<aside className="version-history" aria-label="Version history"><header><b>Version history</b><button onClick={()=>setShowVersions(false)}>Close</button></header>{versions.length?versions.map(version=><article key={version.id}><span><b>{version.label}</b><small>{new Date(version.createdAt).toLocaleString()}</small></span><button onClick={()=>void restore(version)}>Restore</button></article>):<p>No local versions yet.</p>}</aside>}<EditorContent editor={editor}/><footer>{editor.getText().trim().split(/\s+/).filter(Boolean).length} words{(state==="failed"||state==="offline")&&<button onClick={()=>void sync()}>Retry sync</button>}</footer></section>}
+
+import StarterKit from "@tiptap/starter-kit";
+import { EditorContent, useEditor } from "@tiptap/react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { storyDecorationKey, StableBlockIds, StoryDecorations, type StoryDecoration } from "@/lib/editor/story-extensions";
+import { createDraft, deleteDraft, getDraft, putDraft, retryDelay, type ManuscriptDraft } from "@/lib/persistence/manuscript";
+
+type Document = Record<string, unknown>;
+type Proposal = {
+  id: string;
+  kind: "ENTITY" | "TRANSITION" | "EVENT" | "MENTION" | "WARNING";
+  entityType?: "CHARACTER" | "PLACE" | "OBJECT" | "EVENT";
+  entityName?: string;
+  property?: string;
+  beforeValue?: unknown;
+  afterValue?: unknown;
+  confidence: number;
+  evidence: { blockId: string; quote: string; startOffset: number; endOffset: number };
+};
+type PulseResult = { runId: string; canonVersion: number; manuscriptHash: string; revision: number; proposals: Proposal[]; warnings: string[] };
+type SaveState = "cloud" | "local" | "syncing" | "offline" | "conflict" | "failed";
+
+const saveLabels: Record<SaveState, string> = {
+  cloud: "Saved to cloud",
+  local: "Saved locally",
+  syncing: "Saved locally · syncing",
+  offline: "Saved locally · waiting to sync",
+  conflict: "Conflict · local writing protected",
+  failed: "Save failed · local writing protected",
+};
+
+async function sha256(value: string) {
+  const buffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(buffer)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export function ManuscriptEditor({ projectId, sceneId, sceneTitle, projectTitle, initialDocument, initialRevision }: {
+  projectId: string;
+  sceneId: string;
+  sceneTitle: string;
+  projectTitle: string;
+  initialDocument: Document;
+  initialRevision: number;
+}) {
+  const revision = useRef(initialRevision);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const analysisTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latest = useRef<ManuscriptDraft | null>(null);
+  const syncing = useRef(false);
+  const request = useRef<AbortController | null>(null);
+  const confirmRef = useRef<() => Promise<void>>(async () => undefined);
+  const analyzedBlocks = useRef(new Map<string, string>());
+  const previousText = useRef("");
+  const [saveState, setSaveState] = useState<SaveState>("cloud");
+  const [pulse, setPulse] = useState<PulseResult | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [trayOpen, setTrayOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [lens, setLens] = useState<Proposal | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const sync = useCallback(async (draft?: ManuscriptDraft) => {
+    const queued = draft ?? latest.current;
+    if (!queued || syncing.current) return;
+    if (!navigator.onLine) return setSaveState("offline");
+    syncing.current = true;
+    setSaveState("syncing");
+    try {
+      const response = await fetch(`/api/projects/${projectId}/scenes/${sceneId}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json", "x-morrow-mutation-id": `${queued.key}:${queued.updatedAt}` },
+        body: JSON.stringify({ revision: revision.current, document: queued.document, text: queued.text }),
+      });
+      const body = await response.json() as { revision?: number };
+      if (response.status === 409) return setSaveState("conflict");
+      if (!response.ok) throw new Error("Cloud save failed");
+      revision.current = body.revision ?? revision.current + 1;
+      latest.current = null;
+      await deleteDraft(projectId, sceneId);
+      setSaveState("cloud");
+    } catch {
+      const failed = { ...queued, syncState: "failed" as const, attempts: queued.attempts + 1 };
+      latest.current = failed;
+      await putDraft(failed).catch(() => undefined);
+      setSaveState(navigator.onLine ? "failed" : "offline");
+      saveTimer.current = setTimeout(() => void sync(failed), retryDelay(failed.attempts));
+    } finally {
+      syncing.current = false;
+    }
+  }, [projectId, sceneId]);
+
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [StarterKit, StableBlockIds, StoryDecorations],
+    content: initialDocument,
+    onUpdate: ({ editor: activeEditor, transaction }) => {
+      const text = activeEditor.getText();
+      const draft = createDraft(projectId, sceneId, revision.current, activeEditor.getJSON(), text);
+      latest.current = draft;
+      void putDraft(draft).then(() => setSaveState(navigator.onLine ? "local" : "offline")).catch(() => setSaveState("failed"));
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => void sync(draft), 900);
+      if (!transaction.docChanged || text === previousText.current) return;
+      previousText.current = text;
+      if (analysisTimer.current) clearTimeout(analysisTimer.current);
+      analysisTimer.current = setTimeout(() => void analyzeChangedBlocks(activeEditor.getText()), 1200);
+    },
+  });
+
+  async function analyzeChangedBlocks(fullText: string) {
+    if (!editor || !latest.current) return;
+    const blocks: Array<{ id: string; text: string; adjacent: string[]; title: string; order: number }> = [];
+    const all: Array<{ id: string; text: string }> = [];
+    editor.state.doc.descendants((node) => {
+      if (node.isTextblock) all.push({ id: node.attrs.blockId as string, text: node.textContent });
+    });
+    all.forEach((block, order) => {
+      const normalized = block.text.replace(/\s+/g, " ").trim();
+      if (normalized.split(" ").filter(Boolean).length < 3 || analyzedBlocks.current.get(block.id) === normalized) return;
+      blocks.push({ ...block, adjacent: [all[order - 1]?.text, all[order + 1]?.text].filter(Boolean), title: sceneTitle, order });
+    });
+    if (!blocks.length) return;
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
+    const manuscriptHash = await sha256(fullText);
+    const requestId = crypto.randomUUID();
+    try {
+      const response = await fetch(`/api/projects/${projectId}/scenes/${sceneId}/story-pulse`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({ projectId, sceneId, revision: revision.current, requestId, manuscriptHash, blocks, candidateEntities: [], confirmedFacts: [] }),
+      });
+      const result = await response.json() as PulseResult & { error?: string };
+      if (!response.ok) {
+        if (response.status !== 409) setNotice(result.error ?? "Story Pulse could not analyze this change");
+        return;
+      }
+      if (request.current !== controller) return;
+      blocks.forEach((block) => analyzedBlocks.current.set(block.id, block.text.replace(/\s+/g, " ").trim()));
+      setPulse(result);
+      setSelected(result.proposals.map((proposal) => proposal.id));
+      setTrayOpen(true);
+      const decorations: StoryDecoration[] = result.proposals.filter((proposal) => proposal.entityType).map((proposal) => ({ blockId: proposal.evidence.blockId, from: proposal.evidence.startOffset, to: proposal.evidence.endOffset, entityType: proposal.entityType!, label: proposal.entityName ?? proposal.kind }));
+      editor.view.dispatch(editor.state.tr.setMeta(storyDecorationKey, decorations));
+    } catch (error) {
+      if ((error as Error).name !== "AbortError") setNotice("Story Pulse is temporarily unavailable; your writing is still saved locally.");
+    }
+  }
+
+  async function confirm() {
+    if (!pulse || !selected.length) return;
+    setBusy(true);
+    const response = await fetch(`/api/projects/${projectId}/scenes/${sceneId}/story-pulse/${pulse.runId}/confirm`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ revision: pulse.revision, manuscriptHash: pulse.manuscriptHash, expectedVersion: pulse.canonVersion, proposalIds: selected }),
+    });
+    const result = await response.json() as { error?: string };
+    setBusy(false);
+    if (!response.ok) return setNotice(result.error === "STALE_REVISION" ? "The manuscript changed. Review the newest Story Pulse before confirming." : result.error ?? "Confirmation failed");
+    setNotice(`${selected.length} story records confirmed`);
+    setPulse(null);
+    setTrayOpen(false);
+  }
+  confirmRef.current = confirm;
+
+  useEffect(() => {
+    if (!editor) return;
+    previousText.current = editor.getText();
+    void getDraft(projectId, sceneId).then((draft) => {
+      if (draft && draft.baseRevision >= initialRevision && draft.text !== editor.getText()) {
+        editor.commands.setContent(draft.document, false);
+        latest.current = draft;
+        setSaveState("local");
+      }
+    });
+    const keys = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "p") { event.preventDefault(); setTrayOpen(true); }
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && trayOpen) { event.preventDefault(); void confirmRef.current(); }
+      if (event.key === "Escape") { setLibraryOpen(false); setLens(null); setTrayOpen(false); }
+    };
+    addEventListener("keydown", keys);
+    return () => { removeEventListener("keydown", keys); request.current?.abort(); if (saveTimer.current) clearTimeout(saveTimer.current); if (analysisTimer.current) clearTimeout(analysisTimer.current); };
+  }, [editor, initialRevision, projectId, sceneId, trayOpen]);
+
+  if (!editor) return <div className="story-loading">Opening your manuscript…</div>;
+  const words = editor.getText().trim().split(/\s+/).filter(Boolean).length;
+  return <div className="living-manuscript">
+    <header className="story-topbar">
+      <button className="icon-button" aria-label="Toggle outline">☰</button>
+      <span className="story-project">{projectTitle}</span><span className="breadcrumb">/</span>
+      <input aria-label="Scene title" value={sceneTitle} readOnly />
+      <div className="story-top-actions"><button onClick={() => setLibraryOpen(true)}>Search</button><button onClick={() => setLibraryOpen(true)}>Library</button><span role="status">{saveLabels[saveState]}</span><button onClick={() => setTrayOpen(true)}>Pulse{pulse ? ` ${pulse.proposals.length}` : ""}</button><button className="avatar" aria-label="Profile">E</button></div>
+    </header>
+    <aside className="story-outline"><h2>Outline</h2><p className="active-scene">{sceneTitle}</p><button>+ New scene</button></aside>
+    <main className="story-prose"><div className="prose-tools"><button onClick={() => editor.chain().focus().toggleBold().run()}>B</button><button onClick={() => editor.chain().focus().toggleItalic().run()}>I</button></div><EditorContent editor={editor} /><footer>{words} words</footer></main>
+    {lens && <aside className="story-lens"><button onClick={() => setLens(null)} aria-label="Close lens">×</button><small>{lens.entityType}</small><h2>{lens.entityName}</h2><h3>State here</h3><p>{lens.property ? `${lens.property}: ${String(lens.afterValue ?? "unresolved")}` : "First appears in this scene."}</p><h3>Source</h3><button className="source-link" onClick={() => editor.commands.focus()}>&ldquo;{lens.evidence.quote}&rdquo;</button></aside>}
+    <section className={`pulse-tray ${trayOpen ? "open" : ""}`} aria-label="Story Pulse" aria-live="polite"><header><button onClick={() => setTrayOpen((value) => !value)}><b>Story Pulse</b>{pulse ? ` · ${pulse.proposals.length} suggestions` : ""}</button><span>⌘⇧P</span></header>{trayOpen && <div className="pulse-content">{pulse ? <><div className="pulse-list">{pulse.proposals.map((proposal) => <label key={proposal.id} className={proposal.kind === "WARNING" ? "reality-changed" : ""}><input type="checkbox" checked={selected.includes(proposal.id)} onChange={() => setSelected((value) => value.includes(proposal.id) ? value.filter((id) => id !== proposal.id) : [...value, proposal.id])}/><span><small>{proposal.kind === "WARNING" ? "Reality changed" : proposal.entityType ?? proposal.kind}</small><b>{proposal.entityName}{proposal.property ? ` · ${proposal.property}` : ""}</b><q>{proposal.evidence.quote}</q></span><button type="button" onClick={() => setLens(proposal)}>Open lens</button></label>)}</div><div className="pulse-actions"><button className="primary" disabled={busy || !selected.length} onClick={() => void confirm()}>{busy ? "Confirming…" : `Confirm ${selected.length}`}</button><button onClick={() => { setPulse(null); setTrayOpen(false); }}>Keep previous canon</button><button onClick={() => setTrayOpen(false)}>Review later</button></div></> : <p>Keep writing. Changes are analyzed after a quiet moment.</p>}{pulse?.warnings.map((warning) => <p className="provider-note" key={warning}>{warning}</p>)}</div>}</section>
+    {libraryOpen && <div className="library-backdrop" role="presentation"><section className="story-library" role="dialog" aria-modal="true" aria-label="Story Library"><header><h2>Story Library</h2><button onClick={() => setLibraryOpen(false)}>×</button></header><input autoFocus placeholder="Search people, places, objects, events…" aria-label="Search story library"/><nav><button>All</button><button>People</button><button>Places</button><button>Objects</button><button>Events</button></nav><div className="library-empty"><p>Your confirmed story records will appear here.</p><button>+ Quick create</button></div></section></div>}
+    {notice && <button className="story-toast" onClick={() => setNotice(null)}>{notice}</button>}
+  </div>;
+}
