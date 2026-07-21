@@ -10,6 +10,7 @@ import "./reliability.css";
 import "./workspace.css";
 import "./workspace-override.css";
 import "./workspace-entities.css";
+import "./story-workspace.css";
 import type { Metadata } from "next";
 import { baseMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
