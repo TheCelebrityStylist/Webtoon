@@ -1,1 +1,2 @@
-import{WriteWorkspace}from"@/components/studio-demo/Workspaces";export default function Page(){return <WriteWorkspace/>}
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/studio-demo?mode=write"); }

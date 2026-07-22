@@ -1,0 +1,10 @@
+@media (max-width: 600px) {
+  .story-outline:not(.expanded) {
+    transform: translateY(calc(100% - 48px));
+  }
+
+  .story-outline:not(.expanded) .outline-scroll,
+  .story-outline:not(.expanded) .outline-add {
+    visibility: hidden;
+  }
+}

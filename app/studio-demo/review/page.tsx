@@ -1,1 +1,2 @@
-import{ReviewWorkspace}from"@/components/studio-demo/Workspaces";export default function Page(){return <ReviewWorkspace/>}
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/studio-demo?mode=write&panel=review"); }

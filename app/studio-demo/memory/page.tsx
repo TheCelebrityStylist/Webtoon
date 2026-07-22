@@ -1,1 +1,2 @@
-import{MemoryWorkspace}from"@/components/studio-demo/Workspaces";export default function Page(){return <MemoryWorkspace/>}
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/studio-demo?mode=trace"); }

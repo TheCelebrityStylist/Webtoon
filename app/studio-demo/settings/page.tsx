@@ -1,1 +1,2 @@
-import{SettingsWorkspace}from"@/components/studio-demo/Workspaces";export default function Page(){return <SettingsWorkspace/>}
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/studio-demo?mode=write&panel=settings"); }

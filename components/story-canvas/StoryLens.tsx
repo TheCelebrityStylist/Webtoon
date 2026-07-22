@@ -1,0 +1,9 @@
+"use client";
+
+import type { CanvasScene, StoryEntity, StoryObservation } from "@/lib/story-canvas/types";
+
+export function StoryLens({ entity, scenes, observations, pinned, onClose, onPin, onTrace, onSource }: { entity: StoryEntity; scenes: CanvasScene[]; observations: StoryObservation[]; pinned: boolean; onClose: () => void; onPin: () => void; onTrace: () => void; onSource: (sceneId: string, quote?: string) => void }) {
+  const appearances = scenes.filter((scene) => entity.appearances.includes(scene.id));
+  const facts = observations.filter((item) => item.subjectId === entity.id && item.status === "confirmed");
+  return <aside className="story-lens" aria-label={`${entity.name} story lens`}><header><div><small>{entity.type}</small><h2>{entity.name}</h2></div><button onClick={onPin} aria-pressed={pinned} aria-label="Pin Lens">⌖</button><button onClick={onClose} aria-label="Close Lens">×</button></header><button className="trace-link" onClick={onTrace}>Open in Trace →</button><h3>At this point in the story</h3><dl>{entity.currentLocation && <><dt>Current location</dt><dd>{entity.currentLocation}</dd></>}{entity.currentHolder && <><dt>Current holder</dt><dd>{entity.currentHolder}</dd></>}{entity.state && <><dt>Current state</dt><dd>{entity.state}</dd></>}{facts.filter((fact) => fact.predicate !== "exists").map((fact) => <div key={fact.id}><dt>{fact.predicate}</dt><dd>{fact.value}<button onClick={() => onSource(fact.sceneId, fact.quote)}>Source</button></dd></div>)}</dl>{appearances.length > 0 && <section className="lens-appearances"><h3>Appearances</h3>{appearances.map((scene, index) => <button key={scene.id} onClick={() => onSource(scene.id)}><small>{index === appearances.length - 1 ? "Next" : "Appearance"}</small><strong>{scene.title}</strong><span>{scene.chapterId.replace("chapter-", "Chapter ")}</span></button>)}</section>}</aside>;
+}

@@ -1,1 +1,2 @@
-import{CharactersWorkspace}from"@/components/studio-demo/Workspaces";export default function Page(){return <CharactersWorkspace/>}
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/studio-demo?mode=trace&type=character"); }
