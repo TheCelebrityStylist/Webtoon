@@ -1,0 +1,4 @@
+:root {
+  --ui: var(--font-story-ui), Inter, ui-sans-serif, system-ui, sans-serif;
+  --muted: #625e57;
+}

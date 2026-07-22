@@ -1,1 +1,2 @@
-import{TimelineWorkspace}from"@/components/studio-demo/Workspaces";export default function Page(){return <TimelineWorkspace/>}
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/studio-demo?mode=map"); }

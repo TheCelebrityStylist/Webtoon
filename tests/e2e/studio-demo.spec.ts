@@ -1,6 +1,83 @@
-import{test,expect}from"@playwright/test";
-test.beforeEach(async({page})=>{await page.goto("/studio-demo");await page.evaluate(()=>localStorage.clear());await page.reload()});
-test("studio demo journey persists cross-workspace decisions and resets on sign out",async({page})=>{await expect(page.getByRole("link",{name:"Home",exact:true})).toHaveAttribute("aria-current","page");await page.getByRole("link",{name:"Write",exact:true}).click();await expect(page).toHaveURL(/\/studio-demo\/write/);await page.getByRole("button",{name:/The conversation room/}).click();const editor=page.locator(".ProseMirror");await editor.click();await editor.press("End");await editor.type(" The clocks answered.");await expect(page.getByRole("status").filter({hasText:"Saved"})).toBeVisible({timeout:3000});await page.getByRole("link",{name:"Open warning"}).click();await page.getByRole("button",{name:"Open original evidence"}).click();await expect(page.getByText("Confirmed owner").locator("..")).toContainText("Lena Ortiz");await page.getByRole("button",{name:"Confirm transfer to Tomas"}).click();await expect(page.getByRole("status").filter({hasText:"Transfer confirmed"})).toBeVisible();await page.getByRole("link",{name:"Story memory",exact:true}).click();await expect(page.getByText("Current holder ·").locator("..")).toContainText("Tomas Reed");await page.getByRole("link",{name:"Review",exact:true}).click();await expect(page.getByRole("heading",{name:"2 decisions need you."})).toBeVisible();await page.keyboard.press(process.platform==="darwin"?"Meta+K":"Control+K");await page.getByLabel("Search commands").fill("Lena");await page.getByRole("option",{name:/Open Lena Ortiz/}).click();await page.getByLabel("Emotional state").selectOption("Determined");await page.getByRole("link",{name:"Write",exact:true}).click();await expect(page.getByText("Determined",{exact:true})).toBeVisible();await page.reload();await expect(page.getByText("Determined",{exact:true})).toBeVisible();await page.getByRole("button",{name:"Sign out"}).click();await page.getByRole("button",{name:"Leave and reset demo"}).click();await expect(page).toHaveURL(/\/sign-in/);await page.goto("/studio-demo");await expect(page.getByRole("heading",{name:"3 decisions"})).toBeVisible();});
-test("studio navigation and command palette are keyboard operable",async({page})=>{for(const route of ["write","memory","review","timeline","characters","settings"]){await page.getByRole("link",{name:new RegExp(route==="memory"?"Story memory":route,"i"),exact:true}).first().click();await expect(page).toHaveURL(new RegExp(`/studio-demo/${route}`))}await page.keyboard.press("Control+K");await expect(page.getByRole("dialog",{name:"Command palette"})).toBeVisible();await page.getByLabel("Search commands").fill("Home");await page.keyboard.press("Enter");await expect(page).toHaveURL(/\/studio-demo$/)});
-test("studio has no dead visible controls or fake internal links",async({page})=>{for(const route of ["","write","memory","review","timeline","characters","settings"]){await page.goto(`/studio-demo${route?`/${route}`:""}`);const fake=await page.locator('a[href="#"],a:not([href])').count();expect(fake,route).toBe(0);for(const button of await page.getByRole("button").all()){if(await button.isVisible()){const name=await button.getAttribute("aria-label")??await button.innerText();expect(name.trim(),`unnamed button on ${route}`).not.toBe("")}}}});
-test("mobile editor uses bottom navigation without horizontal overflow",async({page})=>{await page.setViewportSize({width:390,height:844});await page.goto("/studio-demo/write");await expect(page.getByRole("navigation",{name:"Mobile studio navigation"})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);await expect(page.locator(".ProseMirror")).toBeVisible()});
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
+
+const sentence = "Lena entered Rowan House carrying the silver key.";
+const changed = "Lena threw the silver key into the river before entering Rowan House.";
+
+test.beforeEach(async ({ page }) => {
+  await page.goto("/studio-demo?mode=write");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+});
+
+test("opens directly in a focused Write canvas without rejected dashboard patterns", async ({ page }) => {
+  await expect(page.getByRole("navigation", { name: "Story depth" }).getByRole("button", { name: "Write" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".manuscript")).toBeFocused();
+  await expect(page.locator(".demo-sidebar,.home-grid,.editor-toolbar,.write-inspector")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: /Good evening|Project home/i })).toHaveCount(0);
+});
+
+test("creates a scene inline and preserves it while switching Map", async ({ page }) => {
+  await page.getByRole("button", { name: "Create scene" }).click();
+  await page.getByLabel("New scene title").fill("The clockmaker's stair");
+  await page.getByLabel("New scene title").press("Enter");
+  await expect(page.getByLabel("Scene title")).toHaveValue("The clockmaker's stair");
+  await page.getByRole("button", { name: "Map" }).click();
+  await expect(page.getByRole("main", { name: "Narrative map" })).toBeVisible();
+  await expect(page.locator(".chapter-bands section")).toHaveCount(3);
+  await expect(page.locator(".thread-lines polyline")).toHaveCount(3);
+  await page.getByRole("button", { name: /The clockmaker's stair/ }).click();
+  await expect(page.getByLabel("Scene title")).toHaveValue("The clockmaker's stair");
+});
+
+test("turns prose into four evidence-backed details and opens entity Lenses", async ({ page }) => {
+  const editor = page.locator(".manuscript");
+  await editor.fill(sentence);
+  await expect(page.getByText("4 story details found")).toBeVisible({ timeout: 4000 });
+  await page.getByText("4 story details found").click();
+  await expect(page.locator(".pulse-groups q")).toHaveCount(4);
+  await expect(page.getByRole("strong").filter({ hasText: "Lena carries the silver key" })).toBeVisible();
+  await page.getByRole("button", { name: "Add to story" }).click();
+  await expect(page.getByRole("button", { name: "Lena" })).toBeVisible();
+  await page.getByRole("button", { name: "Lena" }).click();
+  await expect(page.getByLabel("Lena Ortiz story lens")).toBeVisible();
+  await page.getByLabel("Close Lens").click();
+  await page.getByRole("button", { name: /silver key/i }).click();
+  await expect(page.getByLabel("Silver Key story lens")).toContainText("Current holder");
+});
+
+test("Trace shows the Silver Key trail and Reality Changed links the future archive scene", async ({ page }) => {
+  const editor = page.locator(".manuscript");
+  await editor.fill(sentence);
+  await expect(page.getByText("4 story details found")).toBeVisible({ timeout: 4000 });
+  await page.getByRole("button", { name: "Confirm all" }).click();
+  await editor.fill(changed);
+  await expect(page.getByText(/Reality changed/i)).toBeVisible({ timeout: 4000 });
+  await page.getByText(/Reality changed/).first().click();
+  await expect(page.getByRole("button", { name: /The archive door Chapter 3/ })).toBeVisible();
+  await expect(page.getByText(/same tracked object is used by Lena/i)).toHaveCount(2);
+  await page.getByRole("button", { name: "Trace" }).click();
+  await page.locator(".trace-picker").getByRole("button", { name: /Silver Key/ }).click();
+  await expect(page.getByRole("heading", { name: "Silver Key" })).toBeVisible();
+  await expect(page.locator(".trace-axis")).toContainText("The archive door");
+});
+
+test("Library, Review, keyboard controls, mobile layout and accessibility remain usable", async ({ page }) => {
+  await page.getByRole("button", { name: /Library/ }).click();
+  await expect(page.getByRole("dialog", { name: "Story Library" })).toBeVisible();
+  await page.getByRole("button", { name: "＋ New person" }).click();
+  await page.getByLabel("New person name").fill("Mara Voss");
+  await page.getByLabel("New person name").press("Enter");
+  await expect(page.getByLabel("Mara Voss story lens")).toBeVisible();
+  await page.getByLabel("Close Lens").click();
+  await page.getByRole("button", { name: /Review/ }).click();
+  await expect(page.getByRole("dialog", { name: "Review story decisions" })).toContainText("Finding 1 of 3");
+  await page.keyboard.press("d");
+  await expect(page.getByRole("dialog", { name: "Review story decisions" })).toContainText("Finding 1 of 2");
+  await page.keyboard.press("Escape");
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations.filter((violation) => ["serious", "critical"].includes(violation.impact ?? ""))).toEqual([]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".manuscript")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
