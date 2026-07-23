@@ -1,15 +1,8 @@
 "use client";
-
-import type { CanvasMode } from "@/lib/story-canvas/types";
-
-export function StoryTopBar({ project, breadcrumb, mode, reviewCount, saveStatus, focus, onMode, onLibrary, onReview, onSearch, onSettings, onExitFocus }: {
-  project: string; breadcrumb: string; mode: CanvasMode; reviewCount: number; saveStatus: string; focus: boolean;
-  onMode: (mode: CanvasMode) => void; onLibrary: () => void; onReview: () => void; onSearch: () => void; onSettings: () => void; onExitFocus: () => void;
-}) {
+import type { CanvasMode, SyncStatus } from "@/lib/story-canvas/types";
+import { StoryIcon } from "./StoryIcon";
+const syncLabel: Record<SyncStatus, string> = { "not-connected": "Connect Google", connecting: "Connecting", connected: "Google connected", "local-changes": "Local changes", syncing: "Syncing", synced: "Synced", "google-changed": "Google changed", conflict: "Conflict", offline: "Offline", error: "Sync error" };
+export function StoryTopBar({ project, breadcrumb, mode, reviewCount, saveStatus, syncStatus, focus, onMode, onCreate, onSync, onLibrary, onReview, onSearch, onSettings, onExitFocus }: { project: string; breadcrumb: string; mode: CanvasMode; reviewCount: number; saveStatus: string; syncStatus: SyncStatus; focus: boolean; onMode: (mode: CanvasMode) => void; onCreate: () => void; onSync: () => void; onLibrary: () => void; onReview: () => void; onSearch: () => void; onSettings: () => void; onExitFocus: () => void }) {
   if (focus) return <header className="canvas-focusbar"><span>{breadcrumb}</span><button onClick={onExitFocus}>Exit focus <kbd>⇧F</kbd></button></header>;
-  return <header className="canvas-topbar">
-    <div className="canvas-identity"><span className="morrow-mark">M</span><strong>{project}</strong><span>{breadcrumb}</span></div>
-    <nav className="mode-switcher" aria-label="Story depth">{(["write", "map", "trace"] as const).map((item) => <button key={item} aria-pressed={mode === item} onClick={() => onMode(item)}>{item[0].toUpperCase() + item.slice(1)}</button>)}</nav>
-    <div className="canvas-actions"><button onClick={onLibrary}>Library</button><button onClick={onReview}>Review <span>{reviewCount}</span></button><button aria-label="Search and commands" onClick={onSearch}>⌕</button><span className="save-indicator" role="status">{saveStatus}</span><button className="profile-control" onClick={onSettings} aria-label="Profile and settings">E</button></div>
-  </header>;
+  return <header className="canvas-topbar"><div className="canvas-identity"><span className="morrow-mark">M</span><strong>{project}</strong><span>{breadcrumb}</span></div><nav className="mode-switcher" aria-label="Story depth">{(["write", "map", "trace"] as const).map((item) => <button key={item} aria-pressed={mode === item} onClick={() => onMode(item)}><StoryIcon name={item === "write" ? "scene" : item}/><span>{item[0].toUpperCase() + item.slice(1)}</span></button>)}</nav><div className="canvas-actions"><button className="global-create" onClick={onCreate}><StoryIcon name="plus"/>Create</button><button className={`sync-control ${syncStatus}`} onClick={onSync} aria-label={`Workspace sync: ${syncLabel[syncStatus]}`}><StoryIcon name={syncStatus === "syncing" ? "sync" : "cloud"}/><span>{syncLabel[syncStatus]}</span></button><button onClick={onLibrary} aria-label="Story Library"><StoryIcon name="library"/><span>Library</span></button><button onClick={onReview} aria-label={`Review ${reviewCount} findings`}><StoryIcon name="review"/><span>Review</span>{reviewCount > 0 && <b>{reviewCount}</b>}</button><button aria-label="Search and commands" onClick={onSearch}><StoryIcon name="search"/></button><span className="save-indicator" role="status">{saveStatus}</span><button className="profile-control" onClick={onSettings} aria-label="Profile and settings">E</button></div></header>;
 }

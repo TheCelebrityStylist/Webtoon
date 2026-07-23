@@ -56,7 +56,7 @@ describe("Morrow Story Canvas", () => {
   it("persists versioned state and falls back from invalid storage", () => {
     let raw = "";
     writeCanvasState({ setItem: (key, value) => { expect(key).toBe(STORY_CANVAS_KEY); raw = value; } }, createCanvasState());
-    expect(readCanvasState({ getItem: () => raw }).version).toBe(2);
+    expect(readCanvasState({ getItem: () => raw }).version).toBe(3);
     expect(readCanvasState({ getItem: () => "not-json" }).scenes).toHaveLength(9);
   });
 });

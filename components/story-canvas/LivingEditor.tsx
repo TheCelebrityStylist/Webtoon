@@ -1,81 +1,25 @@
 "use client";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { StableBlockIds, StoryDecorations, storyDecorationKey, type StoryDecoration } from "@/lib/editor/story-extensions";
+import { changedParagraphs } from "@/lib/story-canvas/local-analyzer";
+import type { CanvasScene, EntityType, StoryEntity, StoryObservation } from "@/lib/story-canvas/types";
+import { StoryIcon } from "./StoryIcon";
+const documentFromText = (text: string) => ({ type: "doc", content: text.split(/\n\s*\n/).map((paragraph) => ({ type: "paragraph", content: paragraph ? [{ type: "text", text: paragraph }] : [] })) });
+type Suggestion = { trigger: "@" | "#" | "!" | "/"; query: string; from: number; to: number };
+const kindFor = (trigger: Suggestion["trigger"]): EntityType | null => trigger === "@" ? "person" : trigger === "#" ? "place" : trigger === "!" ? "object" : null;
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { LocalDemoStoryAnalyzer, changedParagraphs } from "@/lib/story-canvas/local-analyzer";
-import type { CanvasScene, StoryEntity, StoryObservation } from "@/lib/story-canvas/types";
-
-const analyzer = new LocalDemoStoryAnalyzer();
-const escapeHtml = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-function decoratedHtml(text: string, entities: StoryEntity[], observations: StoryObservation[]) {
-  const confirmedIds = new Set(observations.filter((item) => item.status === "confirmed").map((item) => item.subjectId));
-  const confirmed = entities.filter((item) => confirmedIds.has(item.id));
-  return text.split(/\n\s*\n/).map((paragraph) => {
-    const candidates = confirmed.flatMap((entity) => [entity.name, ...entity.aliases].flatMap((name) => {
-      const matches: Array<{ start: number; end: number; entity: StoryEntity }> = [];
-      const pattern = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi");
-      for (const match of paragraph.matchAll(pattern)) if (match.index !== undefined) matches.push({ start: match.index, end: match.index + match[0].length, entity });
-      return matches;
-    })).sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
-    const accepted: typeof candidates = [];
-    for (const candidate of candidates) if (!accepted.some((item) => candidate.start < item.end && candidate.end > item.start)) accepted.push(candidate);
-    let cursor = 0;
-    const parts: string[] = [];
-    for (const match of accepted.sort((a, b) => a.start - b.start)) {
-      parts.push(escapeHtml(paragraph.slice(cursor, match.start)));
-      parts.push(`<button type="button" class="entity-decoration ${match.entity.type}" data-entity="${match.entity.id}">${escapeHtml(paragraph.slice(match.start, match.end))}</button>`);
-      cursor = match.end;
-    }
-    parts.push(escapeHtml(paragraph.slice(cursor)));
-    return `<p>${parts.join("")}</p>`;
-  }).join("");
-}
-
-export function LivingEditor({ scene, entities, observations, pulseEnabled, textSize, onChange, onAnalyze, onEntity, onFocusMode }: { scene: CanvasScene; entities: StoryEntity[]; observations: StoryObservation[]; pulseEnabled: boolean; textSize: number; onChange: (content: string) => void; onAnalyze: (proposals: StoryObservation[]) => void; onEntity: (id: string) => void; onFocusMode: () => void }) {
-  const editorRef = useRef<HTMLDivElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const previous = useRef(scene.content);
-  const [draft, setDraft] = useState(scene.content);
-  const [selectionMenu, setSelectionMenu] = useState<{ x: number; y: number } | null>(null);
-  const hasDecorations = observations.some((item) => item.sceneId === scene.id && item.status === "confirmed");
-  const html = useMemo(() => decoratedHtml(draft, entities, observations.filter((item) => item.sceneId === scene.id)), [draft, entities, observations, scene.id]);
-
-  useEffect(() => {
-    setDraft(scene.content);
-    previous.current = scene.content;
-    requestAnimationFrame(() => editorRef.current?.focus());
-    // Scene content changes are handled by the editor input path; reset analysis only when navigation changes scenes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene.id]);
-  useEffect(() => {
-    if (document.activeElement !== editorRef.current && scene.content !== draft) {
-      setDraft(scene.content);
-      previous.current = scene.content;
-    }
-  }, [draft, scene.content]);
+export function LivingEditor({ scene, chapterTitle, entities, observations, pulseEnabled, textSize, onTitle, onChange, onAnalyze, onEntity, onInlineCreate, onFocusMode }: { scene: CanvasScene; chapterTitle: string; entities: StoryEntity[]; observations: StoryObservation[]; pulseEnabled: boolean; textSize: number; onTitle: (title: string) => void; onChange: (content: string) => void; onAnalyze: (blocks: Array<{ id: string; text: string }>) => Promise<void>; onEntity: (id: string) => void; onInlineCreate: (type: EntityType, name: string) => Promise<void>; onFocusMode: () => void }) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null); const previous = useRef(scene.content); const [draft, setDraft] = useState(scene.content); const [suggestion, setSuggestion] = useState<Suggestion | null>(null); const [selectionMenu, setSelectionMenu] = useState(false); const [title, setTitle] = useState(scene.title);
+  const editor = useEditor({ immediatelyRender: false, extensions: [StarterKit, StableBlockIds, StoryDecorations], content: documentFromText(scene.content), editorProps: { attributes: { class: "manuscript", "aria-label": "Manuscript", spellcheck: "true", "data-placeholder": "Start writing…" } }, onUpdate: ({ editor: instance }) => { const text = instance.getText({ blockSeparator: "\n\n" }); setDraft(text); onChange(text); const { from } = instance.state.selection; const before = instance.state.doc.textBetween(Math.max(0, from - 80), from, "\n", "\0"); const match = /(?:^|\s)([@#!/])([^\s@#!/]{0,40})$/.exec(before); setSuggestion(match ? { trigger: match[1] as Suggestion["trigger"], query: match[2], from: from - match[1].length - match[2].length, to: from } : null); }, onSelectionUpdate: ({ editor: instance }) => setSelectionMenu(!instance.state.selection.empty) });
+  useEffect(() => { if (!editor) return; setDraft(scene.content); setTitle(scene.title); previous.current = scene.content; editor.commands.setContent(documentFromText(scene.content), false); requestAnimationFrame(() => editor.commands.focus("end")); }, [editor, scene.id, scene.content, scene.title]);
+  useEffect(() => { if (!editor) return; const confirmed = observations.filter((item) => item.sceneId === scene.id && item.status === "confirmed"); const decorations: StoryDecoration[] = confirmed.map((item) => ({ blockId: item.paragraphId, from: item.start, to: item.end, entityType: item.kind, label: item.title })); editor.view.dispatch(editor.state.tr.setMeta(storyDecorationKey, decorations)); }, [editor, observations, scene.id]);
   useEffect(() => { const key = (event: KeyboardEvent) => { if (event.shiftKey && event.key.toLowerCase() === "f") { event.preventDefault(); onFocusMode(); } }; addEventListener("keydown", key); return () => removeEventListener("keydown", key); }, [onFocusMode]);
-  useEffect(() => {
-    if (!pulseEnabled || draft === previous.current) return;
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      const changed = changedParagraphs(previous.current, draft);
-      previous.current = draft;
-      const proposals = changed.flatMap((paragraph) => analyzer.analyze({ scene: { ...scene, content: draft }, paragraphId: paragraph.id, text: paragraph.text, entities }));
-      if (proposals.length) onAnalyze(proposals);
-    }, 1100);
-    return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [draft, entities, onAnalyze, pulseEnabled, scene]);
-
-  const input = () => {
-    const text = editorRef.current?.innerText.replace(/\n{3,}/g, "\n\n") ?? "";
-    setDraft(text);
-    onChange(text);
-  };
-  const selection = () => {
-    const selected = window.getSelection();
-    if (!selected || selected.isCollapsed || !selected.toString().trim()) return setSelectionMenu(null);
-    const range = selected.getRangeAt(0).getBoundingClientRect();
-    setSelectionMenu({ x: range.left + range.width / 2, y: range.top - 44 });
-  };
-  return <section className="living-editor"><header className="scene-heading"><span>{scene.chapterId.replace("chapter-", "Chapter ")} · {scene.location}</span><input value={scene.title} readOnly aria-label="Scene title"/><small>{draft.trim().split(/\s+/).filter(Boolean).length} words</small></header><div className="paper"><i className="paragraph-pulse" aria-hidden="true"/><div ref={editorRef} className={`manuscript ${hasDecorations ? "decorated" : ""}`} style={{ fontSize: textSize }} contentEditable suppressContentEditableWarning spellCheck onInput={input} onMouseUp={selection} onKeyUp={selection} onClick={(event) => { const target = (event.target as HTMLElement).closest<HTMLElement>("[data-entity]"); if (target?.dataset.entity) onEntity(target.dataset.entity); }} dangerouslySetInnerHTML={{ __html: html }}/></div>{selectionMenu && <div className="selection-menu" style={{ left: selectionMenu.x, top: selectionMenu.y }} role="toolbar" aria-label="Text selection actions"><button><b>B</b></button><button><i>I</i></button><button>Comment</button><button>Improve</button><button>＋ Person</button><button>＋ Place</button><button>＋ Object</button><button>Track fact</button></div>}<footer><span>Shift F · Focus</span><button aria-label="More editor commands">•••</button></footer></section>;
+  useEffect(() => { if (!pulseEnabled || draft === previous.current) return; if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => { const changed = changedParagraphs(previous.current, draft); previous.current = draft; if (changed.length) void onAnalyze(changed.map((paragraph) => ({ id: paragraph.id, text: paragraph.text }))); }, 900); return () => { if (timer.current) clearTimeout(timer.current); }; }, [draft, onAnalyze, pulseEnabled]);
+  const matches = useMemo(() => { const type = suggestion ? kindFor(suggestion.trigger) : null; return type ? entities.filter((entity) => entity.type === type && entity.name.toLowerCase().includes(suggestion?.query.toLowerCase() ?? "")).slice(0, 6) : []; }, [entities, suggestion]);
+  const insertEntity = useCallback(async (entity?: StoryEntity) => { if (!editor || !suggestion) return; const type = kindFor(suggestion.trigger); if (!type) return; const name = entity?.name ?? suggestion.query.trim(); if (!name) return; editor.chain().focus().deleteRange({ from: suggestion.from, to: suggestion.to }).insertContent(name).run(); setSuggestion(null); if (entity) onEntity(entity.id); else await onInlineCreate(type, name); }, [editor, onEntity, onInlineCreate, suggestion]);
+  const command = async (name: string) => { if (!editor || !suggestion) return; editor.chain().focus().deleteRange({ from: suggestion.from, to: suggestion.to }).run(); setSuggestion(null); if (name === "event") await onInlineCreate("event", "Untitled event"); if (name === "focus") onFocusMode(); };
+  if (!editor) return <section className="living-editor"><p className="canvas-loading">Opening the manuscript…</p></section>;
+  return <section className="living-editor"><header className="scene-heading"><span>{chapterTitle} · {scene.location || "Scene"}</span><input value={title} onChange={(event) => setTitle(event.target.value)} onBlur={() => onTitle(title.trim() || "Untitled scene")} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); onTitle(title.trim() || "Untitled scene"); editor.commands.focus("start"); } }} aria-label="Scene title"/><small>{draft.trim().split(/\s+/).filter(Boolean).length} words</small></header><div className={`paper ${editor.isEmpty ? "empty" : ""}`} onClick={(event) => { if (event.target === event.currentTarget) editor.commands.focus(); }}><i className="paragraph-pulse" aria-hidden="true"/><EditorContent editor={editor} style={{ fontSize: textSize }}/>{editor.isEmpty && <p className="first-scene-helper">Type <kbd>/</kbd> for commands<br/>or start with the moment that changes everything.</p>}</div>{suggestion && <div className="inline-suggestion" role="listbox" aria-label={suggestion.trigger === "/" ? "Writing commands" : `Create or choose ${kindFor(suggestion.trigger)}`}><header>{suggestion.trigger === "/" ? "Commands" : suggestion.trigger === "@" ? "People" : suggestion.trigger === "#" ? "Places" : "Objects"}</header>{suggestion.trigger === "/" ? <>{["event", "focus", "continuity"].filter((item) => item.includes(suggestion.query.toLowerCase())).map((item) => <button key={item} onMouseDown={(event) => { event.preventDefault(); void command(item); }}><StoryIcon name={item === "event" ? "event" : item === "focus" ? "scene" : "warning"}/><span>{item === "event" ? "Create event" : item === "focus" ? "Toggle focus" : "Check continuity"}</span></button>)}</> : <>{matches.map((entity) => <button key={entity.id} onMouseDown={(event) => { event.preventDefault(); void insertEntity(entity); }}><StoryIcon name={entity.type === "person" ? "person" : entity.type === "place" ? "place" : "object"}/><span>{entity.name}<small>{entity.type} · {entity.appearances.length} appearances</small></span></button>)}{suggestion.query.trim() && <button className="create-match" onMouseDown={(event) => { event.preventDefault(); void insertEntity(); }}><StoryIcon name="plus"/><span>Create {kindFor(suggestion.trigger)} “{suggestion.query.trim()}”</span></button>}</>}</div>}{selectionMenu && <div className="selection-menu" role="toolbar" aria-label="Text selection actions"><button onClick={() => editor.chain().focus().toggleBold().run()}><b>B</b></button><button onClick={() => editor.chain().focus().toggleItalic().run()}><i>I</i></button><button>Improve clarity</button><button>Strengthen voice</button><button>Increase tension</button><button onClick={() => void onInlineCreate("person", editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to, " "))}>Track as person</button><button>Track as fact</button><button>Ask what changes</button></div>}<footer><span>Shift F · Focus</span><button aria-label="More editor commands"><StoryIcon name="more"/></button></footer></section>;
 }

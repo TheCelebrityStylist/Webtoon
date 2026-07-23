@@ -1,57 +1,41 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
+import { LocalDemoStoryDataSource, ProductionStoryDataSource } from "@/lib/story-canvas/data-source";
 import { createCanvasState } from "@/lib/story-canvas/fixtures";
-import { readCanvasState, writeCanvasState } from "@/lib/story-canvas/persistence";
+import { writeIndexedCanvasState } from "@/lib/story-canvas/persistence";
 import { storyReducer } from "@/lib/story-canvas/story-reducer";
-import type { CanvasAction, CanvasState } from "@/lib/story-canvas/types";
+import type { CanvasAction, CanvasState, CreateChapterInput, CreateEntityInput, CreatePartInput, CreateSceneInput, StoryWorkspaceDataSource, StructureCommand } from "@/lib/story-canvas/types";
 
-type Context = { state: CanvasState; dispatch: (action: CanvasAction, undoable?: boolean) => void; undo: () => void; canUndo: boolean; saveStatus: "Saved" | "Saving" | "Offline"; notice: string; setNotice: (value: string) => void };
+type Context = {
+  state: CanvasState; dispatch: (action: CanvasAction, undoable?: boolean) => void; undo: () => void; canUndo: boolean;
+  saveStatus: "Saved locally" | "Saving" | "Saved" | "Offline" | "Conflict"; notice: string; setNotice: (value: string) => void; dataSource: StoryWorkspaceDataSource;
+  createPart: (input?: Partial<CreatePartInput>) => Promise<void>; createChapter: (input?: Partial<CreateChapterInput>) => Promise<void>; createScene: (input?: Partial<CreateSceneInput>) => Promise<void>;
+  createEntity: (input: Omit<CreateEntityInput, "projectId"> & { projectId?: string }) => Promise<string>; structure: (command: Omit<StructureCommand, "projectId">) => Promise<void>;
+};
 const StoryCanvasContext = createContext<Context | null>(null);
 
-export function StoryCanvasProvider({ children }: { children: ReactNode }) {
-  const [state, rawDispatch] = useReducer(storyReducer, undefined, createCanvasState);
-  const [saveStatus, setSaveStatus] = useState<Context["saveStatus"]>("Saved");
-  const [notice, setNotice] = useState("");
-  const [hydrated, setHydrated] = useState(false);
-  const history = useRef<CanvasState[]>([]);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const stateRef = useRef(state);
-  stateRef.current = state;
+export function StoryCanvasProvider({ children, projectId = "museum-of-lost-hours", mode = "demo", initialState }: { children: ReactNode; projectId?: string; mode?: "demo" | "production"; initialState?: CanvasState }) {
+  const [state, rawDispatch] = useReducer(storyReducer, initialState ?? createCanvasState());
+  const source = useMemo<StoryWorkspaceDataSource>(() => mode === "production" ? new ProductionStoryDataSource(projectId) : new LocalDemoStoryDataSource(), [mode, projectId]);
+  const [saveStatus, setSaveStatus] = useState<Context["saveStatus"]>(mode === "demo" ? "Saved locally" : "Saved");
+  const [notice, setNotice] = useState(""); const [hydrated, setHydrated] = useState(Boolean(initialState));
+  const history = useRef<CanvasState[]>([]); const timer = useRef<ReturnType<typeof setTimeout> | null>(null); const serverTimer = useRef<ReturnType<typeof setTimeout> | null>(null); const lastServerText = useRef(new Map<string, string>()); const stateRef = useRef(state); stateRef.current = state;
 
-  useEffect(() => {
-    const restored = readCanvasState(localStorage);
-    rawDispatch({ type: "RESTORE", state: restored });
-    setHydrated(true);
-  }, []);
+  useEffect(() => { if (initialState) return; let active = true; source.loadProject(projectId).then((restored) => { if (active) rawDispatch({ type: "RESTORE", state: { ...restored, dataMode: mode } }); }).catch(() => setSaveStatus(navigator.onLine ? "Conflict" : "Offline")).finally(() => setHydrated(true)); return () => { active = false; }; }, [initialState, mode, projectId, source]);
+  useEffect(() => { if (!hydrated) return; setSaveStatus(navigator.onLine ? "Saving" : "Offline"); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(async () => { try { await writeIndexedCanvasState(state); setSaveStatus(navigator.onLine ? (mode === "demo" ? "Saved locally" : "Saved") : "Offline"); } catch { setSaveStatus("Conflict"); } }, 450); return () => { if (timer.current) clearTimeout(timer.current); }; }, [state, hydrated, mode]);
+  useEffect(() => { if (!hydrated || mode !== "production") return; const scene = state.scenes.find((item) => item.id === state.currentSceneId); if (!scene || lastServerText.current.get(scene.id) === scene.content) return; if (!lastServerText.current.has(scene.id)) { lastServerText.current.set(scene.id, scene.content); return; } if (serverTimer.current) clearTimeout(serverTimer.current); setSaveStatus(navigator.onLine ? "Saving" : "Offline"); serverTimer.current = setTimeout(async () => { try { const saved = await source.saveScene(scene); lastServerText.current.set(scene.id, scene.content); rawDispatch({ type: "SCENE_SAVED", sceneId: scene.id, revision: saved.revision }); setSaveStatus("Saved"); } catch (error) { setSaveStatus(navigator.onLine ? "Conflict" : "Offline"); setNotice(error instanceof Error ? error.message : "The manuscript could not be saved"); } }, 700); return () => { if (serverTimer.current) clearTimeout(serverTimer.current); }; }, [hydrated, mode, source, state.currentSceneId, state.scenes]);
 
-  useEffect(() => {
-    if (!hydrated) return;
-    setSaveStatus(navigator.onLine ? "Saving" : "Offline");
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      writeCanvasState(localStorage, state);
-      setSaveStatus(navigator.onLine ? "Saved" : "Offline");
-    }, 500);
-    return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [state, hydrated]);
-
-  const dispatch = useCallback((action: CanvasAction, undoable = true) => {
-    if (undoable) history.current = [...history.current.slice(-29), stateRef.current];
-    rawDispatch(action);
-  }, []);
-  const undo = useCallback(() => {
-    const previous = history.current.pop();
-    if (!previous) return setNotice("Nothing to undo");
-    rawDispatch({ type: "RESTORE", state: previous });
-    setNotice("Previous story state restored");
-  }, []);
-  const value = useMemo(() => ({ state, dispatch, undo, canUndo: history.current.length > 0, saveStatus, notice, setNotice }), [state, dispatch, undo, saveStatus, notice]);
+  const dispatch = useCallback((action: CanvasAction, undoable = true) => { if (undoable) history.current = [...history.current.slice(-49), structuredClone(stateRef.current)]; rawDispatch(action); }, []);
+  const undo = useCallback(() => { const previous = history.current.pop(); if (!previous) return setNotice("Nothing to undo"); rawDispatch({ type: "RESTORE", state: previous }); setNotice("Previous story state restored"); }, []);
+  const optimistic = useCallback(async (action: CanvasAction, effect: () => Promise<unknown>) => { const before = structuredClone(stateRef.current); dispatch(action); try { await effect(); } catch (error) { rawDispatch({ type: "RESTORE", state: before }); setNotice(error instanceof Error ? error.message : "That change could not be saved"); throw error; } }, [dispatch]);
+  const createPart = useCallback(async (input: Partial<CreatePartInput> = {}) => optimistic({ type: "CREATE_PART", title: input.title, position: input.position }, () => source.createPart({ projectId: stateRef.current.project.id, title: input.title, position: input.position })), [optimistic, source]);
+  const createChapter = useCallback(async (input: Partial<CreateChapterInput> = {}) => optimistic({ type: "CREATE_CHAPTER", title: input.title, partId: input.partId, position: input.position }, () => source.createChapter({ projectId: stateRef.current.project.id, title: input.title, partId: input.partId, position: input.position })), [optimistic, source]);
+  const createScene = useCallback(async (input: Partial<CreateSceneInput> = {}) => { const chapterId = input.chapterId ?? stateRef.current.project.chapters.find((item) => item.status === "active")?.id; if (!chapterId) throw new Error("Create a chapter first"); return optimistic({ type: "CREATE_SCENE", title: input.title, chapterId, position: input.position }, () => source.createScene({ projectId: stateRef.current.project.id, title: input.title, chapterId, position: input.position })); }, [optimistic, source]);
+  const createEntity = useCallback(async (input: Omit<CreateEntityInput, "projectId"> & { projectId?: string }) => { const entity = await source.createEntity({ ...input, projectId: stateRef.current.project.id }); dispatch({ type: "CREATE_ENTITY", entity }); return entity.id; }, [dispatch, source]);
+  const structure = useCallback(async (command: Omit<StructureCommand, "projectId">) => optimistic({ type: "STRUCTURE", command: { ...command, projectId: stateRef.current.project.id } }, () => source.updateStructure({ ...command, projectId: stateRef.current.project.id })), [optimistic, source]);
+  const value = useMemo(() => ({ state, dispatch, undo, canUndo: history.current.length > 0, saveStatus, notice, setNotice, dataSource: source, createPart, createChapter, createScene, createEntity, structure }), [state, dispatch, undo, saveStatus, notice, source, createPart, createChapter, createScene, createEntity, structure]);
   return <StoryCanvasContext.Provider value={value}>{children}</StoryCanvasContext.Provider>;
 }
 
-export function useStoryCanvas() {
-  const context = useContext(StoryCanvasContext);
-  if (!context) throw new Error("useStoryCanvas must be used inside StoryCanvasProvider");
-  return context;
-}
+export function useStoryCanvas() { const context = useContext(StoryCanvasContext); if (!context) throw new Error("useStoryCanvas must be used inside StoryCanvasProvider"); return context; }
