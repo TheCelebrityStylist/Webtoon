@@ -8,7 +8,7 @@ export function storyReducer(state: CanvasState, action: CanvasAction): CanvasSt
   switch (action.type) {
     case "OPEN_SCENE": return { ...state, currentSceneId: action.sceneId, mode: "write" };
     case "SET_MODE": return { ...state, mode: action.mode };
-    case "UPDATE_SCENE": { const scenes = state.scenes.map((scene) => scene.id === action.sceneId ? { ...scene, content: action.content, wordCount: action.content.trim().split(/\s+/).filter(Boolean).length, lastEditedAt: new Date().toISOString() } : scene); return withProject(state, { ...state.project, scenes, updatedAt: new Date().toISOString() }); }
+    case "UPDATE_SCENE": { const scenes = state.scenes.map((scene) => scene.id === action.sceneId ? { ...scene, manuscriptJson: action.manuscriptJson, manuscriptText: action.manuscriptText, content: action.manuscriptText, wordCount: action.manuscriptText.trim().split(/\s+/).filter(Boolean).length, lastEditedAt: new Date().toISOString() } : scene); return withProject(state, { ...state.project, scenes, updatedAt: new Date().toISOString() }); }
     case "SCENE_SAVED": { const scenes = state.scenes.map((scene) => scene.id === action.sceneId ? { ...scene, revision: action.revision } : scene); return withProject(state, { ...state.project, scenes }); }
     case "RENAME_SCENE": return storyReducer(state, { type: "STRUCTURE", command: { projectId: state.project.id, type: "rename-scene", id: action.sceneId, value: action.title } });
     case "CREATE_PART": return withProject(state, createPartRecord(state.project, action.title, action.position).project);

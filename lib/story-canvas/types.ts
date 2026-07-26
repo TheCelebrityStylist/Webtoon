@@ -2,11 +2,20 @@ export type CanvasMode = "write" | "map" | "trace";
 export type EntityType = "person" | "place" | "object" | "event" | "faction" | "question";
 export type ProjectType = "NOVEL" | "BOOK_SERIES" | "SCREENPLAY" | "TV_SERIES" | "SERIAL_FICTION" | "WEBTOON" | "COMIC" | "GAME_NARRATIVE" | "CUSTOM";
 export type RecordStatus = "draft" | "active" | "archived";
+export type ManuscriptMark = { type: string; attrs?: Record<string, unknown> };
+export type ManuscriptNode = {
+  type: string;
+  attrs?: Record<string, unknown>;
+  content?: ManuscriptNode[];
+  marks?: ManuscriptMark[];
+  text?: string;
+};
+export type ManuscriptDocument = ManuscriptNode & { type: "doc" };
 
 export type StoryPart = { id: string; projectId: string; title: string; position: number; chapterIds: string[]; collapsed?: boolean; status: RecordStatus };
 export type StoryChapter = { id: string; projectId: string; partId?: string; title: string; position: number; summary: string; status: RecordStatus; sceneIds: string[]; collapsed?: boolean; createdAt: string; updatedAt: string };
 export type CanvasScene = {
-  id: string; chapterId: string; title: string; content: string; location: string; people: string[]; objects: string[]; summary: string; order: number;
+  id: string; chapterId: string; title: string; manuscriptJson: ManuscriptDocument; manuscriptText: string; /** @deprecated read-only compatibility alias; never persist */ content: string; location: string; people: string[]; objects: string[]; summary: string; order: number;
   position: number; status: RecordStatus; pointOfViewEntityId?: string; locationEntityId?: string; wordCount: number; lastEditedAt: string; revision: number;
 };
 export type StoryProject = { id: string; title: string; type: ProjectType; premise: string; language: string; parts: StoryPart[]; chapters: StoryChapter[]; scenes: CanvasScene[]; createdAt: string; updatedAt: string };
@@ -34,7 +43,7 @@ export type CreateChapterInput = { projectId: string; title?: string; partId?: s
 export type CreateSceneInput = { projectId: string; chapterId: string; title?: string; position?: number };
 export type CreateEntityInput = { projectId: string; name: string; type: EntityType; sceneId?: string; role?: string; pronouns?: string; description?: string; currentLocation?: string; currentHolder?: string; currentOwner?: string; atmosphere?: string };
 export type UpdateEntityInput = Partial<CreateEntityInput> & { projectId: string; entityId: string };
-export type StructureCommand = { projectId: string; type: "move-chapter" | "duplicate-chapter" | "archive-chapter" | "restore-chapter" | "delete-chapter" | "rename-chapter" | "move-scene" | "duplicate-scene" | "archive-scene" | "restore-scene" | "delete-scene" | "rename-scene" | "split-scene"; id: string; direction?: "before" | "after" | "earlier" | "later"; targetId?: string; value?: string; position?: number };
+export type StructureCommand = { projectId: string; type: "move-chapter" | "duplicate-chapter" | "archive-chapter" | "restore-chapter" | "delete-chapter" | "rename-chapter" | "move-scene" | "duplicate-scene" | "archive-scene" | "restore-scene" | "delete-scene" | "rename-scene"; id: string; direction?: "before" | "after" | "earlier" | "later"; targetId?: string; value?: string; position?: number };
 export type StructureResult = { project: StoryProject; selectedSceneId?: string };
 export type StoryAnalysisInput = { projectId: string; sceneId: string; revision: number; blocks: Array<{ id: string; text: string }>; canonVersion?: number };
 export type StoryAnalysisResult = { runId: string; revision: number; canonVersion: number; proposals: StoryObservation[]; manuscriptHash?: string; warning?: string };
@@ -59,7 +68,7 @@ export interface StoryWorkspaceDataSource {
 export interface StoryAnalyzer { analyze(input: { scene: CanvasScene; paragraphId: string; text: string; entities: StoryEntity[] }): StoryObservation[] }
 
 export type CanvasAction =
-  | { type: "OPEN_SCENE"; sceneId: string } | { type: "SET_MODE"; mode: CanvasMode } | { type: "UPDATE_SCENE"; sceneId: string; content: string } | { type: "SCENE_SAVED"; sceneId: string; revision: number }
+  | { type: "OPEN_SCENE"; sceneId: string } | { type: "SET_MODE"; mode: CanvasMode } | { type: "UPDATE_SCENE"; sceneId: string; manuscriptJson: ManuscriptDocument; manuscriptText: string } | { type: "SCENE_SAVED"; sceneId: string; revision: number }
   | { type: "RENAME_SCENE"; sceneId: string; title: string } | { type: "CREATE_PART"; title?: string; position?: number }
   | { type: "CREATE_CHAPTER"; title?: string; partId?: string; position?: number } | { type: "CREATE_SCENE"; title?: string; chapterId?: string; position?: number }
   | { type: "STRUCTURE"; command: StructureCommand } | { type: "SET_PROPOSALS"; proposals: StoryObservation[] } | { type: "CONFIRM_PROPOSALS"; ids: string[] }

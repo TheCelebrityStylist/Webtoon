@@ -2,11 +2,11 @@
 import { useEffect, useState } from "react";
 import type { EntityType, StoryChapter } from "@/lib/story-canvas/types";
 import { StoryIcon } from "./StoryIcon";
-type Kind = "part" | "chapter" | "scene" | EntityType | "note" | "research" | "import";
+type Kind = "part" | "chapter" | "scene" | EntityType | "import";
 const items: Array<{ section: string; kind: Kind; label: string; icon: Parameters<typeof StoryIcon>[0]["name"] }> = [
   { section: "Structure", kind: "chapter", label: "Chapter", icon: "chapter" }, { section: "Structure", kind: "scene", label: "Scene", icon: "scene" }, { section: "Structure", kind: "part", label: "Part", icon: "library" },
   { section: "Story", kind: "person", label: "Person", icon: "person" }, { section: "Story", kind: "place", label: "Place", icon: "place" }, { section: "Story", kind: "object", label: "Object", icon: "object" }, { section: "Story", kind: "event", label: "Event", icon: "event" }, { section: "Story", kind: "faction", label: "Faction", icon: "person" }, { section: "Story", kind: "question", label: "Story question", icon: "warning" },
-  { section: "Material", kind: "note", label: "Note", icon: "docs" }, { section: "Material", kind: "research", label: "Research", icon: "search" }, { section: "Material", kind: "import", label: "Import document", icon: "drive" },
+  { section: "Material", kind: "import", label: "Import document", icon: "drive" },
 ];
 export function GlobalCreate({ currentChapter, chapters, onClose, onPart, onChapter, onScene, onEntity, onImport }: { currentChapter?: StoryChapter; chapters: StoryChapter[]; onClose: () => void; onPart: (title: string) => void; onChapter: (title: string) => void; onScene: (chapterId: string, title: string) => void; onEntity: (type: EntityType, name: string) => void; onImport: () => void }) {
   const [kind, setKind] = useState<Kind | null>(null); const [name, setName] = useState(""); const [chapterId, setChapterId] = useState(currentChapter?.id ?? chapters[0]?.id ?? "");

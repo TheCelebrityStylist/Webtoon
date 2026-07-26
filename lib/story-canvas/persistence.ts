@@ -1,5 +1,6 @@
 import { createCanvasState } from "./fixtures";
 import type { CanvasState } from "./types";
+import { manuscriptText, normalizeManuscript } from "./manuscript";
 
 export const STORY_CANVAS_KEY = "morrow.story-canvas.v3";
 const DB_NAME = "morrow-story-workspace";
@@ -8,7 +9,13 @@ const STORE = "projects";
 export function normalizeCanvasState(value: Partial<CanvasState> | null): CanvasState {
   const seed = createCanvasState();
   if (!value || value.version !== 3 || !value.project || !Array.isArray(value.scenes) || !Array.isArray(value.entities)) return seed;
-  return { ...seed, ...value, project: { ...seed.project, ...value.project }, sync: { ...seed.sync, ...value.sync } };
+  const scenes = value.scenes.map((scene) => {
+    const legacy = scene as typeof scene & { content?: string };
+    const document = normalizeManuscript(legacy.manuscriptJson, legacy.manuscriptText ?? legacy.content ?? "", scene.id);
+    const text = legacy.manuscriptText ?? legacy.content ?? manuscriptText(document);
+    return { ...scene, manuscriptJson: document, manuscriptText: text, content: text };
+  });
+  return { ...seed, ...value, scenes, project: { ...seed.project, ...value.project, scenes }, sync: { ...seed.sync, ...value.sync } };
 }
 
 export function readCanvasState(storage: Pick<Storage, "getItem">): CanvasState {

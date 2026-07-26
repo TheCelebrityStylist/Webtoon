@@ -1,7 +1,22 @@
 import type { CanvasScene, CanvasState, StoryChapter, StoryEntity, StoryProject } from "./types";
+import { manuscriptFromText } from "./manuscript";
 
 const now = "2026-07-23T00:00:00.000Z";
-const scene = (value: Omit<CanvasScene, "position" | "status" | "wordCount" | "lastEditedAt" | "revision">, position: number): CanvasScene => ({ ...value, position, status: "active", wordCount: value.content.trim().split(/\s+/).filter(Boolean).length, lastEditedAt: now, revision: 0 });
+type FixtureScene = Omit<CanvasScene, "manuscriptJson" | "manuscriptText" | "position" | "status" | "wordCount" | "lastEditedAt" | "revision"> & { content: string };
+const scene = (value: FixtureScene, position: number): CanvasScene => {
+  const { content, ...record } = value;
+  return {
+    ...record,
+    manuscriptJson: manuscriptFromText(content, value.id),
+    manuscriptText: content,
+    content,
+    position,
+    status: "active",
+    wordCount: content.trim().split(/\s+/).filter(Boolean).length,
+    lastEditedAt: now,
+    revision: 0,
+  };
+};
 
 export const storyEntities: StoryEntity[] = [
   { id: "lena", name: "Lena Ortiz", type: "person", aliases: ["Lena"], role: "Museum conservator", pronouns: "she/her", description: "Follows the hours the museum has forgotten.", currentLocation: "Conversation Room", state: "Following the missing hours", appearances: ["museum-entrance", "west-hall", "conversation-room", "archive-door"], sourceCount: 8, status: "active" },
