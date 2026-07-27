@@ -114,6 +114,7 @@ model IntegrationConnection {
   encryptedRefreshToken String
   grantedScopes         String[]
   lastSyncedAt          DateTime?
+  driveStartPageToken   String?
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -177,6 +178,7 @@ model Series {
   locations        Location[]
   worldRules       WorldRule[]
   chapters         Chapter[]
+  parts            StoryPart[]
   aiSuggestions    AiSuggestion[]
   branches         StoryBranch[]
   continuityFacts  ContinuityFact[]
@@ -197,19 +199,38 @@ model Series {
   @@index([workspaceId, deletedAt])
 }
 
+model StoryPart {
+  id        String    @id @default(cuid())
+  seriesId  String
+  title     String
+  position  Int
+  status    String    @default("ACTIVE")
+  series    Series    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  chapters  Chapter[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([seriesId, position])
+  @@index([seriesId, deletedAt])
+}
+
 model CanonUniverse {
-  id        String        @id @default(cuid())
-  seriesId  String        @unique
-  version   Int           @default(0)
-  metadata  Json          @default("{}")
-  series    Series        @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  entities  CanonEntity[]
-  moments   CanonMoment[]
-  facts     CanonFact[]
-  edges     CanonEdge[]
-  branches  CanonBranch[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id           String             @id @default(cuid())
+  seriesId     String             @unique
+  version      Int                @default(0)
+  metadata     Json               @default("{}")
+  series       Series             @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  entities     CanonEntity[]
+  moments      CanonMoment[]
+  facts        CanonFact[]
+  edges        CanonEdge[]
+  branches     CanonBranch[]
+  analysisRuns CanonAnalysisRun[]
+  commits      CanonCommit[]
+  dependencies CanonDependency[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 }
 
 model CanonEntity {
@@ -227,6 +248,7 @@ model CanonEntity {
   transitions CanonTransition[]
   outgoing    CanonEdge[]       @relation("CanonEdgeFrom")
   incoming    CanonEdge[]       @relation("CanonEdgeTo")
+  mentions    CanonMention[]
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   deletedAt   DateTime?
@@ -251,6 +273,7 @@ model CanonMoment {
   branch          CanonBranch?      @relation(fields: [branchId], references: [id], onDelete: Cascade)
   transitions     CanonTransition[]
   facts           CanonFact[]
+  mentions        CanonMention[]
   createdAt       DateTime          @default(now())
 
   @@unique([universeId, branchId, sequence])
@@ -259,19 +282,20 @@ model CanonMoment {
 }
 
 model CanonTransition {
-  id           String      @id @default(cuid())
+  id           String            @id @default(cuid())
   entityId     String
   momentId     String
   property     String
   beforeValue  Json?
   afterValue   Json
   evidence     Json
-  confidence   Float       @default(1)
-  status       String      @default("CONFIRMED")
+  confidence   Float             @default(1)
+  status       String            @default("CONFIRMED")
   supersedesId String?
-  entity       CanonEntity @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  moment       CanonMoment @relation(fields: [momentId], references: [id], onDelete: Cascade)
-  createdAt    DateTime    @default(now())
+  entity       CanonEntity       @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  moment       CanonMoment       @relation(fields: [momentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime          @default(now())
+  commitItems  CanonCommitItem[]
 
   @@index([entityId, property, momentId])
   @@index([momentId, status])
@@ -340,39 +364,53 @@ model Chapter {
   title     String
   number    Int
   kind      String    @default("CHAPTER")
+  partId    String?
+  position  Int       @default(0)
+  summary   String    @default("")
+  status    String    @default("ACTIVE")
   series    Series    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  part      StoryPart? @relation(fields: [partId], references: [id], onDelete: SetNull)
   scenes    Scene[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@unique([seriesId, number])
+  @@index([seriesId, position])
   @@index([seriesId, deletedAt])
+  @@index([partId, position])
 }
 
 model Scene {
-  id               String              @id @default(cuid())
-  chapterId        String
-  title            String
-  position         Int
-  purpose          String              @default("")
-  conflict         String              @default("")
-  stakes           String              @default("")
-  outcome          String              @default("")
-  manuscriptJson   Json                @default("{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}")
-  manuscriptText   String              @default("")
-  revision         Int                 @default(0)
-  chapter          Chapter             @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  beats            StoryBeat[]
-  versions         ManuscriptVersion[]
-  aiSuggestions    AiSuggestion[]
-  continuityFacts  ContinuityFact[]
-  continuityIssues ContinuityIssue[]
-  timelineEvents   TimelineEvent[]
-  revisionFindings RevisionFinding[]
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  deletedAt        DateTime?
+  id                String              @id @default(cuid())
+  chapterId         String
+  title             String
+  position          Int
+  purpose           String              @default("")
+  conflict          String              @default("")
+  stakes            String              @default("")
+  outcome           String              @default("")
+  manuscriptJson    Json                @default("{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}")
+  manuscriptText    String              @default("")
+  revision          Int                 @default(0)
+  status            String              @default("ACTIVE")
+  pointOfViewEntityId String?
+  locationEntityId  String?
+  wordCount         Int                 @default(0)
+  lastEditedAt      DateTime             @default(now())
+  chapter           Chapter             @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  beats             StoryBeat[]
+  versions          ManuscriptVersion[]
+  aiSuggestions     AiSuggestion[]
+  continuityFacts   ContinuityFact[]
+  continuityIssues  ContinuityIssue[]
+  timelineEvents    TimelineEvent[]
+  revisionFindings  RevisionFinding[]
+  canonAnalysisRuns CanonAnalysisRun[]
+  canonMentions     CanonMention[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime?
 
   @@unique([chapterId, position])
   @@index([chapterId, deletedAt])
@@ -390,6 +428,127 @@ model StoryBeat {
   updatedAt   DateTime    @updatedAt
 
   @@unique([sceneId, position])
+}
+
+model CanonAnalysisRun {
+  id             String          @id @default(cuid())
+  universeId     String
+  sceneId        String
+  requestedById  String
+  requestId      String
+  revision       Int
+  manuscriptHash String
+  provider       String
+  model          String?
+  status         String          @default("PENDING")
+  inputSummary   Json
+  warning        String?
+  universe       CanonUniverse   @relation(fields: [universeId], references: [id], onDelete: Cascade)
+  scene          Scene           @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  proposals      CanonProposal[]
+  createdAt      DateTime        @default(now())
+  completedAt    DateTime?
+
+  @@unique([sceneId, requestId])
+  @@index([universeId, sceneId, revision])
+  @@index([requestedById, createdAt])
+}
+
+model CanonProposal {
+  id             String            @id @default(cuid())
+  runId          String
+  kind           String
+  entityType     String?
+  entityName     String?
+  entityId       String?
+  property       String?
+  beforeValue    Json?
+  afterValue     Json?
+  evidence       Json
+  confidence     Float
+  perspective    String            @default("OBJECTIVE")
+  status         String            @default("PENDING")
+  resolutionNote String?
+  run            CanonAnalysisRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  commitItems    CanonCommitItem[]
+  createdAt      DateTime          @default(now())
+  resolvedAt     DateTime?
+
+  @@index([runId, status])
+  @@index([entityId, property])
+}
+
+model CanonMention {
+  id          String       @id @default(cuid())
+  sceneId     String
+  entityId    String
+  momentId    String?
+  blockId     String
+  quote       String
+  startOffset Int
+  endOffset   Int
+  revision    Int
+  active      Boolean      @default(true)
+  scene       Scene        @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  entity      CanonEntity  @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  moment      CanonMoment? @relation(fields: [momentId], references: [id], onDelete: SetNull)
+  createdAt   DateTime     @default(now())
+
+  @@index([sceneId, blockId, revision])
+  @@index([entityId, sceneId])
+}
+
+model CanonCommit {
+  id               String            @id @default(cuid())
+  universeId       String
+  requestedById    String
+  expectedVersion  Int
+  resultingVersion Int
+  status           String            @default("APPLIED")
+  revertedAt       DateTime?
+  revertedById     String?
+  universe         CanonUniverse     @relation(fields: [universeId], references: [id], onDelete: Cascade)
+  items            CanonCommitItem[]
+  createdAt        DateTime          @default(now())
+
+  @@index([universeId, createdAt])
+  @@index([requestedById])
+}
+
+model CanonCommitItem {
+  id           String           @id @default(cuid())
+  commitId     String
+  proposalId   String
+  transitionId String?
+  recordType   String
+  recordId     String
+  beforeValue  Json?
+  afterValue   Json?
+  commit       CanonCommit      @relation(fields: [commitId], references: [id], onDelete: Cascade)
+  proposal     CanonProposal    @relation(fields: [proposalId], references: [id], onDelete: Restrict)
+  transition   CanonTransition? @relation(fields: [transitionId], references: [id], onDelete: SetNull)
+
+  @@unique([commitId, proposalId])
+  @@index([recordType, recordId])
+}
+
+model CanonDependency {
+  id               String        @id @default(cuid())
+  universeId       String
+  sourceRecordType String
+  sourceRecordId   String
+  targetRecordType String
+  targetRecordId   String
+  consequenceClass String
+  severity         String
+  evidence         Json
+  active           Boolean       @default(true)
+  universe         CanonUniverse @relation(fields: [universeId], references: [id], onDelete: Cascade)
+  createdAt        DateTime      @default(now())
+
+  @@unique([universeId, sourceRecordType, sourceRecordId, targetRecordType, targetRecordId])
+  @@index([universeId, targetRecordType, targetRecordId, active])
+  @@index([sourceRecordType, sourceRecordId, active])
 }
 
 model ManuscriptVersion {
@@ -735,6 +894,16 @@ model GoogleDocumentReference {
   kind           String
   title          String
   lastExportedAt DateTime?
+  documentUrl    String?
+  revisionId     String?
+  driveVersion   String?
+  modifiedTime   DateTime?
+  canonVersion   Int?
+  manuscriptRevision Int?
+  namedRanges    Json?
+  syncStatus     String    @default("CONNECTED")
+  lastSyncedAt   DateTime?
+  lastCheckedAt  DateTime?
   createdAt      DateTime  @default(now())
 
   @@unique([userId, googleId])

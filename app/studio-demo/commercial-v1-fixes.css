@@ -1,0 +1,15 @@
+.canvas-topbar .global-create{display:inline-flex;align-items:center;gap:6px;width:auto;overflow:visible;padding-inline:12px;background:var(--accent);color:#fff;border-radius:7px;box-shadow:none}
+.create-dialog{width:min(560px,calc(100vw - 28px));max-height:82vh;overflow:auto;background:var(--paper);border-radius:14px;box-shadow:0 26px 90px #1c17144d}
+.create-dialog>header{display:flex;justify-content:space-between;padding:22px 24px;border-bottom:1px solid var(--line)}
+.create-dialog>header button{border:0;background:transparent}
+.create-dialog h2{font:500 27px var(--manuscript);margin:0}
+.create-dialog form{display:grid;gap:14px;padding:22px}
+.create-dialog form label{display:grid;gap:6px}
+.create-dialog form input,.create-dialog form select{padding:11px;border:1px solid var(--line-strong);border-radius:7px;background:#fff}
+.create-dialog form footer{display:flex;justify-content:flex-end;gap:8px}
+.recent-create,.create-section{padding:14px 22px}
+.recent-create>button{display:grid;grid-template-columns:24px 1fr auto;width:100%;padding:11px;border:0;border-top:1px solid var(--line);background:transparent;text-align:left}
+.create-section h3{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.create-section>div{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.create-section button{display:flex;align-items:center;gap:7px;padding:10px;border:1px solid var(--line);border-radius:7px;background:transparent}
+@media(max-width:600px){.create-section>div{grid-template-columns:repeat(2,1fr)}}

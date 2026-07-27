@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { calendarDateTime, previewCharacterRows } from "@/integrations/google/validation";
-import { decryptToken, encryptToken, oauthStatePayload, signOAuthState, verifyOAuthState } from "@/integrations/google/security";
+import { decryptToken, encryptToken, oauthStatePayload, safeOAuthReturnTo, signOAuthState, verifyOAuthState } from "@/integrations/google/security";
 
 describe("Google Workspace integration boundaries", () => {
   beforeEach(() => {
@@ -19,10 +19,12 @@ describe("Google Workspace integration boundaries", () => {
   });
 
   it("binds OAuth state to user and expiry", () => {
-    const state = signOAuthState("user-1", "nonce", Date.now() + 60_000);
+    const state = signOAuthState("user-1", "nonce", Date.now() + 60_000, "/studio/projects/project-1/chapters");
     expect(verifyOAuthState(state, "user-1")).toBe(true);
     expect(verifyOAuthState(state, "user-2")).toBe(false);
     expect(oauthStatePayload(state, "user-1")?.nonce).toBe("nonce");
+    expect(oauthStatePayload(state, "user-1")?.returnTo).toBe("/studio/projects/project-1/chapters");
+    expect(safeOAuthReturnTo("https://evil.example")).toBe("/studio/settings/integrations/google");
   });
 
   it("validates Sheets rows and Calendar time zones", () => {

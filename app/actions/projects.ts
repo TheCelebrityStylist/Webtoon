@@ -17,6 +17,15 @@ export async function createProject(_: FormState, data: FormData): Promise<FormS
   const project = await prisma.series.create({ data: { ...parsed.data, slug: `${slugify(parsed.data.title)}-${Date.now().toString(36)}`, workspaceId: membership.workspaceId } });
   redirect(`/studio/projects/${project.id}/overview`);
 }
+export async function createCommercialProject(data: FormData) {
+  const user = await requireUser(); const title = String(data.get("title") ?? "").trim(); const type = String(data.get("projectType") ?? "NOVEL"); const method = String(data.get("startingMethod") ?? "blank");
+  if (title.length < 2) throw new Error("Give the project a title.");
+  const projectType = ({ BOOK_SERIES: "NOVEL", TV_SERIES: "SERIAL_FICTION", GAME_NARRATIVE: "NARRATIVE_DESIGN", CUSTOM: "NOVEL" } as Record<string, string>)[type] ?? type;
+  if (!["NOVEL", "SCREENPLAY", "WEBTOON", "SERIAL_FICTION", "COMIC", "NARRATIVE_DESIGN"].includes(projectType)) throw new Error("Choose a supported project type.");
+  const membership = await prisma.workspaceMember.findFirst({ where: { userId: user.id, role: "OWNER" } }); if (!membership) throw new Error("An owner workspace is required.");
+  const result = await prisma.$transaction(async (tx) => { const project = await tx.series.create({ data: { title, slug: `${slugify(title)}-${Date.now().toString(36)}`, workspaceId: membership.workspaceId, projectType: projectType as "NOVEL", logline: "A new story taking shape in Morrow.", synopsis: "This project was created in the commercial writing workspace.", premise: "", genre: "DRAMA", language: "en", audience: "General", regionalVariant: "en-US", pointOfView: "THIRD_LIMITED", narrativeTense: "PAST" } }); const chapter = await tx.chapter.create({ data: { seriesId: project.id, title: projectType === "SCREENPLAY" ? "Act One" : projectType === "WEBTOON" || projectType === "SERIAL_FICTION" ? "Episode One" : "Chapter One", number: 1, position: 0 } }); const scene = await tx.scene.create({ data: { chapterId: chapter.id, title: "Untitled scene", position: 0 } }); await tx.importJob.create({ data: { seriesId: project.id, userId: user.id, provider: method, sourceId: `onboarding:${method}`, status: method === "blank" || method === "demo" ? "COMPLETED" : "PENDING", result: { startingMethod: method } } }); return { project, scene }; });
+  redirect(method === "google" ? `/studio/projects/${result.project.id}/chapters/${result.scene.id}?panel=sync` : `/studio/projects/${result.project.id}/chapters/${result.scene.id}`);
+}
 export async function updateProject(projectId: string, _: FormState, data: FormData): Promise<FormState> {
   const user = await requireUser(); await requireProjectAccess(user.id, projectId, ["OWNER", "WRITER", "EDITOR"]);
   const parsed = projectInput.safeParse(values(data)); if (!parsed.success) return { error: "Please correct the project details.", fields: parsed.error.flatten().fieldErrors };
