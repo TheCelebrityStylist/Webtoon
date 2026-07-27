@@ -26,6 +26,23 @@ export class LocalDemoStoryDataSource implements StoryWorkspaceDataSource {
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> { const response = await fetch(url, { ...init, headers: { "content-type": "application/json", ...(init?.headers ?? {}) } }); const body = await response.json(); if (!response.ok) throw Object.assign(new Error(body.error ?? "Request failed"), { status: response.status, body }); return body as T; }
 const sha256 = async (value: string) => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)))).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+export function buildScopedStoryPulsePayload(state: ReturnType<typeof createCanvasState> | undefined, input: StoryAnalysisInput, manuscriptHash: string, requestId: string) {
+  const changedText = input.blocks.map((block) => block.text).join("\n").toLocaleLowerCase();
+  const candidateEntities = (state?.entities ?? []).filter((entity) => [entity.name, ...entity.aliases].some((name) => name && changedText.includes(name.toLocaleLowerCase()))).slice(0, 50);
+  const candidateIds = new Set(candidateEntities.map((entity) => entity.id));
+  const confirmedFacts = (state?.observations ?? []).filter((item) => item.status === "confirmed" && candidateIds.has(item.subjectId)).slice(0, 200);
+  return {
+    projectId: input.projectId,
+    sceneId: input.sceneId,
+    revision: input.revision,
+    requestId,
+    manuscriptHash,
+    canonVersion: input.canonVersion ?? (state?.observations.filter((item) => item.status === "confirmed").length ?? 0),
+    blocks: input.blocks.map((block, order) => ({ ...block, adjacent: [], order })),
+    candidateEntities: candidateEntities.map((entity) => ({ id: entity.id, name: entity.name, aliases: entity.aliases, type: entity.type === "person" ? "CHARACTER" : entity.type.toUpperCase() })),
+    confirmedFacts: confirmedFacts.map((item) => ({ id: item.id, entityId: item.subjectId, predicate: item.predicate, value: item.value })),
+  };
+}
 export class ProductionStoryDataSource implements StoryWorkspaceDataSource {
   readonly mode = "production" as const;
   constructor(private projectId: string, private snapshot?: ReturnType<typeof createCanvasState>) {}
@@ -43,7 +60,8 @@ export class ProductionStoryDataSource implements StoryWorkspaceDataSource {
   async analyzeBlocks(input: StoryAnalysisInput) {
     const state = this.snapshot;
     const manuscriptHash = await sha256(input.blocks.map((block) => `${block.id}\0${block.text}`).join("\n"));
-    const raw = await json<{ runId: string; revision: number; canonVersion: number; manuscriptHash: string; warnings?: string[]; proposals: Array<{ id: string; kind: string; entityId?: string; entityName?: string; entityType?: string; property?: string; afterValue?: unknown; evidence: { blockId: string; quote: string; startOffset: number; endOffset: number } }> }>(`/api/projects/${this.projectId}/scenes/${input.sceneId}/story-pulse`, { method: "POST", body: JSON.stringify({ projectId: this.projectId, sceneId: input.sceneId, revision: input.revision, requestId: crypto.randomUUID(), manuscriptHash, blocks: input.blocks.map((block, order) => ({ ...block, adjacent: [], order })), candidateEntities: (state?.entities ?? []).map((entity) => ({ id: entity.id, name: entity.name, aliases: entity.aliases, type: entity.type === "person" ? "CHARACTER" : entity.type.toUpperCase() })), confirmedFacts: (state?.observations ?? []).filter((item) => item.status === "confirmed").map((item) => ({ id: item.id, entityId: item.subjectId, predicate: item.predicate, value: item.value })) }) });
+    const payload = buildScopedStoryPulsePayload(state, input, manuscriptHash, crypto.randomUUID());
+    const raw = await json<{ runId: string; revision: number; canonVersion: number; manuscriptHash: string; warnings?: string[]; proposals: Array<{ id: string; kind: string; entityId?: string; entityName?: string; entityType?: string; property?: string; afterValue?: unknown; evidence: { blockId: string; quote: string; startOffset: number; endOffset: number } }> }>(`/api/projects/${this.projectId}/scenes/${input.sceneId}/story-pulse`, { method: "POST", body: JSON.stringify(payload) });
     const proposals = raw.proposals.map((proposal) => ({ id: proposal.id, subjectId: proposal.entityId ?? proposal.entityName ?? proposal.id, predicate: proposal.property === "holder" ? "holder" as const : proposal.property === "location" ? "location" as const : proposal.kind === "EVENT" ? "entered" as const : "exists" as const, value: String(proposal.afterValue ?? proposal.entityName ?? "exists"), sceneId: input.sceneId, paragraphId: proposal.evidence.blockId, quote: proposal.evidence.quote, start: proposal.evidence.startOffset, end: proposal.evidence.endOffset, status: "proposed" as const, kind: proposal.entityType === "CHARACTER" ? "person" as const : proposal.entityType === "PLACE" ? "place" as const : proposal.entityType === "OBJECT" ? "object" as const : proposal.entityType === "EVENT" ? "event" as const : "state" as const, title: proposal.kind === "WARNING" ? `Review ${proposal.entityName ?? "story fact"}` : `Track ${proposal.entityName ?? proposal.property ?? "story fact"}` }));
     return { runId: raw.runId, revision: raw.revision, canonVersion: raw.canonVersion, manuscriptHash: raw.manuscriptHash, proposals, warning: raw.warnings?.join(" ") };
   }

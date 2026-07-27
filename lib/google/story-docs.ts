@@ -94,6 +94,33 @@ export function parseGoogleScenesByNamedRange(doc: GoogleDocForScenes) {
     return [{ id: name.slice("morrow:scene:".length), title: title.trim() || "Untitled scene", content: prose.join("\n") }];
   });
 }
-export function compareGoogleDocument(input: { documentId: string; storedRevision?: string; googleRevision: string; storedLocalRevision?: number; localRevision: number; localScenes: Array<{ id: string; title: string; content: string }>; googleScenes: Array<{ id: string; title: string; content: string }> }): GoogleDocumentComparison { const googleChanged = Boolean(input.storedRevision && input.storedRevision !== input.googleRevision); const localChanged = input.localRevision !== (input.storedLocalRevision ?? input.localRevision); const status = googleChanged && localChanged ? "conflict" : googleChanged ? "google-only" : localChanged ? "morrow-only" : "unchanged"; const google = new Map(input.googleScenes.map((scene) => [scene.id, scene])); return { documentId: input.documentId, baseRevision: input.storedRevision, googleRevision: input.googleRevision, localRevision: input.localRevision, status, scenes: input.localScenes.filter((scene) => google.get(scene.id)?.content !== scene.content).map((scene) => ({ sceneId: scene.id, title: scene.title, morrow: scene.content, google: google.get(scene.id)?.content ?? "" })) }; }
+
+export type GoogleConflictDecision = {
+  sceneId: string;
+  action: "KEEP_MORROW" | "USE_GOOGLE" | "MERGE" | "SKIP";
+  mergedText?: string;
+};
+
+export function assertGoogleConflictRevision(expectedRevision: string, actualRevision: string) {
+  if (expectedRevision !== actualRevision) {
+    throw Object.assign(new Error("Google changed after this conflict review was opened"), { code: "STALE_GOOGLE_REVISION" });
+  }
+}
+
+export function buildConflictGoogleRequests(
+  decisions: GoogleConflictDecision[],
+  localScenes: Array<{ id: string; title: string; manuscriptText: string }>,
+) {
+  const local = new Map(localScenes.map((scene) => [scene.id, scene]));
+  return decisions.flatMap((decision) => {
+    if (decision.action === "USE_GOOGLE" || decision.action === "SKIP") return [];
+    const scene = local.get(decision.sceneId);
+    if (!scene) throw Object.assign(new Error("Conflict scene is outside this project"), { code: "SCENE_NOT_FOUND" });
+    const text = decision.action === "MERGE" ? decision.mergedText : scene.manuscriptText;
+    if (text === undefined) throw Object.assign(new Error("Enter the merged scene text"), { code: "MERGED_TEXT_REQUIRED" });
+    return [{ replaceNamedRangeContent: { namedRangeName: namedRangeName("scene", scene.id), text: `${scene.title}\n${text}\n\n` } }];
+  });
+}
+export function compareGoogleDocument(input: { documentId: string; storedRevision?: string; googleRevision: string; storedLocalRevision?: number; localRevision: number; localScenes: Array<{ id: string; title: string; content: string }>; googleScenes: Array<{ id: string; title: string; content: string }>; externalHeadings?: string[] }): GoogleDocumentComparison { const googleChanged = Boolean(input.storedRevision && input.storedRevision !== input.googleRevision); const localChanged = input.localRevision !== (input.storedLocalRevision ?? input.localRevision); const status = googleChanged && localChanged ? "conflict" : googleChanged ? "google-only" : localChanged ? "morrow-only" : "unchanged"; const google = new Map(input.googleScenes.map((scene) => [scene.id, scene])); return { documentId: input.documentId, baseRevision: input.storedRevision, googleRevision: input.googleRevision, localRevision: input.localRevision, status, scenes: input.localScenes.filter((scene) => google.get(scene.id)?.content !== scene.content || google.get(scene.id)?.title !== scene.title).map((scene) => ({ sceneId: scene.id, title: scene.title, morrow: scene.content, google: google.get(scene.id)?.content ?? "" })), unmappedSceneIds: input.localScenes.filter((scene) => !google.has(scene.id)).map((scene) => scene.id), renamedSceneIds: input.localScenes.filter((scene) => google.has(scene.id) && google.get(scene.id)?.title !== scene.title).map((scene) => scene.id), externalHeadings: input.externalHeadings ?? [] }; }
 export function buildMorrowToGoogleSyncPlan(project: StoryProject, changedSceneIds: string[], requiredRevisionId: string) { const changed = new Set(changedSceneIds); return { writeControl: { requiredRevisionId }, requests: project.scenes.filter((scene) => changed.has(scene.id)).map((scene) => ({ replaceNamedRangeContent: { namedRangeName: namedRangeName("scene", scene.id), text: `${scene.title}\n${scene.content}\n` } })) }; }
 export function buildStoryWorkbook(project: StoryProject, entities: Array<{ id: string; name: string; type: string; appearances: string[]; [key: string]: unknown }>, continuity: Array<Record<string, unknown>> = []) { const chapters = project.chapters.filter((item) => item.status !== "archived"); const scenes = project.scenes.filter((item) => item.status !== "archived"); const sheets: Record<string, unknown[][]> = { Overview: [["Project", project.title], ["Type", project.type], ["Word count", scenes.reduce((sum, scene) => sum + scene.wordCount, 0)], ["Chapters", chapters.length], ["Scenes", scenes.length], ["Last synchronized", new Date().toISOString()]], Chapters: [["Chapter ID", "Position", "Part", "Title", "Summary", "Status", "Words"], ...chapters.map((chapter) => [chapter.id, chapter.position + 1, project.parts.find((part) => part.id === chapter.partId)?.title ?? "", chapter.title, chapter.summary, chapter.status, scenes.filter((scene) => scene.chapterId === chapter.id).reduce((sum, scene) => sum + scene.wordCount, 0)])], Scenes: [["Scene ID", "Chapter", "Position", "Title", "POV", "Place", "Summary", "Status", "Words"], ...scenes.map((scene) => [scene.id, chapters.find((chapter) => chapter.id === scene.chapterId)?.title ?? "", scene.position + 1, scene.title, scene.pointOfViewEntityId ?? "", scene.locationEntityId ?? scene.location, scene.summary, scene.status, scene.wordCount])], People: [], Places: [], Objects: [], Events: [], Questions: [], Continuity: [["Severity", "Issue", "Evidence", "Affected scene", "Status"], ...continuity.map((item) => [item.severity, item.issue, item.evidence, item.sceneId, item.status])] }; for (const name of ["People", "Places", "Objects", "Events", "Questions"]) sheets[name] = [["Entity ID", "Name", "Current state", "Appearances"], ...entities.filter((entity) => `${entity.type}s`.toLowerCase() === name.toLowerCase() || (name === "People" && entity.type === "person")).map((entity) => [entity.id, entity.name, entity.state ?? entity.currentLocation ?? "", entity.appearances.length])]; return sheets; }

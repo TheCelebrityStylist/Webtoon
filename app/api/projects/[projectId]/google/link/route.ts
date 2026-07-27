@@ -7,8 +7,10 @@ import { buildGoogleDocumentPlan } from "@/lib/google/story-docs";
 import { serializeWorkspace, workspaceInclude } from "@/lib/story-canvas/server-serializer";
 
 const input = z.object({
-  action: z.enum(["create", "inspect", "link"]),
+  action: z.enum(["create", "inspect", "link", "replace"]),
   documentId: z.string().min(10).optional(),
+  expectedRevision: z.string().min(1).optional(),
+  confirmation: z.literal("REPLACE").optional(),
 });
 type Doc = {
   documentId: string;
@@ -54,11 +56,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
 
     const canvas = serializeWorkspace(project);
     let verified = doc;
-    if (parsed.data.action === "create") {
+    if (parsed.data.action === "create" || parsed.data.action === "replace") {
+      if (parsed.data.action === "replace") {
+        if (parsed.data.confirmation !== "REPLACE") return Response.json({ error: "Type REPLACE to confirm replacement", code: "REPLACE_CONFIRMATION_REQUIRED" }, { status: 422 });
+        if (!parsed.data.expectedRevision || parsed.data.expectedRevision !== doc.revisionId) return Response.json({ error: "Google changed after the replacement preview was opened", code: "STALE_GOOGLE_REVISION" }, { status: 409 });
+      }
       const plan = buildGoogleDocumentPlan(canvas.project);
+      const endIndex = doc.body?.content?.at(-1)?.endIndex ?? 1;
+      const deleteRanges = Object.values(doc.namedRanges ?? {}).flatMap((group) => group.namedRanges ?? []).flatMap((range) => range.namedRangeId ? [{ deleteNamedRange: { namedRangeId: range.namedRangeId } }] : []);
+      const replacementPrefix = parsed.data.action === "replace" && endIndex > 1 ? [...deleteRanges, { deleteContentRange: { range: { startIndex: 1, endIndex: endIndex - 1 } } }] : [];
       await googleJson(session.user.id, "https://www.googleapis.com/auth/documents", `https://docs.googleapis.com/v1/documents/${encodeURIComponent(doc.documentId)}:batchUpdate`, {
         method: "POST",
-        body: JSON.stringify({ requests: plan.requests, writeControl: doc.revisionId ? { requiredRevisionId: doc.revisionId } : undefined }),
+        body: JSON.stringify({ requests: [...replacementPrefix, ...plan.requests], writeControl: doc.revisionId ? { requiredRevisionId: doc.revisionId } : undefined }),
       });
       verified = await googleJson<Doc>(session.user.id, "https://www.googleapis.com/auth/documents", `https://docs.googleapis.com/v1/documents/${encodeURIComponent(doc.documentId)}`);
     }
@@ -69,22 +78,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
       create: {
         userId: session.user.id, seriesId: projectId, googleId: doc.documentId, kind: "PRIMARY_DOC", title: doc.title,
         documentUrl: `https://docs.google.com/document/d/${doc.documentId}/edit`, revisionId: verified.revisionId,
-        manuscriptRevision: parsed.data.action === "create" ? Math.max(0, ...canvas.scenes.map((scene) => scene.revision)) : null,
-        namedRanges: verified.namedRanges ?? {}, lastSyncedAt: parsed.data.action === "create" ? new Date() : null,
-        syncStatus: parsed.data.action === "create" ? "SYNCED" : "LINKED",
+        manuscriptRevision: parsed.data.action === "create" || parsed.data.action === "replace" ? Math.max(0, ...canvas.scenes.map((scene) => scene.revision)) : null,
+        namedRanges: verified.namedRanges ?? {}, driveVersion: parsed.data.action === "replace" ? doc.revisionId : null, lastSyncedAt: parsed.data.action === "create" || parsed.data.action === "replace" ? new Date() : null,
+        syncStatus: parsed.data.action === "create" || parsed.data.action === "replace" ? "SYNCED" : "LINKED",
       },
       update: {
         kind: "PRIMARY_DOC", seriesId: projectId, title: doc.title,
         documentUrl: `https://docs.google.com/document/d/${doc.documentId}/edit`, revisionId: verified.revisionId,
         namedRanges: verified.namedRanges ?? {}, lastCheckedAt: new Date(),
-        ...(parsed.data.action === "create" ? { manuscriptRevision: Math.max(0, ...canvas.scenes.map((scene) => scene.revision)), lastSyncedAt: new Date(), syncStatus: "SYNCED" } : { syncStatus: "LINKED" }),
+        ...(parsed.data.action === "create" || parsed.data.action === "replace" ? { manuscriptRevision: Math.max(0, ...canvas.scenes.map((scene) => scene.revision)), driveVersion: parsed.data.action === "replace" ? doc.revisionId : undefined, lastSyncedAt: new Date(), syncStatus: "SYNCED" } : { syncStatus: "LINKED" }),
       },
     });
     return Response.json({
       documentId: reference.googleId,
       documentName: reference.title,
       documentUrl: reference.documentUrl,
-      status: parsed.data.action === "create" ? "synced" : "connected",
+      status: parsed.data.action === "create" || parsed.data.action === "replace" ? "synced" : "connected",
       latestRevisionId: reference.revisionId,
       lastSyncedAt: reference.lastSyncedAt,
       inspection: summary(verified),

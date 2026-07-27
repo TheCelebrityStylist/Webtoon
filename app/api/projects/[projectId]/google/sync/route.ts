@@ -23,6 +23,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ projectId
     const canvas = serializeWorkspace(project);
     const localRevision = Math.max(0, ...canvas.scenes.map((scene) => scene.revision));
     const googleScenes = parseGoogleScenesByNamedRange(doc);
+    const externalHeadings = (doc.body?.content ?? []).flatMap((item) => item.paragraph?.paragraphStyle?.namedStyleType?.startsWith("HEADING") ? [(item.paragraph.elements ?? []).map((element) => element.textRun?.content ?? "").join("").trim()] : []).filter(Boolean);
     const comparison = compareGoogleDocument({
       documentId: reference.googleId,
       storedRevision: reference.revisionId ?? undefined,
@@ -31,6 +32,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ projectId
       localRevision,
       localScenes: canvas.scenes.map((scene) => ({ id: scene.id, title: scene.title, content: scene.manuscriptText })),
       googleScenes,
+      externalHeadings,
     });
     await prisma.googleDocumentReference.update({
       where: { id: reference.id },

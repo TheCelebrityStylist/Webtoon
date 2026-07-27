@@ -23,6 +23,8 @@ export type StoryProject = { id: string; title: string; type: ProjectType; premi
 export type StoryEntity = {
   id: string; name: string; type: EntityType; aliases: string[]; currentLocation?: string; currentHolder?: string; currentOwner?: string; state?: string;
   role?: string; pronouns?: string; description?: string; atmosphere?: string; parentId?: string; importance?: string; appearances: string[]; sourceCount?: number; sceneIds?: string[]; status?: RecordStatus;
+  goals?: string[]; members?: string[]; leaderId?: string; allyIds?: string[]; enemyIds?: string[];
+  introducedSceneId?: string; relatedEntityIds?: string[]; expectedPayoff?: string; resolvedSceneId?: string; sourceEvidence?: string;
 };
 export type StoryObservation = { id: string; subjectId: string; predicate: "exists" | "location" | "holder" | "entered"; value: string; sceneId: string; paragraphId: string; quote: string; start: number; end: number; status: "proposed" | "confirmed" | "dismissed" | "changed"; kind: EntityType | "state"; title: string };
 export type ReviewFinding = { id: string; sceneId: string; quote: string; issue: string; reason: string; relatedQuote: string; status: "open" | "accepted" | "intentional" | "dismissed" };
@@ -30,7 +32,7 @@ export type SyncStatus = "not-connected" | "connecting" | "connected" | "local-c
 export type GoogleWorkspaceState = { status: SyncStatus; accountEmail?: string; grantedServices: string[]; documentId?: string; documentName?: string; documentUrl?: string; latestRevisionId?: string; driveVersion?: string; modifiedTime?: string; lastSyncedAt?: string; lastSyncedCanonVersion?: number; lastSyncedManuscriptRevision?: number; workbookId?: string; externalChange?: GoogleDocumentComparison };
 export type GoogleDocumentBlock = { id: string; text: string; style: string; kind: "heading" | "paragraph" | "rule"; included: boolean };
 export type GoogleImportPreview = { documentId: string; title: string; blocks: GoogleDocumentBlock[]; project: StoryProject; sourceModifiedTime?: string };
-export type GoogleDocumentComparison = { documentId: string; baseRevision?: string; googleRevision: string; localRevision: number; status: "google-only" | "morrow-only" | "conflict" | "unchanged"; scenes: Array<{ sceneId: string; title: string; morrow: string; google: string; result?: string }> };
+export type GoogleDocumentComparison = { documentId: string; baseRevision?: string; googleRevision: string; localRevision: number; status: "google-only" | "morrow-only" | "conflict" | "unchanged"; scenes: Array<{ sceneId: string; title: string; morrow: string; google: string; result?: string }>; unmappedSceneIds?: string[]; renamedSceneIds?: string[]; externalHeadings?: string[] };
 
 export type CanvasState = {
   version: 3; project: StoryProject; projectTitle: string; currentSceneId: string; mode: CanvasMode; outlineExpanded: boolean; focusMode: boolean;
@@ -41,7 +43,7 @@ export type CanvasState = {
 export type CreatePartInput = { projectId: string; title?: string; position?: number };
 export type CreateChapterInput = { projectId: string; title?: string; partId?: string; position?: number };
 export type CreateSceneInput = { projectId: string; chapterId: string; title?: string; position?: number };
-export type CreateEntityInput = { projectId: string; name: string; type: EntityType; sceneId?: string; role?: string; pronouns?: string; description?: string; currentLocation?: string; currentHolder?: string; currentOwner?: string; atmosphere?: string };
+export type CreateEntityInput = { projectId: string; name: string; type: EntityType; sceneId?: string; role?: string; pronouns?: string; description?: string; currentLocation?: string; currentHolder?: string; currentOwner?: string; atmosphere?: string; goals?: string[]; members?: string[]; leaderId?: string; allyIds?: string[]; enemyIds?: string[]; relatedEntityIds?: string[]; expectedPayoff?: string; resolvedSceneId?: string; sourceEvidence?: string };
 export type UpdateEntityInput = Partial<CreateEntityInput> & { projectId: string; entityId: string };
 export type StructureCommand = { projectId: string; type: "move-chapter" | "duplicate-chapter" | "archive-chapter" | "restore-chapter" | "delete-chapter" | "rename-chapter" | "move-scene" | "duplicate-scene" | "archive-scene" | "restore-scene" | "delete-scene" | "rename-scene"; id: string; direction?: "before" | "after" | "earlier" | "later"; targetId?: string; value?: string; position?: number };
 export type StructureResult = { project: StoryProject; selectedSceneId?: string };
