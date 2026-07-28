@@ -6,10 +6,11 @@ import { createCanvasState } from "@/lib/story-canvas/fixtures";
 import { writeIndexedCanvasState } from "@/lib/story-canvas/persistence";
 import { storyReducer } from "@/lib/story-canvas/story-reducer";
 import type { CanvasAction, CanvasState, CreateChapterInput, CreateEntityInput, CreatePartInput, CreateSceneInput, StoryWorkspaceDataSource, StructureCommand } from "@/lib/story-canvas/types";
+import { DemoStoryworldDataSource, ProductionStoryworldDataSource, type StoryworldDataSource } from "@/lib/storyworld/data-source";
 
 type Context = {
   state: CanvasState; dispatch: (action: CanvasAction, undoable?: boolean) => void; undo: () => void; canUndo: boolean;
-  saveStatus: "Saved locally" | "Saving" | "Saved" | "Offline" | "Conflict"; notice: string; setNotice: (value: string) => void; dataSource: StoryWorkspaceDataSource;
+  saveStatus: "Saved locally" | "Saving" | "Saved" | "Offline" | "Conflict"; notice: string; setNotice: (value: string) => void; dataSource: StoryWorkspaceDataSource; storyworldSource: StoryworldDataSource;
   createPart: (input?: Partial<CreatePartInput>) => Promise<void>; createChapter: (input?: Partial<CreateChapterInput>) => Promise<void>; createScene: (input?: Partial<CreateSceneInput>) => Promise<void>;
   createEntity: (input: Omit<CreateEntityInput, "projectId"> & { projectId?: string }) => Promise<string>; structure: (command: Omit<StructureCommand, "projectId">) => Promise<void>;
 };
@@ -18,6 +19,7 @@ const StoryCanvasContext = createContext<Context | null>(null);
 export function StoryCanvasProvider({ children, projectId = "museum-of-lost-hours", mode = "demo", initialState }: { children: ReactNode; projectId?: string; mode?: "demo" | "production"; initialState?: CanvasState }) {
   const [state, rawDispatch] = useReducer(storyReducer, initialState ?? createCanvasState());
   const source = useMemo<StoryWorkspaceDataSource>(() => mode === "production" ? new ProductionStoryDataSource(projectId) : new LocalDemoStoryDataSource(), [mode, projectId]);
+  const storyworldSource = useMemo<StoryworldDataSource>(() => mode === "production" ? new ProductionStoryworldDataSource(projectId) : new DemoStoryworldDataSource(projectId), [mode, projectId]);
   const [saveStatus, setSaveStatus] = useState<Context["saveStatus"]>(mode === "demo" ? "Saved locally" : "Saved");
   const [notice, setNotice] = useState(""); const [hydrated, setHydrated] = useState(Boolean(initialState));
   const history = useRef<CanvasState[]>([]); const timer = useRef<ReturnType<typeof setTimeout> | null>(null); const stateRef = useRef(state); stateRef.current = state;
@@ -33,7 +35,7 @@ export function StoryCanvasProvider({ children, projectId = "museum-of-lost-hour
   const createScene = useCallback(async (input: Partial<CreateSceneInput> = {}) => { const chapterId = input.chapterId ?? stateRef.current.project.chapters.find((item) => item.status === "active")?.id; if (!chapterId) throw new Error("Create a chapter first"); return optimistic({ type: "CREATE_SCENE", title: input.title, chapterId, position: input.position }, () => source.createScene({ projectId: stateRef.current.project.id, title: input.title, chapterId, position: input.position })); }, [optimistic, source]);
   const createEntity = useCallback(async (input: Omit<CreateEntityInput, "projectId"> & { projectId?: string }) => { const entity = await source.createEntity({ ...input, projectId: stateRef.current.project.id }); dispatch({ type: "CREATE_ENTITY", entity }); return entity.id; }, [dispatch, source]);
   const structure = useCallback(async (command: Omit<StructureCommand, "projectId">) => optimistic({ type: "STRUCTURE", command: { ...command, projectId: stateRef.current.project.id } }, () => source.updateStructure({ ...command, projectId: stateRef.current.project.id })), [optimistic, source]);
-  const value = useMemo(() => ({ state, dispatch, undo, canUndo: history.current.length > 0, saveStatus, notice, setNotice, dataSource: source, createPart, createChapter, createScene, createEntity, structure }), [state, dispatch, undo, saveStatus, notice, source, createPart, createChapter, createScene, createEntity, structure]);
+  const value = useMemo(() => ({ state, dispatch, undo, canUndo: history.current.length > 0, saveStatus, notice, setNotice, dataSource: source, storyworldSource, createPart, createChapter, createScene, createEntity, structure }), [state, dispatch, undo, saveStatus, notice, source, storyworldSource, createPart, createChapter, createScene, createEntity, structure]);
   return <StoryCanvasContext.Provider value={value}>{children}</StoryCanvasContext.Provider>;
 }
 

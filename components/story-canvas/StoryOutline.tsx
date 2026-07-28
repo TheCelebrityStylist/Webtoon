@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { CanvasScene, StoryChapter, StoryPart, StructureCommand } from "@/lib/story-canvas/types";
 import { StoryIcon } from "./StoryIcon";
+import styles from "./styles/StoryOutline.module.css";
 
 type Creation = { type: "chapter" | "scene"; chapterId?: string; partId?: string; position?: number };
 
@@ -88,7 +89,7 @@ export function StoryOutline({ projectTitle, parts, chapters, scenes, currentSce
     </section>;
   };
 
-  return <aside className={`story-outline ${expanded ? "expanded" : "collapsed"}`} aria-label="Story outline">
+  return <aside className={`${styles.outline} story-outline ${expanded ? "expanded" : "collapsed"}`} aria-label="Story outline">
     <header className="outline-header"><div><small>Manuscript</small><strong>{projectTitle}</strong></div><button onClick={onToggle} aria-label={expanded ? "Collapse story outline" : "Expand story outline"}><StoryIcon name="menu"/></button><button aria-label="Create chapter" onClick={() => setCreating({ type: "chapter" })}><StoryIcon name="plus"/></button></header>
     {expanded && <><label className="outline-search"><StoryIcon name="search"/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Filter chapters and scenes" aria-label="Filter manuscript"/></label><div className="outline-scroll">{parts.filter((part) => part.status !== "archived").map((part) => <section className="outline-part" key={part.id}><header><span>{part.title}</span><small>{Math.round((part.chapterIds.length / Math.max(1, chapters.length)) * 100)}%</small><button aria-label={`Add chapter to ${part.title}`} onClick={() => setCreating({ type: "chapter", partId: part.id })}><StoryIcon name="plus"/></button></header>{visible.filter((chapter) => chapter.partId === part.id).map(renderChapter)}</section>)}{visible.filter((chapter) => !chapter.partId).map(renderChapter)}{!visible.length && <div className="outline-empty"><StoryIcon name="chapter"/><strong>Your story is ready for its first chapter.</strong><button onClick={() => setCreating({ type: "chapter" })}>Create chapter</button></div>}</div><button className="outline-add" onClick={() => setCreating({ type: "chapter" })}><StoryIcon name="plus"/><span>New chapter</span></button></>}
     {creating && <div className="inline-structure-create"><StoryIcon name={creating.type === "chapter" ? "chapter" : "scene"}/><input autoFocus value={title} onChange={(event) => setTitle(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") submit(); if (event.key === "Escape") setCreating(null); }} placeholder={creating.type === "chapter" ? "Untitled chapter" : "Untitled scene"} aria-label={`New ${creating.type} title`}/><button onClick={submit}>Create</button></div>}
