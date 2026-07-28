@@ -9,6 +9,7 @@ import { changedParagraphs } from "@/lib/story-canvas/local-analyzer";
 import type { CanvasScene, EntityType, StoryEntity, StoryObservation } from "@/lib/story-canvas/types";
 import { StoryIcon } from "./StoryIcon";
 import { useCollaborativeScene } from "./hooks/useCollaborativeScene";
+import { MANUSCRIPT_META } from "@/lib/storyworld/local-first/y-document";
 const documentFromText = (text: string) => ({ type: "doc", content: text.split(/\n\s*\n/).map((paragraph) => ({ type: "paragraph", content: paragraph ? [{ type: "text", text: paragraph }] : [] })) });
 type Suggestion = { trigger: "@" | "#" | "!" | "/"; query: string; from: number; to: number };
 const kindFor = (trigger: Suggestion["trigger"]): EntityType | null => trigger === "@" ? "person" : trigger === "#" ? "place" : trigger === "!" ? "object" : null;
@@ -19,7 +20,22 @@ export function LivingEditor({ projectId, branchId, production, scene, chapterTi
   const extensions = useMemo(() => production
     ? [StarterKit.configure({ history: false }), StableBlockIds, StoryDecorations, Collaboration.configure({ document: collaboration.document })]
     : [StarterKit, StableBlockIds, StoryDecorations], [collaboration.document, production]);
-  const editor = useEditor({ immediatelyRender: false, extensions, content: production ? undefined : documentFromText(scene.content), editorProps: { attributes: { class: "manuscript", "aria-label": "Manuscript", spellcheck: "true", "data-placeholder": "Start writing…" } }, onUpdate: ({ editor: instance }) => { const text = instance.getText({ blockSeparator: "\n\n" }); setDraft(text); onChange(text); const { from } = instance.state.selection; const before = instance.state.doc.textBetween(Math.max(0, from - 80), from, "\n", "\0"); const match = /(?:^|\s)([@#!/])([^\s@#!/]{0,40})$/.exec(before); setSuggestion(match ? { trigger: match[1] as Suggestion["trigger"], query: match[2], from: from - match[1].length - match[2].length, to: from } : null); }, onSelectionUpdate: ({ editor: instance }) => setSelectionMenu(!instance.state.selection.empty) }, [scene.id, production]);
+  const editor = useEditor({ immediatelyRender: false, extensions, content: production ? undefined : documentFromText(scene.content), editorProps: { attributes: { class: "manuscript", "aria-label": "Manuscript", spellcheck: "true", "data-placeholder": "Start writing…" } }, onUpdate: ({ editor: instance }) => {
+    const text = instance.getText({ blockSeparator: "\n\n" });
+    if (production) {
+      collaboration.document.transact(() => {
+        const metadata = collaboration.document.getMap<unknown>(MANUSCRIPT_META);
+        metadata.set("manuscriptJson", instance.getJSON());
+        metadata.set("manuscriptText", text);
+      }, "editor-metadata");
+    }
+    setDraft(text);
+    onChange(text);
+    const { from } = instance.state.selection;
+    const before = instance.state.doc.textBetween(Math.max(0, from - 80), from, "\n", "\0");
+    const match = /(?:^|\s)([@#!/])([^\s@#!/]{0,40})$/.exec(before);
+    setSuggestion(match ? { trigger: match[1] as Suggestion["trigger"], query: match[2], from: from - match[1].length - match[2].length, to: from } : null);
+  }, onSelectionUpdate: ({ editor: instance }) => setSelectionMenu(!instance.state.selection.empty) }, [scene.id, production, collaboration.document]);
   useEffect(() => {
     if (!editor || !production || !collaboration.localHydrated || (collaboration.status !== "synced" && collaboration.status !== "offline")) return;
     const fragment = collaboration.document.getXmlFragment("prosemirror");

@@ -14,13 +14,26 @@ export async function GET(_: Request, { params }: { params: Promise<{ projectId:
     const { branch } = await requireStoryworldBranch(session.user.id, projectId, branchId);
     const main = branch.parentId ? await prisma.canonBranch.findUnique({ where: { id: branch.parentId } }) : branch;
     if (!main) return Response.json({ error: { code: "BASE_BRANCH_NOT_FOUND", message: "Base branch not found" } }, { status: 404 });
-    const [mainEvents, branchEvents] = await Promise.all([loadEffectiveBranchEvents(main.id), loadEffectiveBranchEvents(branch.id)]);
+    const [mainEvents, branchEvents, sceneOverrides] = await Promise.all([
+      loadEffectiveBranchEvents(main.id),
+      loadEffectiveBranchEvents(branch.id),
+      prisma.branchSceneOverride.findMany({
+        where: { branchId },
+        select: { sceneId: true, baseCheckpoint: { select: { sequence: true } }, branchDocument: { select: { snapshotSequence: true } } },
+      }),
+    ]);
     const mainProjection = replayProjection(main.id, mainEvents);
     const branchProjection = replayProjection(branch.id, branchEvents);
     const mainDiagnostics = diagnoseStoryworld(mainProjection, mainEvents);
     const branchDiagnostics = diagnoseStoryworld(branchProjection, branchEvents);
     const differences = compareBranchState({ mainEvents, branchEvents, mainProjection, branchProjection, mainDiagnostics, branchDiagnostics });
-    return Response.json({ baseBranchId: main.id, branchId, differences, summary: { events: branchEvents.length - mainEvents.length, entityStates: differences.filter((difference) => difference.recordType === "ENTITY_STATE").length, introducedRisks: differences.filter((difference) => difference.kind === "INTRODUCED_RISK").length } }, { headers: { "cache-control": "private, no-store" } });
+    return Response.json({
+      baseBranchId: main.id,
+      branchId,
+      differences,
+      sceneChanges: sceneOverrides.map((override) => ({ sceneId: override.sceneId, baseSequence: override.baseCheckpoint.sequence, branchSequence: override.branchDocument.snapshotSequence })),
+      summary: { events: branchEvents.length - mainEvents.length, scenes: sceneOverrides.length, entityStates: differences.filter((difference) => difference.recordType === "ENTITY_STATE").length, introducedRisks: differences.filter((difference) => difference.kind === "INTRODUCED_RISK").length },
+    }, { headers: { "cache-control": "private, no-store" } });
   } catch (error) {
     return storyworldError(error);
   }

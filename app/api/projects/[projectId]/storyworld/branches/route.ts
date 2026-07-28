@@ -26,7 +26,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ projectId:
       orderBy: { createdAt: "asc" },
       include: { _count: { select: { sceneOverrides: true, diagnostics: { where: { status: "OPEN" } } } } },
     });
-    return Response.json({ branches }, { headers: { "cache-control": "private, no-store" } });
+    const version = await prisma.canonUniverse.findUniqueOrThrow({ where: { id: universe.id }, select: { version: true } });
+    return Response.json({ branches, universeVersion: version.version }, { headers: { "cache-control": "private, no-store" } });
   } catch (error) {
     return storyworldError(error);
   }
