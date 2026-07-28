@@ -1,5 +1,85 @@
 "use client";
-import { useMemo, useState } from "react"; import type { CanvasScene, StoryEntity } from "@/lib/story-canvas/types"; import { StoryIcon } from "./StoryIcon"; import { useStoryCanvas } from "./hooks/useStoryCanvas";
-const colors = ["#754260", "#176c68", "#b07824", "#4f6389"];
-export function StoryMap({ scenes, entities, currentSceneId, onOpen }: { scenes: CanvasScene[]; entities: StoryEntity[]; currentSceneId: string; onOpen: (id: string) => void }) { const { state, createChapter, createScene, structure } = useStoryCanvas(); const [zoom, setZoom] = useState(1); const [order, setOrder] = useState<"reader" | "chronology">("reader"); const [filter, setFilter] = useState("all"); const [selectedThread, setSelectedThread] = useState<string | null>(null); const chapters = state.project.chapters.filter((item) => item.status !== "archived").sort((a, b) => a.position - b.position); const visible = useMemo(() => scenes.filter((scene) => scene.status !== "archived" && (filter === "all" || scene.people.includes(filter) || scene.objects.includes(filter) || scene.locationEntityId === filter)), [filter, scenes]); const threads = [{ id: "portrait", label: "The altered portrait", scenes: ["portrait-gallery", "restored-portrait"], color: colors[0] }, { id: "hours", label: "The missing hours", scenes: ["west-hall", "missing-hour", "archive-door"], color: colors[1] }, { id: "key", label: "The silver key", scenes: ["conversation-room", "river-bank", "archive-door"], color: colors[2] }];
-  return <main className="story-map commercial-map"><header><div><small>Structure and consequence</small><h1>Story map</h1></div><div className="map-order"><button aria-pressed={order === "reader"} onClick={() => setOrder("reader")}>Reader order</button><button aria-pressed={order === "chronology"} onClick={() => setOrder("chronology")}>Chronology</button></div><div className="map-controls"><label><StoryIcon name="filter"/><select value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Filter Story Map"><option value="all">All story elements</option>{entities.map((entity) => <option key={entity.id} value={entity.id}>{entity.name}</option>)}</select></label><button onClick={() => setZoom((value) => Math.max(.7, value - .1))} aria-label="Zoom out">−</button><span>{Math.round(zoom * 100)}%</span><button onClick={() => setZoom((value) => Math.min(1.35, value + .1))} aria-label="Zoom in">＋</button><button onClick={() => setZoom(1)}>Fit story</button><button className="primary" onClick={() => void createChapter({ title: "Untitled chapter" })}><StoryIcon name="plus"/>Chapter</button></div></header><div className="map-body"><aside className="map-legend"><h2>Story threads</h2>{threads.map((thread) => <button key={thread.id} aria-pressed={selectedThread === thread.id} onClick={() => setSelectedThread((value) => value === thread.id ? null : thread.id)}><i style={{ background: thread.color }}/><span>{thread.label}<small>{thread.scenes.length} story points</small></span></button>)}<h2>Markers</h2><span><i className="person"/>Person</span><span><i className="place"/>Place</span><span><i className="object"/>Object</span></aside><div className="map-viewport"><div className="map-commercial-plane" style={{ transform: `scale(${zoom})` }}><svg className="commercial-thread-lines" viewBox={`0 0 ${Math.max(1200, chapters.length * 430)} 620`} aria-label="Story thread connections">{threads.map((thread, threadIndex) => { const points = thread.scenes.flatMap((id) => { const scene = scenes.find((item) => item.id === id); if (!scene) return []; const chapterIndex = chapters.findIndex((chapter) => chapter.id === scene.chapterId); return [`${chapterIndex * 430 + 170 + scene.position * 72},${155 + threadIndex * 145}`]; }); return <polyline key={thread.id} points={points.join(" ")} fill="none" stroke={thread.color} strokeWidth={selectedThread === thread.id ? 5 : 2.5} opacity={selectedThread && selectedThread !== thread.id ? .16 : .9}><title>{thread.label}: setup to payoff across {thread.scenes.length} scenes</title></polyline>; })}</svg><div className="commercial-chapters" style={{ gridTemplateColumns: `repeat(${Math.max(1, chapters.length)}, 430px)` }}>{chapters.map((chapter, chapterIndex) => { const chapterScenes = visible.filter((scene) => scene.chapterId === chapter.id).sort((a, b) => a.position - b.position); return <section key={chapter.id}><header><div><small>Chapter {chapterIndex + 1}</small><h2>{chapter.title}</h2><span>{chapterScenes.reduce((sum, scene) => sum + scene.wordCount, 0).toLocaleString()} words</span></div><button onClick={() => void createScene({ chapterId: chapter.id, title: "Untitled scene" })} aria-label={`Add scene to ${chapter.title}`}><StoryIcon name="plus"/></button><button aria-label={`${chapter.title} menu`}><StoryIcon name="more"/></button></header><div className="chapter-map-scenes" onDragOver={(event) => event.preventDefault()} onDrop={(event) => { const id = event.dataTransfer.getData("text/morrow-scene"); if (id) void structure({ type: "move-scene", id, targetId: chapter.id, position: chapterScenes.length }); }}>{chapterScenes.map((scene) => <button draggable onDragStart={(event) => event.dataTransfer.setData("text/morrow-scene", scene.id)} key={scene.id} className={`map-scene-card ${scene.id === currentSceneId ? "selected" : ""}`} onClick={() => onOpen(scene.id)}><header><span>{scene.location || "Location open"}</span>{scene.id === currentSceneId && <b>Writing</b>}</header><h3>{scene.title}</h3><p>{scene.summary || (scene.content ? scene.content.slice(0, 92) : "What changes in this scene?")}</p><footer><span>{scene.pointOfViewEntityId ? entities.find((entity) => entity.id === scene.pointOfViewEntityId)?.name : scene.people[0] ? entities.find((entity) => entity.id === scene.people[0])?.name : "POV open"}</span><div>{scene.people.slice(0, 2).map((id) => <i className="person" key={id}/>)}{scene.objects.slice(0, 2).map((id) => <i className="object" key={id}/>)}</div>{scene.objects.includes("silver-key") && scene.id === "archive-door" && <StoryIcon name="warning"/>}</footer></button>)}</div></section>; })}</div><div className="map-minimap"><span style={{ width: `${Math.min(100, 100 / zoom)}%` }}/><small>Minimap</small></div></div></div></div></main>; }
+
+import "@xyflow/react/dist/style.css";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { Background, Controls, ReactFlow, type Edge, type Node, type NodeProps } from "@xyflow/react";
+import { Box, CircleHelp, MapPin, UserRound } from "lucide-react";
+import type { CanvasScene, StoryEntity } from "@/lib/story-canvas/types";
+
+type WorldNodeData = {
+  label: string;
+  type: "scene" | "person" | "place" | "object" | "question" | "event" | "faction";
+  detail: string;
+  sourceSceneId?: string;
+};
+
+const icon = {
+  scene: MapPin,
+  person: UserRound,
+  place: MapPin,
+  object: Box,
+  question: CircleHelp,
+  event: MapPin,
+  faction: UserRound,
+};
+
+const WorldNode = memo(function WorldNode({ data }: NodeProps<Node<WorldNodeData>>) {
+  const Icon = icon[data.type];
+  return <article className={`world-node world-node-${data.type}`} aria-label={`${data.type}: ${data.label}. ${data.detail}`}>
+    <Icon aria-hidden="true"/><span><small>{data.type}</small><strong>{data.label}</strong><em>{data.detail}</em></span>
+  </article>;
+});
+
+const nodeTypes = { world: WorldNode };
+const layerTypes = {
+  Story: new Set(["scene", "event"]),
+  People: new Set(["person"]),
+  Places: new Set(["place"]),
+  Objects: new Set(["object"]),
+  Questions: new Set(["question"]),
+  Factions: new Set(["faction"]),
+};
+
+function buildGraph(scenes: CanvasScene[], entities: StoryEntity[]) {
+  const nodes: Node<WorldNodeData>[] = [
+    ...scenes.map((scene) => ({ id: `scene:${scene.id}`, type: "world", position: { x: 0, y: 0 }, data: { label: scene.title, type: "scene" as const, detail: `${scene.wordCount} words`, sourceSceneId: scene.id } })),
+    ...entities.map((entity) => ({ id: `entity:${entity.id}`, type: "world", position: { x: 0, y: 0 }, data: { label: entity.name, type: entity.type, detail: entity.currentLocation ?? entity.currentHolder ?? entity.state ?? `${entity.appearances.length} appearances` } })),
+  ];
+  const sceneIds = new Set(scenes.map((scene) => scene.id));
+  const edges: Edge[] = entities.flatMap((entity) => entity.appearances.filter((sceneId) => sceneIds.has(sceneId)).map((sceneId) => ({
+    id: `appearance:${entity.id}:${sceneId}`,
+    source: `entity:${entity.id}`,
+    target: `scene:${sceneId}`,
+    type: "smoothstep",
+    label: "APPEARS IN",
+    className: `world-edge world-edge-${entity.type}`,
+  })));
+  return { nodes, edges };
+}
+
+export function StoryMap({ scenes, entities, currentSceneId, onOpen }: { scenes: CanvasScene[]; entities: StoryEntity[]; currentSceneId: string; onOpen: (id: string) => void }) {
+  const graph = useMemo(() => buildGraph(scenes, entities), [entities, scenes]);
+  const [layout, setLayout] = useState(graph);
+  const [layers, setLayers] = useState(() => new Set(Object.keys(layerTypes)));
+  const worker = useRef<Worker>();
+  useEffect(() => {
+    worker.current = new Worker(new URL("../../workers/story-layout.worker.ts", import.meta.url));
+    worker.current.onmessage = (event: MessageEvent<{ nodes: Node<WorldNodeData>[]; edges: Edge[] }>) => setLayout(event.data);
+    return () => worker.current?.terminate();
+  }, []);
+  useEffect(() => worker.current?.postMessage(graph), [graph]);
+  const visibleTypes = useMemo(() => new Set(Object.entries(layerTypes).filter(([layer]) => layers.has(layer)).flatMap(([, types]) => [...types])), [layers]);
+  const nodes = layout.nodes.filter((node) => visibleTypes.has(node.data.type));
+  const nodeIds = new Set(nodes.map((node) => node.id));
+  const edges = layout.edges.filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target));
+  return <main className="story-world">
+    <aside className="world-layers"><small>WORLD LAYERS</small>{Object.keys(layerTypes).map((layer) => <label key={layer}><input type="checkbox" checked={layers.has(layer)} onChange={() => setLayers((current) => { const next = new Set(current); if (next.has(layer)) next.delete(layer); else next.add(layer); return next; })}/>{layer}</label>)}</aside>
+    <section className="world-observatory" aria-label="Storyworld projection">
+      <header><span>WORLD · STORY POINT</span><strong>{scenes.findIndex((scene) => scene.id === currentSceneId) + 1} / {scenes.length}</strong><small>{nodes.length} visible records · {edges.length} supported connections</small></header>
+      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView minZoom={0.15} maxZoom={2} onlyRenderVisibleElements onNodeDoubleClick={(_, node) => { if (node.data.sourceSceneId) onOpen(node.data.sourceSceneId); }}>
+        <Background color="#252a33" gap={28}/>
+        <Controls showInteractive={false}/>
+      </ReactFlow>
+    </section>
+  </main>;
+}

@@ -15,6 +15,7 @@ import "./studio-demo/story-font.css";
 import "./studio-demo/mobile-overrides.css";
 import "./studio-demo/commercial-v1.css";
 import "./studio-demo/commercial-v1-fixes.css";
+import "./storyworld.css";
 import type { Metadata } from "next";
 import { baseMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
