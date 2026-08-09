@@ -192,7 +192,7 @@ body {
 }
 .feature-proof b {
   display: block;
-  color: #826f7c;
+  color: #66525e;
   font-size: 0.62rem;
   margin-bottom: 1rem;
 }
@@ -227,7 +227,7 @@ body {
   box-shadow: 16px 16px 0 #879c79;
 }
 .proof-console output span {
-  color: #826f7c;
+  color: #66525e;
   font-size: 0.65rem;
   letter-spacing: 0.12em;
 }

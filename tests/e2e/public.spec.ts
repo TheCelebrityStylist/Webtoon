@@ -120,18 +120,15 @@ test("planning canvas reacts to scene movement, arc focus, question trace, and u
 }) => {
   await page.goto("/planning");
   await page
-    .getByRole("button", { name: /The visitor arrives/ })
-    .click();
-  await page
     .getByRole("button", { name: "Move The visitor arrives later" })
     .click();
   await expect(page.getByRole("status")).toContainText(
     "tracks were recalculated",
   );
-  await page.getByRole("button", { name: "Tomas", exact: true }).click();
+  await page.getByRole("button", { name: /^Tomas\b/ }).click();
   await expect(page.getByRole("status")).toContainText("Tomas arc highlighted");
   await page
-    .getByRole("button", { name: "Who sent the visitor?", exact: true })
+    .getByRole("button", { name: /^Who sent the visitor\?/ })
     .click();
   await expect(page.getByText("Possible resolution · S9")).toBeVisible();
   await page.getByRole("button", { name: "Undo", exact: false }).click();

@@ -282,15 +282,17 @@ async function getStore(projectId: string): Promise<Store> {
   if (typeof localStorage !== "undefined") {
     try {
       const raw = localStorage.getItem(legacyKey(projectId));
-      if (raw)
+      if (raw) {
+        const legacy = JSON.parse(raw) as Partial<Store>;
         migrated = {
           ...seed(),
-          ...(JSON.parse(raw) as Partial<Store>),
+          ...legacy,
           schemaVersion: 2,
-          branchScenes: {},
-          mergePreviews: {},
-          merges: [],
+          branchScenes: legacy.branchScenes ?? {},
+          mergePreviews: legacy.mergePreviews ?? {},
+          merges: legacy.merges ?? [],
         };
+      }
     } catch {
       /* retain seed */
     }
@@ -422,7 +424,7 @@ export class DemoStoryworldDataSource implements StoryworldDataSource {
     await putStore(this.projectId, s);
     return branch;
   }
-  async compareBranch(id: string) {
+  async compareBranch(id: string): Promise<BranchComparison> {
     const s = await getStore(this.projectId);
     return (
       s.comparisons[id] ?? {
@@ -435,7 +437,7 @@ export class DemoStoryworldDataSource implements StoryworldDataSource {
       }
     );
   }
-  async compileBranch(id: string) {
+  async compileBranch(id: string): Promise<CompileResult> {
     return {
       branchId: id,
       consequences: (await this.compareBranch(id)).consequences,
@@ -481,7 +483,7 @@ export class DemoStoryworldDataSource implements StoryworldDataSource {
     await putStore(this.projectId, s);
     return saved;
   }
-  async previewMerge(input: MergeBranchInput) {
+  async previewMerge(input: MergeBranchInput): Promise<MergePreview> {
     const s = await getStore(this.projectId);
     if (s.version !== input.expectedVersion)
       throw new StoryworldDataError(
@@ -702,7 +704,7 @@ type ApiBranch = {
   forkSceneId?: string;
   status: "ACTIVE" | "MERGED" | "ARCHIVED";
   active: boolean;
-  _count: { sceneOverrides: number; diagnostics: number };
+  _count?: { sceneOverrides: number; diagnostics: number };
 };
 const human = (x: ApiBranch): StoryBranch => ({
   id: x.id,
@@ -711,8 +713,8 @@ const human = (x: ApiBranch): StoryBranch => ({
   forkSceneId: x.forkSceneId,
   status: x.status,
   active: x.active,
-  changedScenes: x._count.sceneOverrides,
-  openConsequences: x._count.diagnostics,
+  changedScenes: x._count?.sceneOverrides ?? 0,
+  openConsequences: x._count?.diagnostics ?? 0,
   mergeState: x.status === "MERGED" ? "merged" : "unmerged",
 });
 export class ProductionStoryworldDataSource implements StoryworldDataSource {
@@ -757,16 +759,84 @@ export class ProductionStoryworldDataSource implements StoryworldDataSource {
     );
     return human(r.branch);
   }
-  async compareBranch(id: string) {
-    return request<BranchComparison>(
-      `/api/projects/${this.projectId}/storyworld/branches/${id}/compare`,
-    );
+  async compareBranch(id: string): Promise<BranchComparison> {
+    const response = await request<{
+      branchId: string;
+      differences: Array<{
+        id: string;
+        kind: string;
+        recordType: string;
+        recordId: string;
+        main?: unknown;
+        branch?: unknown;
+      }>;
+      sceneChanges: Array<{ sceneId: string }>;
+      summary: { introducedRisks: number };
+    }>(`/api/projects/${this.projectId}/storyworld/branches/${id}/compare`);
+    const branch = await this.loadBranch(id);
+    return {
+      branchId: id,
+      baseName: "Main",
+      branchName: branch.name,
+      changedSentence: response.sceneChanges.length
+        ? `${response.sceneChanges.length} changed scene${response.sceneChanges.length === 1 ? "" : "s"}`
+        : "No manuscript changes yet.",
+      changes: response.differences.map((difference) => ({
+        id: difference.recordId,
+        kind:
+          difference.recordType === "DIAGNOSTIC"
+            ? "payoff"
+            : difference.recordType === "ENTITY_STATE"
+              ? "state"
+              : "scene",
+        title: `${difference.recordType.replaceAll("_", " ").toLowerCase()} ${difference.kind.toLowerCase()}`,
+        before:
+          difference.main === undefined
+            ? "Not established"
+            : JSON.stringify(difference.main),
+        after:
+          difference.branch === undefined
+            ? "Removed in branch"
+            : JSON.stringify(difference.branch),
+        selected: difference.recordType !== "DIAGNOSTIC",
+      })),
+      consequences: response.differences
+        .filter((difference) => difference.recordType === "DIAGNOSTIC")
+        .map((difference) => ({
+          id: difference.id,
+          title: "Story consequence requires review",
+          detail: `${difference.kind.replaceAll("_", " ").toLowerCase()} in this branch`,
+          severity: "warning",
+          resolved: false,
+        })),
+    };
   }
-  compileBranch(id: string) {
-    return request<CompileResult>(
-      `/api/projects/${this.projectId}/storyworld/branches/${id}/compile`,
-      { method: "POST" },
-    );
+  async compileBranch(id: string): Promise<CompileResult> {
+    const response = await request<{
+      diagnostics: Array<{
+        id: string;
+        title: string;
+        explanation: string;
+        severity: string;
+        sourceSceneId?: string;
+        affectedSceneId?: string;
+      }>;
+    }>(`/api/projects/${this.projectId}/storyworld/branches/${id}/compile`, {
+      method: "POST",
+      body: JSON.stringify({ trigger: "MANUAL" }),
+    });
+    return {
+      branchId: id,
+      consequences: response.diagnostics.map((item) => ({
+        id: item.id,
+        title: item.title,
+        detail: item.explanation,
+        severity: item.severity === "INFO" ? "information" : "warning",
+        sceneId: item.affectedSceneId ?? item.sourceSceneId,
+        resolved: false,
+      })),
+      calculatedAt: new Date().toISOString(),
+    };
   }
   loadBranchScene(branchId: string, sceneId: string) {
     return request<BranchSceneDocument>(
@@ -779,17 +849,20 @@ export class ProductionStoryworldDataSource implements StoryworldDataSource {
       { method: "PUT", body: JSON.stringify(value) },
     );
   }
-  previewMerge(input: MergeBranchInput) {
-    return request<MergePreview>(
-      `/api/projects/${this.projectId}/storyworld/branches/${input.branchId}/merge/preview`,
-      { method: "POST", body: JSON.stringify(input) },
-    );
+  async previewMerge(input: MergeBranchInput): Promise<MergePreview> {
+    const comparison = await this.compareBranch(input.branchId);
+    return {
+      id: `preview:${input.branchId}:${input.expectedVersion}`,
+      branchId: input.branchId,
+      expectedVersion: input.expectedVersion,
+      changes: comparison.changes.filter((change) =>
+        input.changeIds.includes(change.id),
+      ),
+      createdAt: new Date().toISOString(),
+    };
   }
-  cancelMergePreview(id: string) {
-    return request<void>(
-      `/api/projects/${this.projectId}/storyworld/merge-previews/${id}`,
-      { method: "DELETE" },
-    );
+  async cancelMergePreview() {
+    // Production previews are derived read-only from the current version.
   }
   async mergeBranch(input: MergeBranchInput) {
     const r = await request<{
@@ -827,14 +900,58 @@ export class ProductionStoryworldDataSource implements StoryworldDataSource {
       message: "Merge undone. The alternate path is still available.",
     };
   }
-  loadEntityState(input: EntityStateInput) {
-    return request<EntityState>(
-      `/api/projects/${input.projectId}/storyworld/branches/${input.branchId}/entities/${input.entityId}${input.sequence === undefined ? "" : `?sequence=${input.sequence}`}`,
+  async loadEntityState(input: EntityStateInput) {
+    const response = await request<{
+      entity: { id: string; name: string };
+      projection: { stateJson: Record<string, unknown> } | null;
+      references?: Record<string, string>;
+      evidence?: Array<{ exactQuote?: string; sceneId?: string }>;
+    }>(
+      `/api/projects/${input.projectId}/storyworld/entities/${input.entityId}/state?branchId=${encodeURIComponent(input.branchId)}${input.sequence === undefined ? "" : `&sequence=${input.sequence}`}`,
     );
+    const state = response.projection?.stateJson ?? {};
+    const references = response.references ?? {};
+    const evidence = response.evidence?.[0];
+    const facts = Object.entries(state)
+      .filter(
+        ([key, value]) =>
+          !["entityId", "introduced", "lastEventId"].includes(key) &&
+          value !== undefined &&
+          value !== null &&
+          (typeof value !== "object" || Object.keys(value).length > 0),
+      )
+      .map(([key, value]) => {
+        const raw = typeof value === "string" ? value : JSON.stringify(value);
+        return {
+          label: key
+            .replaceAll(/([A-Z])/g, " $1")
+            .replaceAll("_", " ")
+            .trim(),
+          value: references[raw] ?? raw,
+          evidence: evidence?.exactQuote ?? "Confirmed Storyworld state",
+          sceneId: evidence?.sceneId ?? "",
+        };
+      });
+    return { entityId: response.entity.id, facts };
   }
-  loadStoryTime(input: StoryTimeInput) {
-    return request<StoryTimeProjection>(
+  async loadStoryTime(input: StoryTimeInput) {
+    const projection = await request<
+      StoryworldProjection & {
+        entityStates?: Array<{ entityId: string }>;
+      }
+    >(
       `/api/projects/${input.projectId}/storyworld/branches/${input.branchId}/projection?sequence=${input.sequence}`,
     );
+    const entityStates = await Promise.all(
+      (projection.entityStates ?? []).map((item) =>
+        this.loadEntityState({ ...input, entityId: item.entityId }),
+      ),
+    );
+    return {
+      branchId: input.branchId,
+      sequence: projection.sequence,
+      label: `Story point ${projection.sequence}`,
+      entityStates,
+    };
   }
 }

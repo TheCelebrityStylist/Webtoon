@@ -669,6 +669,7 @@ export function StoryCanvas() {
           onOpen={(id) => {
             setPanel(null);
             openEntity(id);
+            setUrl(state.mode, null, id);
           }}
           onCreate={(name, type) => void addEntity(type, name)}
         />

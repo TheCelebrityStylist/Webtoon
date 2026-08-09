@@ -73,6 +73,83 @@ test("Demo branches previews safely, merges explicitly, undoes, and persists", a
     page.getByRole("button", { name: /Key left behind/ }),
   ).toBeVisible();
 });
+test("legacy branch history migrates once to versioned IndexedDB without losing selection or undo", async ({
+  page,
+}) => {
+  const key = "morrow:storyworld:museum-of-lost-hours:v1";
+  await page.addInitScript(
+    ({ storageKey }) => {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          version: 7,
+          activeBranchId: "legacy-branch",
+          branches: [
+            {
+              id: "main",
+              name: "Main",
+              status: "ACTIVE",
+              active: false,
+              changedScenes: 0,
+              openConsequences: 0,
+              mergeState: "unmerged",
+            },
+            {
+              id: "legacy-branch",
+              name: "Preserved legacy path",
+              parentId: "main",
+              status: "ACTIVE",
+              active: true,
+              changedScenes: 1,
+              openConsequences: 2,
+              mergeState: "unmerged",
+            },
+          ],
+          comparisons: {},
+          merges: [
+            { id: "legacy-merge", branchId: "legacy-branch", changeIds: [] },
+          ],
+          undoState: {
+            mergeId: "legacy-merge",
+            branchId: "legacy-branch",
+            version: 7,
+          },
+        }),
+      );
+    },
+    { storageKey: key },
+  );
+  await page.goto("/studio-demo?mode=branches");
+  await expect(
+    page.getByRole("button", { name: /Preserved legacy path/ }),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate((storageKey) => localStorage.getItem(storageKey), key),
+    )
+    .toBeNull();
+  const migrated = await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("morrow-storyworld", 2);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    return new Promise<Record<string, unknown>>((resolve, reject) => {
+      const request = database
+        .transaction("projects", "readonly")
+        .objectStore("projects")
+        .get("museum-of-lost-hours");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  });
+  expect(migrated).toMatchObject({
+    schemaVersion: 2,
+    activeBranchId: "legacy-branch",
+    merges: [{ id: "legacy-merge" }],
+    undoState: { mergeId: "legacy-merge" },
+  });
+});
 test("authoring surfaces have no robots or horizontal overflow", async ({
   page,
 }) => {

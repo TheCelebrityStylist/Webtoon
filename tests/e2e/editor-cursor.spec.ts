@@ -39,9 +39,13 @@ test.beforeEach(async ({ page }) => {
   await page.reload();
 });
 
-test("typing and autosave preserve beginning and middle cursor positions", async ({ page }) => {
+test("typing and autosave preserve beginning and middle cursor positions", async ({
+  page,
+}) => {
   const editor = page.getByLabel("Manuscript", { exact: true });
   await expect(editor).toBeVisible();
+  await expect(editor).toBeFocused();
+  await page.waitForTimeout(500);
   const length = await editor.evaluate((root) => root.textContent?.length ?? 0);
   const targets = [0, Math.max(1, Math.floor(length / 2))];
   for (const target of targets) {
@@ -53,7 +57,9 @@ test("typing and autosave preserve beginning and middle cursor positions", async
   }
 });
 
-test("committing a title does not move the manuscript cursor to the end", async ({ page }) => {
+test("committing a title does not move the manuscript cursor to the end", async ({
+  page,
+}) => {
   const editor = page.getByLabel("Manuscript", { exact: true });
   const target = 7;
   await editor.evaluate(setCaret, target);

@@ -23,6 +23,10 @@
   letter-spacing: 0.18em;
   color: #8b4052;
 }
+
+.continue small {
+  color: #f0cbd5;
+}
 .intro h1 {
   font:
     700 clamp(4rem, 8vw, 8rem) / 0.86 Arial,

@@ -21,7 +21,7 @@
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #8b3f54;
+  color: #4f2836;
 }
 .hero {
   min-height: 850px;
@@ -632,7 +632,7 @@
 }
 .projectPreview > span {
   font-size: 0.7rem;
-  color: #907b87;
+  color: #66525e;
 }
 .projectPreview h3 {
   font:
@@ -647,7 +647,7 @@
 }
 .projectPreview dt {
   font-size: 0.72rem;
-  color: #8c7683;
+  color: #66525e;
 }
 .projectPreview dd {
   margin: 0;

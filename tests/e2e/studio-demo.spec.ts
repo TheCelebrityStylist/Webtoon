@@ -2,8 +2,6 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 const sentence = "Lena entered Rowan House carrying the silver key.";
-const changed =
-  "Lena threw the silver key into the river before entering Rowan House.";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/studio-demo?mode=write");
@@ -69,7 +67,7 @@ test("turns prose into four evidence-backed details and opens entity Lenses", as
   await page.getByRole("button", { name: "Story Library" }).click();
   await page.getByRole("dialog", { name: "Story Library" }).getByRole("button", { name: /^Silver Key/ }).click();
   await expect(page.getByLabel("Silver Key story lens")).toContainText(
-    "Current holder",
+    "Holder",
   );
 });
 

@@ -1,0 +1,10 @@
+{
+  "writeInteractiveMs": 217.46458299999995,
+  "editorTransactionP95Ms": 0.10000002384185791,
+  "worldInitialLayoutMs": 142.2584999999999,
+  "branchLoadMs": 31.04245899999978,
+  "comparisonLoadMs": 154.92962499999976,
+  "storyTimeUpdateMs": 41.889500000000226,
+  "libraryOpenMs": 66.71712500000012,
+  "createOpenMs": 37.25829199999998
+}

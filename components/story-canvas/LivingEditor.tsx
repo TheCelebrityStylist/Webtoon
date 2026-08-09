@@ -133,6 +133,7 @@ export function LivingEditor({
           "data-placeholder": "Start writing…",
         },
       },
+      onCreate: ({ editor: instance }) => instance.commands.focus("end"),
       onUpdate: ({ editor: instance }) => {
         const text = instance.getText({ blockSeparator: "\n\n" });
         if (production) {
@@ -228,14 +229,6 @@ export function LivingEditor({
       active = false;
     };
   }, [branchId, demoStoryworld, editor, production, scene.id]);
-  useEffect(() => {
-    if (!editor) return;
-    const frame = requestAnimationFrame(() => {
-      if (document.activeElement === document.body)
-        editor.commands.focus("end");
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [editor]);
   useEffect(() => {
     setTitle(scene.title);
     if (!editor || loadedScene.current === scene.id) return;

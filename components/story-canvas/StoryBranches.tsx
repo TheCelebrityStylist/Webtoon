@@ -35,7 +35,7 @@ export function StoryBranches({
     [projectId, source],
   );
   const [collection, setCollection] = useState<BranchCollection>();
-  const [selected, setSelected] = useState("main");
+  const [selected, setSelected] = useState("");
   const [comparison, setComparison] = useState<BranchComparison>();
   const [status, setStatus] = useState<
     "loading" | "ready" | "working" | "error"
@@ -52,7 +52,7 @@ export function StoryBranches({
       const result = await data.loadBranches(projectId);
       setCollection(result);
       setSelected((value) =>
-        result.branches.some((item) => item.id === value)
+        value && result.branches.some((item) => item.id === value)
           ? value
           : result.activeBranchId,
       );
