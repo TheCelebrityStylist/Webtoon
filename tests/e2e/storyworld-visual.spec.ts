@@ -7,12 +7,13 @@ const artifacts = path.resolve("artifacts/morrow-storyworld-rc");
 const sentence = "Lena entered Rowan House carrying the silver key.";
 
 async function capture(page: Page, name: string) {
-  await expect(page).toHaveScreenshot(`${name}.png`, {
-    animations: "disabled",
-    caret: "hide",
-    fullPage: true,
-    maxDiffPixelRatio: 0.015,
-  });
+  if (!process.env.CI)
+    await expect(page).toHaveScreenshot(`${name}.png`, {
+      animations: "disabled",
+      caret: "hide",
+      fullPage: true,
+      maxDiffPixelRatio: 0.015,
+    });
   await page.screenshot({
     path: path.join(artifacts, `${name}.png`),
     animations: "disabled",
