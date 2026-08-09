@@ -14,6 +14,6 @@ export function parseQuickCapture(input: string): QuickCaptureProposal {
   else if (/\b(at|during|midnight|morning|evening|discovers?|arrives?|leaves?|dies?|finds?)\b/.test(lower)) kind = "event";
   else if (/\b(house|room|library|city|river|street|museum|forest|island|station)\b/.test(lower)) kind = "place";
   else if (/\b(faction|guild|order|team|family|company|society)\b/.test(lower)) kind = "faction";
-  const title = value.split(/[,.]/)[0]?.trim() || "Untitled";
+  const title = (value.replace(/^(?:new\s+)?(?:chapter|scene|part|person|place|object|event|question|faction)\s*:\s*/i, "").split(/[,.]/)[0]?.trim()) || "Untitled";
   return { kind, title, confidence: "deterministic" };
 }

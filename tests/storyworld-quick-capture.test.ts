@@ -11,4 +11,8 @@ describe("quick capture", () => {
   ])("classifies %s as %s without an AI provider", (input, kind) => {
     expect(parseQuickCapture(input).kind).toBe(kind);
   });
+
+  it("removes an explicit record prefix from the proposed title", () => {
+    expect(parseQuickCapture("New scene: The clockmaker's stair")).toEqual({ kind: "scene", title: "The clockmaker's stair", confidence: "deterministic" });
+  });
 });
