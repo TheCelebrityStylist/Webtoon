@@ -37,6 +37,12 @@ test("creates a scene through Quick Capture and preserves it while switching Wor
   await expect(page.getByLabel("Scene title")).toHaveValue(
     "The clockmaker's stair",
   );
+  await page
+    .getByLabel("Manuscript", { exact: true })
+    .fill("Lena entered Rowan House carrying the silver key.");
+  await expect(page.getByText("4 story details found")).toBeVisible({
+    timeout: 4000,
+  });
   await page.getByRole("button", { name: "WORLD" }).click();
   await expect(page.getByLabel("Storyworld projection")).toBeVisible();
   await expect(page.locator(".react-flow__node")).toHaveCount(22);

@@ -19,7 +19,25 @@ export class LocalDemoStoryDataSource implements StoryWorkspaceDataSource {
   async updateStructure(command: StructureCommand): Promise<StructureResult> { const result = applyStructureCommand(this.state.project, command); this.state.project = result.project; this.state.scenes = result.project.scenes; await this.save(); return result; }
   async createEntity(input: CreateEntityInput) { const entity: StoryEntity = { id: entityId(input.name, input.type), name: input.name, type: input.type, aliases: [], appearances: input.sceneId ? [input.sceneId] : [], sceneIds: input.sceneId ? [input.sceneId] : [], role: input.role, pronouns: input.pronouns, description: input.description, currentLocation: input.currentLocation, currentHolder: input.currentHolder, currentOwner: input.currentOwner, atmosphere: input.atmosphere, status: "active", sourceCount: input.sceneId ? 1 : 0 }; this.state.entities.push(entity); await this.save(); return entity; }
   async updateEntity(input: UpdateEntityInput) { const current = this.state.entities.find((item) => item.id === input.entityId); if (!current) throw new Error("Entity not found"); const entity = { ...current, ...input, id: current.id, type: input.type ?? current.type, aliases: current.aliases, appearances: current.appearances }; this.state.entities = this.state.entities.map((item) => item.id === entity.id ? entity : item); await this.save(); return entity; }
-  async analyzeBlocks(input: StoryAnalysisInput): Promise<StoryAnalysisResult> { const scene = this.state.scenes.find((item) => item.id === input.sceneId); if (!scene) throw new Error("Scene not found"); return { runId: `local-${Date.now()}`, revision: input.revision, canonVersion: this.state.observations.filter((item) => item.status === "confirmed").length, proposals: input.blocks.flatMap((block) => analyzer.analyze({ scene, paragraphId: block.id, text: block.text, entities: this.state.entities })) }; }
+  async analyzeBlocks(input: StoryAnalysisInput): Promise<StoryAnalysisResult> {
+    const stored = this.state.scenes.find((item) => item.id === input.sceneId);
+    const fallback = this.state.scenes[0];
+    if (!stored && !fallback) throw new Error("Scene not found");
+    const scene = stored ?? {
+      ...fallback,
+      id: input.sceneId,
+      title: "New scene",
+      manuscriptText: input.blocks.map((block) => block.text).join("\n\n"),
+      content: input.blocks.map((block) => block.text).join("\n\n"),
+      revision: input.revision,
+    };
+    return {
+      runId: `local-${Date.now()}`,
+      revision: input.revision,
+      canonVersion: this.state.observations.filter((item) => item.status === "confirmed").length,
+      proposals: input.blocks.flatMap((block) => analyzer.analyze({ scene, paragraphId: block.id, text: block.text, entities: this.state.entities })),
+    };
+  }
   async confirmProposals(input: ConfirmProposalInput): Promise<CanonCommit> { return { id: `local-commit-${Date.now()}`, resultingVersion: input.expectedCanonVersion + 1, proposalIds: input.proposalIds }; }
   async revertCommit(commitId: string): Promise<CanonCommit> { return { id: commitId, resultingVersion: Math.max(0, this.state.observations.filter((item) => item.status === "confirmed").length - 1), proposalIds: [], reverted: true }; }
 }
