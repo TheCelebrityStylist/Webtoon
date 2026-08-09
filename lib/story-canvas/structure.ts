@@ -1,4 +1,5 @@
 import type { CanvasScene, StoryChapter, StoryPart, StoryProject, StructureCommand } from "./types";
+import { manuscriptFromText } from "./manuscript";
 
 const stamp = () => new Date().toISOString();
 const id = (kind: string) => `${kind}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -24,7 +25,7 @@ export function createChapterRecord(project: StoryProject, title = "Untitled cha
 export function createSceneRecord(project: StoryProject, chapterId: string, title = "Untitled scene", position?: number): { project: StoryProject; scene: CanvasScene } {
   const siblings = project.scenes.filter((item) => item.chapterId === chapterId && item.status !== "archived");
   const at = position ?? siblings.length;
-  const created: CanvasScene = { id: id("scene"), chapterId, title, content: "", location: "", people: [], objects: [], summary: "", order: 0, position: at, status: "active", wordCount: 0, lastEditedAt: stamp(), revision: 0 };
+  const created: CanvasScene = { id: id("scene"), chapterId, title, manuscriptJson: manuscriptFromText("", `scene-${chapterId}`), manuscriptText: "", content: "", location: "", people: [], objects: [], summary: "", order: 0, position: at, status: "active", wordCount: 0, lastEditedAt: stamp(), revision: 0 };
   const shifted = project.scenes.map((item) => item.chapterId === chapterId && item.position >= at ? { ...item, position: item.position + 1 } : item);
   const chapter = project.chapters.find((item) => item.id === chapterId);
   const chapters = project.chapters.map((item) => item.id === chapterId ? { ...item, sceneIds: [...item.sceneIds.slice(0, at), created.id, ...item.sceneIds.slice(at)], updatedAt: stamp() } : item);
@@ -56,7 +57,6 @@ export function applyStructureCommand(project: StoryProject, command: StructureC
     scenes[sceneIndex] = { ...scene, chapterId: targetChapterId, position };
   }
   if (command.type === "duplicate-scene" && sceneIndex >= 0) { const source = scenes[sceneIndex]; const copy = { ...source, id: id("scene"), title: `${source.title} copy`, position: source.position + 1, revision: 0, lastEditedAt: stamp() }; scenes.push(copy); return { project: normalize({ ...project, chapters, scenes }), selectedSceneId: copy.id }; }
-  if (command.type === "split-scene" && sceneIndex >= 0) { const source = scenes[sceneIndex], at = Number(command.value ?? Math.floor(source.content.length / 2)); const splitAt = source.content.lastIndexOf(" ", at); const created = { ...source, id: id("scene"), title: `${source.title} — continued`, content: source.content.slice(splitAt).trim(), position: source.position + 1, revision: 0, lastEditedAt: stamp() }; scenes[sceneIndex] = { ...source, content: source.content.slice(0, splitAt).trim(), wordCount: source.content.slice(0, splitAt).trim().split(/\s+/).filter(Boolean).length }; scenes.push(created); return { project: normalize({ ...project, chapters, scenes }), selectedSceneId: created.id }; }
   chapters = chapters.map((chapter) => ({ ...chapter, sceneIds: scenes.filter((scene) => scene.chapterId === chapter.id).sort((a, b) => a.position - b.position).map((scene) => scene.id), updatedAt: stamp() }));
   return { project: normalize({ ...project, chapters, scenes }) };
 }

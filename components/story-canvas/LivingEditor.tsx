@@ -6,7 +6,8 @@ import { prosemirrorJSONToYXmlFragment } from "y-prosemirror";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StableBlockIds, StoryDecorations, storyDecorationKey, type StoryDecoration } from "@/lib/editor/story-extensions";
 import { changedParagraphs } from "@/lib/story-canvas/local-analyzer";
-import type { CanvasScene, EntityType, StoryEntity, StoryObservation } from "@/lib/story-canvas/types";
+import { normalizeManuscript } from "@/lib/story-canvas/manuscript";
+import type { CanvasScene, EntityType, ManuscriptDocument, StoryEntity, StoryObservation } from "@/lib/story-canvas/types";
 import { StoryIcon } from "./StoryIcon";
 import { useCollaborativeScene } from "./hooks/useCollaborativeScene";
 import { MANUSCRIPT_META } from "@/lib/storyworld/local-first/y-document";
@@ -14,13 +15,13 @@ const documentFromText = (text: string) => ({ type: "doc", content: text.split(/
 type Suggestion = { trigger: "@" | "#" | "!" | "/"; query: string; from: number; to: number };
 const kindFor = (trigger: Suggestion["trigger"]): EntityType | null => trigger === "@" ? "person" : trigger === "#" ? "place" : trigger === "!" ? "object" : null;
 
-export function LivingEditor({ projectId, branchId, production, scene, chapterTitle, entities, observations, pulseEnabled, textSize, onTitle, onChange, onAnalyze, onEntity, onInlineCreate, onFocusMode, onWhatIf }: { projectId: string; branchId?: string; production: boolean; scene: CanvasScene; chapterTitle: string; entities: StoryEntity[]; observations: StoryObservation[]; pulseEnabled: boolean; textSize: number; onTitle: (title: string) => void; onChange: (content: string) => void; onAnalyze: (blocks: Array<{ id: string; text: string }>) => Promise<void>; onEntity: (id: string) => void; onInlineCreate: (type: EntityType, name: string) => Promise<void>; onFocusMode: () => void; onWhatIf: (selection: { sceneId: string; blockId: string; from: number; to: number; quote: string; snapshotSequence: number }) => void }) {
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null); const previous = useRef(scene.content); const [draft, setDraft] = useState(scene.content); const [suggestion, setSuggestion] = useState<Suggestion | null>(null); const [selectionMenu, setSelectionMenu] = useState(false); const [title, setTitle] = useState(scene.title);
-  const collaboration = useCollaborativeScene({ projectId, sceneId: scene.id, branchId, initialJson: documentFromText(scene.content), initialText: scene.content, enabled: production });
+export function LivingEditor({ projectId, branchId, production, scene, chapterTitle, entities, observations, pulseEnabled, textSize, onTitle, onChange, onAnalyze, onEntity, onInlineCreate, onFocusMode, onWhatIf }: { projectId: string; branchId?: string; production: boolean; scene: CanvasScene; chapterTitle: string; entities: StoryEntity[]; observations: StoryObservation[]; pulseEnabled: boolean; textSize: number; onTitle: (title: string) => void; onChange: (manuscriptJson: ManuscriptDocument, manuscriptText: string) => void; onAnalyze: (blocks: Array<{ id: string; text: string }>) => Promise<void>; onEntity: (id: string) => void; onInlineCreate: (type: EntityType, name: string) => Promise<void>; onFocusMode: () => void; onWhatIf: (selection: { sceneId: string; blockId: string; from: number; to: number; quote: string; snapshotSequence: number }) => void }) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null); const previous = useRef(scene.manuscriptText); const [draft, setDraft] = useState(scene.manuscriptText); const [suggestion, setSuggestion] = useState<Suggestion | null>(null); const [selectionMenu, setSelectionMenu] = useState(false); const [title, setTitle] = useState(scene.title);
+  const collaboration = useCollaborativeScene({ projectId, sceneId: scene.id, branchId, initialJson: scene.manuscriptJson, initialText: scene.manuscriptText, enabled: production });
   const extensions = useMemo(() => production
     ? [StarterKit.configure({ history: false }), StableBlockIds, StoryDecorations, Collaboration.configure({ document: collaboration.document })]
     : [StarterKit, StableBlockIds, StoryDecorations], [collaboration.document, production]);
-  const editor = useEditor({ immediatelyRender: false, extensions, content: production ? undefined : documentFromText(scene.content), editorProps: { attributes: { class: "manuscript", "aria-label": "Manuscript", spellcheck: "true", "data-placeholder": "Start writing…" } }, onUpdate: ({ editor: instance }) => {
+  const editor = useEditor({ immediatelyRender: false, extensions, content: production ? undefined : normalizeManuscript(scene.manuscriptJson, scene.manuscriptText, scene.id), editorProps: { attributes: { class: "manuscript", "aria-label": "Manuscript", spellcheck: "true", "data-placeholder": "Start writing…" } }, onUpdate: ({ editor: instance }) => {
     const text = instance.getText({ blockSeparator: "\n\n" });
     if (production) {
       collaboration.document.transact(() => {
@@ -30,7 +31,7 @@ export function LivingEditor({ projectId, branchId, production, scene, chapterTi
       }, "editor-metadata");
     }
     setDraft(text);
-    onChange(text);
+    onChange(instance.getJSON() as ManuscriptDocument, text);
     const { from } = instance.state.selection;
     const before = instance.state.doc.textBetween(Math.max(0, from - 80), from, "\n", "\0");
     const match = /(?:^|\s)([@#!/])([^\s@#!/]{0,40})$/.exec(before);
@@ -39,9 +40,9 @@ export function LivingEditor({ projectId, branchId, production, scene, chapterTi
   useEffect(() => {
     if (!editor || !production || !collaboration.localHydrated || (collaboration.status !== "synced" && collaboration.status !== "offline")) return;
     const fragment = collaboration.document.getXmlFragment("prosemirror");
-    if (fragment.length === 0) prosemirrorJSONToYXmlFragment(editor.schema, documentFromText(scene.content), fragment);
-  }, [collaboration.document, collaboration.localHydrated, collaboration.status, editor, production, scene.content]);
-  useEffect(() => { if (!editor) return; setDraft(scene.content); setTitle(scene.title); previous.current = scene.content; if (!production) editor.commands.setContent(documentFromText(scene.content), false); }, [editor, production, scene.id, scene.content, scene.title]);
+    if (fragment.length === 0) prosemirrorJSONToYXmlFragment(editor.schema, normalizeManuscript(scene.manuscriptJson, scene.manuscriptText, scene.id), fragment);
+  }, [collaboration.document, collaboration.localHydrated, collaboration.status, editor, production, scene.id, scene.manuscriptJson, scene.manuscriptText]);
+  useEffect(() => { if (!editor) return; setDraft(scene.manuscriptText); setTitle(scene.title); previous.current = scene.manuscriptText; if (!production) editor.commands.setContent(normalizeManuscript(scene.manuscriptJson, scene.manuscriptText, scene.id), false); }, [editor, production, scene.id, scene.manuscriptJson, scene.manuscriptText, scene.title]);
   useEffect(() => { if (!editor) return; const confirmed = observations.filter((item) => item.sceneId === scene.id && item.status === "confirmed"); const decorations: StoryDecoration[] = confirmed.map((item) => ({ blockId: item.paragraphId, from: item.start, to: item.end, entityType: item.kind, label: item.title })); editor.view.dispatch(editor.state.tr.setMeta(storyDecorationKey, decorations)); }, [editor, observations, scene.id]);
   useEffect(() => { const key = (event: KeyboardEvent) => { if (event.shiftKey && event.key.toLowerCase() === "f") { event.preventDefault(); onFocusMode(); } }; addEventListener("keydown", key); return () => removeEventListener("keydown", key); }, [onFocusMode]);
   useEffect(() => { if (!pulseEnabled || draft === previous.current) return; if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => { const changed = changedParagraphs(previous.current, draft); previous.current = draft; if (changed.length) void onAnalyze(changed.map((paragraph) => ({ id: paragraph.id, text: paragraph.text }))); }, 900); return () => { if (timer.current) clearTimeout(timer.current); }; }, [draft, onAnalyze, pulseEnabled]);

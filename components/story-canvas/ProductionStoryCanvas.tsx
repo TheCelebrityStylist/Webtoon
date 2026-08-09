@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { serializeWorkspace, workspaceInclude } from "@/lib/story-canvas/server-serializer";
 import { requireUser } from "@/server/session";
+import { requireProjectAccess } from "@/server/authorization";
 import { StoryCanvas } from "./StoryCanvas";
 import { StoryCanvasProvider } from "./hooks/useStoryCanvas";
 
 export async function ProductionStoryCanvas({ projectId, sceneId }: { projectId: string; sceneId?: string }) {
   const user = await requireUser();
+  await requireProjectAccess(user.id, projectId, ["OWNER", "WRITER", "EDITOR", "VIEWER"]);
   const [project, connection, document] = await Promise.all([
     prisma.series.findUnique({ where: { id: projectId }, include: workspaceInclude }),
     prisma.integrationConnection.findFirst({ where: { userId: user.id, provider: "google", revokedAt: null } }),
