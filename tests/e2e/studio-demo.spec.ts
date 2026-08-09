@@ -77,6 +77,26 @@ test("turns prose into four evidence-backed details and opens entity Lenses", as
   );
 });
 
+test("reloads a new Main scene safely when an alternate branch is selected", async ({
+  page,
+}) => {
+  const runtimeErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") runtimeErrors.push(message.text());
+  });
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.getByLabel("Story material").fill("New scene: Reload boundary");
+  await page.getByRole("button", { name: "Confirm scene" }).click();
+  await page
+    .getByRole("combobox", { name: "Story branch" })
+    .selectOption({ label: "Key left behind" });
+  await page.reload();
+  await expect(page.getByLabel("Scene title")).toBeVisible();
+  expect(runtimeErrors).not.toContain(
+    expect.stringContaining("That source scene no longer exists"),
+  );
+});
+
 test("World and projected Lens show the Silver Key story state", async ({
   page,
 }) => {

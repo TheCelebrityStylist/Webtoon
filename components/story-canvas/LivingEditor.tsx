@@ -219,16 +219,38 @@ export function LivingEditor({
   useEffect(() => {
     if (!editor || production || !branchId) return;
     let active = true;
-    void demoStoryworld.loadBranchScene(branchId, scene.id).then((value) => {
-      if (!active) return;
-      editor.commands.setContent(value.manuscriptJson, false);
-      setDraft(value.manuscriptText);
-      previous.current = value.manuscriptText;
-    });
+    void demoStoryworld
+      .loadBranchScene(branchId, scene.id)
+      .catch(() => ({
+        branchId,
+        sceneId: scene.id,
+        manuscriptJson: normalizeManuscript(
+          scene.manuscriptJson,
+          scene.manuscriptText,
+          scene.id,
+        ),
+        manuscriptText: scene.manuscriptText,
+        inherited: true,
+        updatedAt: new Date().toISOString(),
+      }))
+      .then((value) => {
+        if (!active) return;
+        editor.commands.setContent(value.manuscriptJson, false);
+        setDraft(value.manuscriptText);
+        previous.current = value.manuscriptText;
+      });
     return () => {
       active = false;
     };
-  }, [branchId, demoStoryworld, editor, production, scene.id]);
+  }, [
+    branchId,
+    demoStoryworld,
+    editor,
+    production,
+    scene.id,
+    scene.manuscriptJson,
+    scene.manuscriptText,
+  ]);
   useEffect(() => {
     setTitle(scene.title);
     if (!editor || loadedScene.current === scene.id) return;
