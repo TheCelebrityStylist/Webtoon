@@ -1,16 +1,30 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useMemo, useState } from "react";
 import type { EntityType, StoryChapter } from "@/lib/story-canvas/types";
+import { parseQuickCapture, type QuickCaptureKind } from "@/lib/storyworld/quick-capture";
 import { StoryIcon } from "./StoryIcon";
-type Kind = "part" | "chapter" | "scene" | EntityType | "import";
-const items: Array<{ section: string; kind: Kind; label: string; icon: Parameters<typeof StoryIcon>[0]["name"] }> = [
-  { section: "Structure", kind: "chapter", label: "Chapter", icon: "chapter" }, { section: "Structure", kind: "scene", label: "Scene", icon: "scene" }, { section: "Structure", kind: "part", label: "Part", icon: "library" },
-  { section: "Story", kind: "person", label: "Person", icon: "person" }, { section: "Story", kind: "place", label: "Place", icon: "place" }, { section: "Story", kind: "object", label: "Object", icon: "object" }, { section: "Story", kind: "event", label: "Event", icon: "event" }, { section: "Story", kind: "faction", label: "Faction", icon: "person" }, { section: "Story", kind: "question", label: "Story question", icon: "warning" },
-  { section: "Material", kind: "import", label: "Import document", icon: "drive" },
+
+const kinds: Array<{ kind: QuickCaptureKind; label: string }> = [
+  { kind: "person", label: "Person" }, { kind: "place", label: "Place" }, { kind: "object", label: "Object" },
+  { kind: "event", label: "Event" }, { kind: "faction", label: "Faction" }, { kind: "question", label: "Question" },
+  { kind: "chapter", label: "Chapter" }, { kind: "scene", label: "Scene" }, { kind: "part", label: "Part" },
 ];
+
 export function GlobalCreate({ currentChapter, chapters, onClose, onPart, onChapter, onScene, onEntity, onImport }: { currentChapter?: StoryChapter; chapters: StoryChapter[]; onClose: () => void; onPart: (title: string) => void; onChapter: (title: string) => void; onScene: (chapterId: string, title: string) => void; onEntity: (type: EntityType, name: string) => void; onImport: () => void }) {
-  const [kind, setKind] = useState<Kind | null>(null); const [name, setName] = useState(""); const [chapterId, setChapterId] = useState(currentChapter?.id ?? chapters[0]?.id ?? "");
+  const [input, setInput] = useState("");
+  const proposal = useMemo(() => parseQuickCapture(input), [input]);
+  const [manualKind, setManualKind] = useState<QuickCaptureKind>();
+  const [chapterId, setChapterId] = useState(currentChapter?.id ?? chapters[0]?.id ?? "");
+  const kind = manualKind ?? proposal.kind;
   useEffect(() => { const close = (event: KeyboardEvent) => event.key === "Escape" && onClose(); addEventListener("keydown", close); return () => removeEventListener("keydown", close); }, [onClose]);
-  const submit = () => { const title = name.trim() || (kind === "chapter" ? "Untitled chapter" : kind === "scene" ? "Untitled scene" : kind === "part" ? "Untitled part" : "Untitled"); if (kind === "part") onPart(title); else if (kind === "chapter") onChapter(title); else if (kind === "scene") onScene(chapterId, title); else if (kind === "import") onImport(); else if (kind && ["person", "place", "object", "event", "faction", "question"].includes(kind)) onEntity(kind as EntityType, title); onClose(); };
-  return <div className="canvas-backdrop create-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="create-dialog" role="dialog" aria-modal="true" aria-label="Create story material"><header><div><small>New in your story</small><h2>{kind ? `Create ${items.find((item) => item.kind === kind)?.label.toLowerCase()}` : "Create"}</h2></div><button onClick={onClose} aria-label="Close Create"><StoryIcon name="close"/></button></header>{kind ? <form onSubmit={(event) => { event.preventDefault(); submit(); }}><label>{kind === "person" ? "Name" : kind === "place" ? "Place name" : kind === "object" ? "Object name" : kind === "event" ? "Event title" : "Title"}<input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder={kind === "chapter" ? "Untitled chapter" : kind === "scene" ? "Untitled scene" : "Start typing…"}/></label>{kind === "scene" && <label>Chapter<select value={chapterId} onChange={(event) => setChapterId(event.target.value)}>{chapters.filter((item) => item.status !== "archived").map((chapter) => <option key={chapter.id} value={chapter.id}>{chapter.title}</option>)}</select></label>}<footer><button type="button" onClick={() => setKind(null)}>Back</button><button className="primary" type="submit">Create {items.find((item) => item.kind === kind)?.label.toLowerCase()}</button></footer></form> : <><div className="recent-create"><small>Suggested</small><button onClick={() => setKind("scene")}><StoryIcon name="scene"/><span>Add scene to <strong>{currentChapter?.title ?? "current chapter"}</strong></span><kbd>↵</kbd></button><button onClick={() => setKind("person")}><StoryIcon name="person"/><span>Add person to the current scene</span></button></div>{["Structure", "Story", "Material"].map((section) => <section className="create-section" key={section}><h3>{section}</h3><div>{items.filter((item) => item.section === section).map((item) => <button key={item.kind} onClick={() => item.kind === "import" ? onImport() : setKind(item.kind)}><StoryIcon name={item.icon}/><span>{item.label}</span></button>)}</div></section>)}</>}</section></div>;
+  const submit = () => {
+    if (!input.trim()) return;
+    if (kind === "part") onPart(proposal.title);
+    else if (kind === "chapter") onChapter(proposal.title);
+    else if (kind === "scene") onScene(chapterId, proposal.title);
+    else onEntity(kind, proposal.title);
+    onClose();
+  };
+  return <div className="canvas-backdrop create-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="create-dialog quick-capture" role="dialog" aria-modal="true" aria-label="Add anything to the story"><header><div><small>QUICK CAPTURE</small><h2>Add anything to the story…</h2></div><button onClick={onClose} aria-label="Close Quick Capture"><StoryIcon name="close"/></button></header><form onSubmit={(event) => { event.preventDefault(); submit(); }}><label className="capture-input">Story material<textarea autoFocus value={input} onChange={(event) => { setInput(event.target.value); setManualKind(undefined); }} placeholder="A person, place, object, event, question, chapter or scene…"/></label>{input.trim() && <section className="capture-proposal" aria-live="polite"><small>STRUCTURED PROPOSAL · LOCAL</small><strong>{proposal.title}</strong><span>{kind}</span><p>This proposal is deterministic. Confirming it creates a real project record.</p></section>}<fieldset><legend>Record type</legend>{kinds.map((item) => <button type="button" key={item.kind} aria-pressed={kind === item.kind} onClick={() => setManualKind(item.kind)}>{item.label}</button>)}</fieldset>{kind === "scene" && <label>Chapter<select value={chapterId} onChange={(event) => setChapterId(event.target.value)}>{chapters.filter((chapter) => chapter.status !== "archived").map((chapter) => <option key={chapter.id} value={chapter.id}>{chapter.title}</option>)}</select></label>}<footer><button type="button" onClick={onImport}><StoryIcon name="drive"/>Import document</button><button className="primary" type="submit" disabled={!input.trim() || (kind === "scene" && !chapterId)}>Confirm {kind}</button></footer></form></section></div>;
 }

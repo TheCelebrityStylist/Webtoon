@@ -1,6 +1,5 @@
 import { auth } from "@/auth";
 import { ensureCanonUniverse } from "@/lib/canon/repository";
-import { FixtureStoryIntelligenceProvider } from "@/lib/canon/story-pulse";
 import { storyAnalysisInputSchema, validatedResult } from "@/lib/canon/story-pulse";
 import { storyProvider } from "@/lib/canon/providers";
 import { prisma } from "@/lib/prisma";
@@ -21,8 +20,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
     const scene = await prisma.scene.findUnique({ where: { id: sceneId }, select: { revision: true, manuscriptText: true } });
     if (!scene || scene.revision !== parsed.data.revision) return Response.json({ error: "The manuscript revision changed", revision: scene?.revision }, { status: 409 });
     const universe = await ensureCanonUniverse(projectId);
-    const exactDemo = parsed.data.blocks.some((block) => block.text.includes("Lena") && block.text.includes("Rowan House") && block.text.includes("silver key"));
-    const provider = exactDemo && process.env.NODE_ENV !== "production" ? new FixtureStoryIntelligenceProvider() : storyProvider();
+    const provider = storyProvider();
     const result = validatedResult(parsed.data, await provider.analyze(parsed.data));
     const run = await prisma.canonAnalysisRun.create({
       data: {

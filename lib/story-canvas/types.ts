@@ -1,4 +1,4 @@
-export type CanvasMode = "write" | "map" | "trace";
+export type CanvasMode = "write" | "world" | "branches";
 export type EntityType = "person" | "place" | "object" | "event" | "faction" | "question";
 export type ProjectType = "NOVEL" | "BOOK_SERIES" | "SCREENPLAY" | "TV_SERIES" | "SERIAL_FICTION" | "WEBTOON" | "COMIC" | "GAME_NARRATIVE" | "CUSTOM";
 export type RecordStatus = "draft" | "active" | "archived";

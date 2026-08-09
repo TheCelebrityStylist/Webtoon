@@ -1,0 +1,270 @@
+.workspace {
+  height: calc(100vh - 64px);
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 360px;
+  background: #fffefa;
+  color: #201d1b;
+  font:
+    14px Geist,
+    system-ui;
+}
+.workspace button {
+  font: inherit;
+}
+.tree,
+.impact {
+  padding: 32px 22px;
+  border-right: 1px solid rgba(32, 29, 27, 0.1);
+  background: #f8f5ef;
+}
+.impact {
+  border: 0;
+  border-left: 1px solid rgba(32, 29, 27, 0.1);
+}
+.tree small,
+.detail small,
+.impact > small {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #746e67;
+}
+.tree h1 {
+  font:
+    36px Newsreader,
+    serif;
+  margin: 8px 0;
+}
+.tree > p {
+  color: #746e67;
+  line-height: 1.5;
+}
+.tree > button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  text-align: left;
+  gap: 10px;
+  padding: 14px 12px;
+  margin: 8px 0;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+}
+.tree > button[aria-pressed="true"] {
+  background: #fff;
+  border-color: rgba(32, 29, 27, 0.12);
+  box-shadow: 0 6px 20px #36281f0d;
+}
+.tree button span {
+  min-width: 0;
+}
+.tree button strong,
+.tree button small {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tree button b {
+  border-radius: 20px;
+  background: #eee3e9;
+  color: #70435f;
+  padding: 2px 7px;
+}
+.tree .create {
+  display: block;
+  text-align: center;
+  border: 1px dashed rgba(32, 29, 27, 0.15);
+  color: #70435f;
+}
+.detail {
+  padding: 48px 64px;
+  overflow: auto;
+}
+.detail h2,
+.impact h2 {
+  font:
+    36px Newsreader,
+    serif;
+  margin: 7px 0;
+}
+.detail header p {
+  color: #746e67;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 32px 0;
+  border: 1px solid rgba(32, 29, 27, 0.1);
+  border-radius: 14px;
+}
+.metrics span {
+  padding: 18px;
+  color: #746e67;
+  border-right: 1px solid rgba(32, 29, 27, 0.08);
+}
+.metrics span:last-child {
+  border: 0;
+}
+.metrics strong {
+  display: block;
+  color: #201d1b;
+  margin-top: 6px;
+}
+.open,
+.impact button {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: #70435f;
+  color: white;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 700;
+}
+.compare {
+  margin-top: 30px;
+}
+.compare > header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  color: #746e67;
+}
+.compare blockquote {
+  margin: 16px 0;
+  padding: 18px;
+  border-left: 3px solid #70435f;
+  background: #f8f5ef;
+}
+.compare article {
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(32, 29, 27, 0.1);
+}
+.compare h3 {
+  margin: 0 0 12px;
+}
+.compare article p {
+  display: grid;
+  grid-template-columns: 1fr 24px 1fr;
+  align-items: center;
+}
+.compare del {
+  color: #9b5c59;
+}
+.compare ins {
+  color: #356957;
+  text-decoration: none;
+}
+.empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: #746e67;
+}
+.empty h3 {
+  font:
+    26px Newsreader,
+    serif;
+  color: #201d1b;
+}
+.impact article {
+  padding: 16px;
+  margin: 16px 0;
+  background: #fff;
+  border: 1px solid rgba(32, 29, 27, 0.1);
+  border-radius: 12px;
+}
+.impact article p,
+.impact > p {
+  color: #746e67;
+  line-height: 1.5;
+}
+.impact button {
+  margin-top: 12px;
+}
+.loading,
+.error {
+  height: calc(100vh - 64px);
+  display: grid;
+  place-content: center;
+  text-align: center;
+  background: #fffefa;
+  color: #201d1b;
+}
+.loading i {
+  height: 14px;
+  width: 320px;
+  background: #ece7df;
+  margin: 6px;
+  border-radius: 8px;
+}
+.error svg {
+  margin: auto;
+  width: 42px;
+  height: 42px;
+}
+.error h1 {
+  font:
+    36px Newsreader,
+    serif;
+}
+.error div {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.error button {
+  padding: 12px 18px;
+}
+@media (max-width: 900px) {
+  .workspace {
+    display: block;
+    height: auto;
+    min-height: calc(100vh - 64px);
+  }
+  .tree,
+  .detail,
+  .impact {
+    border: 0;
+    padding: 24px;
+  }
+  .tree > button {
+    display: inline-grid;
+    width: calc(50% - 10px);
+    margin-right: 8px;
+  }
+  .detail {
+    overflow: visible;
+  }
+  .impact {
+    border-top: 1px solid rgba(32, 29, 27, 0.1);
+  }
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+  .metrics span {
+    border: 0;
+    border-bottom: 1px solid rgba(32, 29, 27, 0.08);
+  }
+}
+@media (max-width: 520px) {
+  .tree > button {
+    width: 100%;
+  }
+  .detail {
+    padding: 24px 18px;
+  }
+  .metrics {
+    margin: 20px 0;
+  }
+  .compare article p {
+    grid-template-columns: 1fr;
+  }
+  .compare article svg {
+    transform: rotate(90deg);
+  }
+}

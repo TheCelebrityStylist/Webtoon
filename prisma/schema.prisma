@@ -93,6 +93,49 @@ enum JobStatus {
   CANCELED
 }
 
+enum StoryworldBranchStatus {
+  ACTIVE
+  MERGED
+  ARCHIVED
+}
+
+enum NarrativeTruthStatus {
+  PROPOSED
+  CONFIRMED
+  INTENTIONAL_EXCEPTION
+  SUPERSEDED
+  RETRACTED
+}
+
+enum NarrativePerspective {
+  REALITY
+  NARRATOR
+  READER
+  CHARACTER_KNOWLEDGE
+  CHARACTER_BELIEF
+  CHARACTER_DECEPTION
+}
+
+enum NarrativeSeverity {
+  INFO
+  RISK
+  BLOCKER
+}
+
+enum StoryworldRunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum StoryworldMergeStatus {
+  PREVIEW
+  APPLIED
+  REVERTED
+  ABORTED
+}
+
 model User {
   id            String                  @id @default(cuid())
   email         String                  @unique
@@ -216,21 +259,25 @@ model StoryPart {
 }
 
 model CanonUniverse {
-  id           String             @id @default(cuid())
-  seriesId     String             @unique
-  version      Int                @default(0)
-  metadata     Json               @default("{}")
-  series       Series             @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  entities     CanonEntity[]
-  moments      CanonMoment[]
-  facts        CanonFact[]
-  edges        CanonEdge[]
-  branches     CanonBranch[]
-  analysisRuns CanonAnalysisRun[]
-  commits      CanonCommit[]
-  dependencies CanonDependency[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  id               String             @id @default(cuid())
+  seriesId         String             @unique
+  version          Int                @default(0)
+  metadata         Json               @default("{}")
+  series           Series             @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  entities         CanonEntity[]
+  moments          CanonMoment[]
+  facts            CanonFact[]
+  edges            CanonEdge[]
+  branches         CanonBranch[]
+  analysisRuns     CanonAnalysisRun[]
+  commits          CanonCommit[]
+  dependencies     CanonDependency[]
+  storyworldEvents CanonEvent[]
+  projections      CanonProjection[]
+  diagnostics      CanonDiagnostic[]
+  compileRuns      CanonCompileRun[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 }
 
 model CanonEntity {
@@ -345,34 +392,52 @@ model CanonEdge {
 }
 
 model CanonBranch {
-  id           String        @id @default(cuid())
-  universeId   String
-  name         String
-  parentId     String?
-  forkSequence Int
-  active       Boolean       @default(false)
-  universe     CanonUniverse @relation(fields: [universeId], references: [id], onDelete: Cascade)
-  moments      CanonMoment[]
-  createdAt    DateTime      @default(now())
+  id                     String                 @id @default(cuid())
+  universeId             String
+  name                   String
+  description            String?
+  parentId               String?
+  forkCommitId           String?
+  forkSequence           Int
+  forkManuscriptSequence Int                    @default(0)
+  initiatingEvidence     Json?
+  active                 Boolean                @default(false)
+  status                 StoryworldBranchStatus @default(ACTIVE)
+  createdById            String?
+  universe               CanonUniverse          @relation(fields: [universeId], references: [id], onDelete: Cascade)
+  parent                 CanonBranch?           @relation("CanonBranchTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children               CanonBranch[]          @relation("CanonBranchTree")
+  moments                CanonMoment[]
+  events                 CanonEvent[]
+  projections            CanonProjection[]
+  diagnostics            CanonDiagnostic[]
+  compileRuns            CanonCompileRun[]
+  sceneOverrides         BranchSceneOverride[]
+  sourceMerges           BranchMerge[]          @relation("SourceBranchMerge")
+  targetMerges           BranchMerge[]          @relation("TargetBranchMerge")
+  createdAt              DateTime               @default(now())
+  mergedAt               DateTime?
 
   @@unique([universeId, name])
+  @@index([universeId, status, createdAt])
+  @@index([parentId])
 }
 
 model Chapter {
-  id        String    @id @default(cuid())
+  id        String     @id @default(cuid())
   seriesId  String
   title     String
   number    Int
-  kind      String    @default("CHAPTER")
+  kind      String     @default("CHAPTER")
   partId    String?
-  position  Int       @default(0)
-  summary   String    @default("")
-  status    String    @default("ACTIVE")
-  series    Series    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  position  Int        @default(0)
+  summary   String     @default("")
+  status    String     @default("ACTIVE")
+  series    Series     @relation(fields: [seriesId], references: [id], onDelete: Cascade)
   part      StoryPart? @relation(fields: [partId], references: [id], onDelete: SetNull)
   scenes    Scene[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   deletedAt DateTime?
 
   @@unique([seriesId, number])
@@ -382,38 +447,91 @@ model Chapter {
 }
 
 model Scene {
-  id                String              @id @default(cuid())
-  chapterId         String
-  title             String
-  position          Int
-  purpose           String              @default("")
-  conflict          String              @default("")
-  stakes            String              @default("")
-  outcome           String              @default("")
-  manuscriptJson    Json                @default("{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}")
-  manuscriptText    String              @default("")
-  revision          Int                 @default(0)
-  status            String              @default("ACTIVE")
-  pointOfViewEntityId String?
-  locationEntityId  String?
-  wordCount         Int                 @default(0)
-  lastEditedAt      DateTime             @default(now())
-  chapter           Chapter             @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  beats             StoryBeat[]
-  versions          ManuscriptVersion[]
-  aiSuggestions     AiSuggestion[]
-  continuityFacts   ContinuityFact[]
-  continuityIssues  ContinuityIssue[]
-  timelineEvents    TimelineEvent[]
-  revisionFindings  RevisionFinding[]
-  canonAnalysisRuns CanonAnalysisRun[]
-  canonMentions     CanonMention[]
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  deletedAt         DateTime?
+  id                     String                       @id @default(cuid())
+  chapterId              String
+  title                  String
+  position               Int
+  purpose                String                       @default("")
+  conflict               String                       @default("")
+  stakes                 String                       @default("")
+  outcome                String                       @default("")
+  manuscriptJson         Json                         @default("{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}")
+  manuscriptText         String                       @default("")
+  revision               Int                          @default(0)
+  status                 String                       @default("ACTIVE")
+  pointOfViewEntityId    String?
+  locationEntityId       String?
+  wordCount              Int                          @default(0)
+  lastEditedAt           DateTime                     @default(now())
+  chapter                Chapter                      @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  beats                  StoryBeat[]
+  versions               ManuscriptVersion[]
+  aiSuggestions          AiSuggestion[]
+  continuityFacts        ContinuityFact[]
+  continuityIssues       ContinuityIssue[]
+  timelineEvents         TimelineEvent[]
+  revisionFindings       RevisionFinding[]
+  canonAnalysisRuns      CanonAnalysisRun[]
+  canonMentions          CanonMention[]
+  collaborativeDocuments SceneCollaborativeDocument[]
+  branchOverrides        BranchSceneOverride[]
+  storyworldEvents       CanonEvent[]
+  createdAt              DateTime                     @default(now())
+  updatedAt              DateTime                     @updatedAt
+  deletedAt              DateTime?
 
   @@unique([chapterId, position])
   @@index([chapterId, deletedAt])
+}
+
+model SceneCollaborativeDocument {
+  id               String                     @id @default(cuid())
+  sceneId          String
+  branchId         String?
+  snapshot         Bytes
+  stateVector      Bytes
+  snapshotSequence Int                        @default(0)
+  scene            Scene                      @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  updates          SceneCollaborativeUpdate[]
+  checkpoints      SceneDocumentCheckpoint[]
+  branchOverrides  BranchSceneOverride[]
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  @@unique([sceneId, branchId])
+  @@index([sceneId, updatedAt])
+}
+
+model SceneCollaborativeUpdate {
+  id          String                     @id @default(cuid())
+  documentId  String
+  sequence    Int
+  updateBytes Bytes
+  mutationId  String
+  createdById String
+  document    SceneCollaborativeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdAt   DateTime                   @default(now())
+
+  @@unique([documentId, sequence])
+  @@unique([documentId, mutationId])
+  @@index([documentId, createdAt])
+}
+
+model SceneDocumentCheckpoint {
+  id              String                     @id @default(cuid())
+  documentId      String
+  sequence        Int
+  manuscriptJson  Json
+  manuscriptText  String
+  wordCount       Int
+  source          String
+  createdById     String
+  document        SceneCollaborativeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  branchOverrides BranchSceneOverride[]
+  createdAt       DateTime                   @default(now())
+
+  @@unique([documentId, sequence])
+  @@index([documentId, createdAt])
 }
 
 model StoryBeat {
@@ -549,6 +667,146 @@ model CanonDependency {
   @@unique([universeId, sourceRecordType, sourceRecordId, targetRecordType, targetRecordId])
   @@index([universeId, targetRecordType, targetRecordId, active])
   @@index([sourceRecordType, sourceRecordId, active])
+}
+
+model CanonEvent {
+  id                  String               @id @default(cuid())
+  universeId          String
+  branchId            String
+  commitId            String
+  eventType           String
+  subjectEntityId     String?
+  objectEntityId      String?
+  predicate           String?
+  valueJson           Json?
+  perspective         NarrativePerspective
+  perspectiveEntityId String?
+  manuscriptSequence  Int
+  storySequence       Int?
+  storyDateStart      DateTime?
+  storyDateEnd        DateTime?
+  sourceSceneId       String?
+  evidenceId          String?
+  evidence            Json?
+  status              NarrativeTruthStatus @default(CONFIRMED)
+  universe            CanonUniverse        @relation(fields: [universeId], references: [id], onDelete: Cascade)
+  branch              CanonBranch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  sourceScene         Scene?               @relation(fields: [sourceSceneId], references: [id], onDelete: SetNull)
+  createdAt           DateTime             @default(now())
+
+  @@index([universeId, branchId, manuscriptSequence])
+  @@index([branchId, subjectEntityId, eventType])
+  @@index([sourceSceneId, status])
+  @@index([commitId])
+}
+
+model CanonProjection {
+  id                   String        @id @default(cuid())
+  universeId           String
+  branchId             String
+  entityId             String
+  atManuscriptSequence Int
+  projectionType       String
+  stateJson            Json
+  sourceCommitId       String
+  compilerVersion      String
+  universe             CanonUniverse @relation(fields: [universeId], references: [id], onDelete: Cascade)
+  branch               CanonBranch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@unique([branchId, entityId, atManuscriptSequence, projectionType])
+  @@index([universeId, branchId, atManuscriptSequence])
+  @@index([branchId, projectionType])
+}
+
+model CanonDiagnostic {
+  id               String            @id @default(cuid())
+  universeId       String
+  branchId         String
+  compileRunId     String
+  code             String
+  severity         NarrativeSeverity
+  title            String
+  explanation      String
+  sourceEntityId   String?
+  affectedEntityId String?
+  sourceSceneId    String?
+  affectedSceneId  String?
+  dependencyPath   Json
+  evidenceIds      String[]
+  status           String            @default("OPEN")
+  universe         CanonUniverse     @relation(fields: [universeId], references: [id], onDelete: Cascade)
+  branch           CanonBranch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  compileRun       CanonCompileRun   @relation(fields: [compileRunId], references: [id], onDelete: Cascade)
+  createdAt        DateTime          @default(now())
+  resolvedAt       DateTime?
+
+  @@index([branchId, severity, status])
+  @@index([compileRunId])
+  @@index([affectedSceneId])
+}
+
+model CanonCompileRun {
+  id                       String              @id @default(cuid())
+  universeId               String
+  branchId                 String
+  trigger                  String
+  earliestAffectedSequence Int
+  latestAffectedSequence   Int?
+  compilerVersion          String
+  status                   StoryworldRunStatus @default(PENDING)
+  deterministicDurationMs  Int?
+  providerDurationMs       Int?
+  eventCount               Int                 @default(0)
+  projectionCount          Int                 @default(0)
+  diagnosticCount          Int                 @default(0)
+  errorCode                String?
+  universe                 CanonUniverse       @relation(fields: [universeId], references: [id], onDelete: Cascade)
+  branch                   CanonBranch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  diagnostics              CanonDiagnostic[]
+  createdAt                DateTime            @default(now())
+  completedAt              DateTime?
+
+  @@index([branchId, createdAt])
+  @@index([universeId, status])
+}
+
+model BranchSceneOverride {
+  id               String                     @id @default(cuid())
+  branchId         String
+  sceneId          String
+  baseCheckpointId String
+  branchDocumentId String
+  status           String                     @default("ACTIVE")
+  branch           CanonBranch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  scene            Scene                      @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  baseCheckpoint   SceneDocumentCheckpoint    @relation(fields: [baseCheckpointId], references: [id], onDelete: Restrict)
+  branchDocument   SceneCollaborativeDocument @relation(fields: [branchDocumentId], references: [id], onDelete: Restrict)
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  @@unique([branchId, sceneId])
+  @@index([sceneId, status])
+}
+
+model BranchMerge {
+  id              String                @id @default(cuid())
+  sourceBranchId  String
+  targetBranchId  String
+  baseCommitId    String
+  mergeCommitId   String?
+  selectedChanges Json
+  inverseChanges  Json?
+  status          StoryworldMergeStatus @default(PREVIEW)
+  createdById     String
+  sourceBranch    CanonBranch           @relation("SourceBranchMerge", fields: [sourceBranchId], references: [id], onDelete: Restrict)
+  targetBranch    CanonBranch           @relation("TargetBranchMerge", fields: [targetBranchId], references: [id], onDelete: Restrict)
+  createdAt       DateTime              @default(now())
+  completedAt     DateTime?
+
+  @@index([sourceBranchId, status])
+  @@index([targetBranchId, createdAt])
 }
 
 model ManuscriptVersion {
@@ -887,24 +1145,24 @@ model RevisionFinding {
 }
 
 model GoogleDocumentReference {
-  id             String    @id @default(cuid())
-  userId         String
-  seriesId       String
-  googleId       String
-  kind           String
-  title          String
-  lastExportedAt DateTime?
-  documentUrl    String?
-  revisionId     String?
-  driveVersion   String?
-  modifiedTime   DateTime?
-  canonVersion   Int?
+  id                 String    @id @default(cuid())
+  userId             String
+  seriesId           String
+  googleId           String
+  kind               String
+  title              String
+  lastExportedAt     DateTime?
+  documentUrl        String?
+  revisionId         String?
+  driveVersion       String?
+  modifiedTime       DateTime?
+  canonVersion       Int?
   manuscriptRevision Int?
-  namedRanges    Json?
-  syncStatus     String    @default("CONNECTED")
-  lastSyncedAt   DateTime?
-  lastCheckedAt  DateTime?
-  createdAt      DateTime  @default(now())
+  namedRanges        Json?
+  syncStatus         String    @default("CONNECTED")
+  lastSyncedAt       DateTime?
+  lastCheckedAt      DateTime?
+  createdAt          DateTime  @default(now())
 
   @@unique([userId, googleId])
   @@index([seriesId, kind])

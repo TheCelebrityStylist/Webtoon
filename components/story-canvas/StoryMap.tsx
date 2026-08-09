@@ -1,30 +1,211 @@
 "use client";
+import "@xyflow/react/dist/style.css";
+import { memo, useEffect, useMemo, useState } from "react";
+import {
+  Background,
+  Controls,
+  Handle,
+  Position,
+  ReactFlow,
+  type Edge,
+  type Node,
+  type NodeProps,
+} from "@xyflow/react";
+import { Box, CircleHelp, GitBranch, MapPin, UserRound } from "lucide-react";
+import type {
+  StoryworldDataSource,
+  StoryworldProjection,
+  WorldNodeProjection,
+} from "@/lib/storyworld/data-source";
+import styles from "./styles/WorldWorkspace.module.css";
 
-import { useMemo, useState } from "react";
-import type { CanvasScene, StoryEntity } from "@/lib/story-canvas/types";
-import { StoryIcon } from "./StoryIcon";
-import { useStoryCanvas } from "./hooks/useStoryCanvas";
+type Data = WorldNodeProjection;
+const icon = (type: Data["type"]) =>
+  type === "person"
+    ? UserRound
+    : type === "object"
+      ? Box
+      : type === "question"
+        ? CircleHelp
+        : type === "branch-difference"
+          ? GitBranch
+          : MapPin;
+const WorldNode = memo(function WorldNode({ data }: NodeProps<Node<Data>>) {
+  const Icon = icon(data.type);
+  return (
+    <article
+      className={`${styles.node} ${styles[data.type] ?? ""}`}
+      aria-label={`${data.type}: ${data.label}. ${data.detail}`}
+    >
+      <Handle type="target" position={Position.Left} />
+      <Icon />
+      <span>
+        <small>{data.type.replace("-", " ")}</small>
+        <strong>{data.label}</strong>
+        <em>{data.detail}</em>
+        <b>{data.meta}</b>
+      </span>
+      <Handle type="source" position={Position.Right} />
+    </article>
+  );
+});
+const nodeTypes = { world: WorldNode };
+const groups = {
+  Story: new Set(["chapter", "scene", "event"]),
+  People: new Set(["person"]),
+  Places: new Set(["place"]),
+  Objects: new Set(["object"]),
+  Questions: new Set(["question"]),
+  Differences: new Set(["diagnostic", "branch-difference"]),
+};
 
-const colors = ["#754260", "#176c68", "#b07824"];
-export function StoryMap({ scenes, entities, currentSceneId, onOpen }: { scenes: CanvasScene[]; entities: StoryEntity[]; currentSceneId: string; onOpen: (id: string) => void }) {
-  const { state, createChapter, createScene, structure } = useStoryCanvas();
-  const [zoom, setZoom] = useState(1);
-  const [order, setOrder] = useState<"reader" | "chronology">("reader");
-  const [filter, setFilter] = useState("all");
-  const [selectedThread, setSelectedThread] = useState<string | null>(null);
-  const chapters = state.project.chapters.filter((item) => item.status !== "archived").sort((a, b) => a.position - b.position);
-  const visible = useMemo(() => scenes.filter((scene) => scene.status !== "archived" && (filter === "all" || scene.people.includes(filter) || scene.objects.includes(filter) || scene.locationEntityId === filter)), [filter, scenes]);
-  const threads = [
-    { id: "portrait", label: "The altered portrait", scenes: ["portrait-gallery", "restored-portrait"], color: colors[0] },
-    { id: "hours", label: "The missing hours", scenes: ["west-hall", "missing-hour", "archive-door"], color: colors[1] },
-    { id: "key", label: "The silver key", scenes: ["conversation-room", "river-bank", "archive-door"], color: colors[2] },
-  ];
-  return <main className="story-map commercial-map" aria-label="Story map">
-    <header><div><small>Structure and consequence</small><h1>Story map</h1></div><div className="map-order"><button aria-pressed={order === "reader"} onClick={() => setOrder("reader")}>Reader order</button><button aria-pressed={order === "chronology"} onClick={() => setOrder("chronology")}>Chronology</button></div><div className="map-controls"><label><StoryIcon name="filter"/><select value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Filter Story Map"><option value="all">All story elements</option>{entities.map((entity) => <option key={entity.id} value={entity.id}>{entity.name}</option>)}</select></label><button onClick={() => setZoom((value) => Math.max(.7, value - .1))} aria-label="Zoom out">−</button><span>{Math.round(zoom * 100)}%</span><button onClick={() => setZoom((value) => Math.min(1.35, value + .1))} aria-label="Zoom in">＋</button><button onClick={() => setZoom(1)}>Fit story</button><button className="primary" onClick={() => void createChapter({ title: "Untitled chapter" })}><StoryIcon name="plus"/>Chapter</button></div></header>
-    <div className="map-body"><aside className="map-legend"><h2>Story threads</h2>{threads.map((thread) => <button key={thread.id} aria-pressed={selectedThread === thread.id} onClick={() => setSelectedThread((value) => value === thread.id ? null : thread.id)}><i style={{ background: thread.color }}/><span>{thread.label}<small>{thread.scenes.length} story points</small></span></button>)}<h2>Markers</h2><span><i className="person"/>Person</span><span><i className="place"/>Place</span><span><i className="object"/>Object</span></aside>
-      <div className="map-viewport"><div className="map-commercial-plane" style={{ transform: `scale(${zoom})` }}><svg className="commercial-thread-lines" viewBox={`0 0 ${Math.max(1200, chapters.length * 430)} 620`} aria-label="Story thread connections">{threads.map((thread, threadIndex) => { const points = thread.scenes.flatMap((id) => { const scene = scenes.find((item) => item.id === id); if (!scene) return []; const chapterIndex = chapters.findIndex((chapter) => chapter.id === scene.chapterId); return [`${chapterIndex * 430 + 170 + scene.position * 72},${155 + threadIndex * 145}`]; }); return <polyline key={thread.id} points={points.join(" ")} fill="none" stroke={thread.color} strokeWidth={selectedThread === thread.id ? 5 : 2.5} opacity={selectedThread && selectedThread !== thread.id ? .16 : .9}><title>{thread.label}: setup to payoff across {thread.scenes.length} scenes</title></polyline>; })}</svg>
-        <div className="commercial-chapters" style={{ gridTemplateColumns: `repeat(${Math.max(1, chapters.length)}, 430px)` }}>{chapters.map((chapter, chapterIndex) => { const chapterScenes = visible.filter((scene) => scene.chapterId === chapter.id).sort((a, b) => a.position - b.position); return <section key={chapter.id}><header><div><small>Chapter {chapterIndex + 1}</small><h2>{chapter.title}</h2><span>{chapterScenes.reduce((sum, scene) => sum + scene.wordCount, 0).toLocaleString()} words</span></div><button onClick={() => void createScene({ chapterId: chapter.id, title: "Untitled scene" })} aria-label={`Add scene to ${chapter.title}`}><StoryIcon name="plus"/></button></header><div className="chapter-map-scenes" onDragOver={(event) => event.preventDefault()} onDrop={(event) => { const id = event.dataTransfer.getData("text/morrow-scene"); if (id) void structure({ type: "move-scene", id, targetId: chapter.id, position: chapterScenes.length }); }}>{chapterScenes.map((scene) => <button draggable onDragStart={(event) => event.dataTransfer.setData("text/morrow-scene", scene.id)} key={scene.id} className={`map-scene-card ${scene.id === currentSceneId ? "selected" : ""}`} onClick={() => onOpen(scene.id)}><header><span>{scene.location || "Location open"}</span>{scene.id === currentSceneId && <b>Writing</b>}</header><h3>{scene.title}</h3><p>{scene.summary || (scene.manuscriptText ? scene.manuscriptText.slice(0, 92) : "What changes in this scene?")}</p><footer><span>{scene.pointOfViewEntityId ? entities.find((entity) => entity.id === scene.pointOfViewEntityId)?.name : scene.people[0] ? entities.find((entity) => entity.id === scene.people[0])?.name : "POV open"}</span><div>{scene.people.slice(0, 2).map((id) => <i className="person" key={id}/>)}{scene.objects.slice(0, 2).map((id) => <i className="object" key={id}/>)}</div></footer></button>)}</div></section>; })}</div><div className="map-minimap"><span style={{ width: `${Math.min(100, 100 / zoom)}%` }}/><small>Minimap</small></div>
-      </div></div>
-    </div>
-  </main>;
+export function StoryMap({
+  projectId,
+  branchId = "main",
+  sequence = 9,
+  source,
+  onOpen,
+  onSelect,
+}: {
+  projectId: string;
+  branchId?: string;
+  sequence?: number;
+  source: StoryworldDataSource;
+  onOpen: (id: string) => void;
+  onSelect?: (id: string) => void;
+}) {
+  const [projection, setProjection] = useState<StoryworldProjection>();
+  const [error, setError] = useState("");
+  const [layers, setLayers] = useState(new Set(Object.keys(groups)));
+  const [selected, setSelected] = useState("");
+  useEffect(() => {
+    let active = true;
+    setError("");
+    void source
+      .loadWorld({ projectId, branchId, sequence })
+      .then((value) => {
+        if (active) setProjection(value);
+      })
+      .catch(() => {
+        if (active) setError("Story state is still being prepared.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [branchId, projectId, sequence, source]);
+  const built = useMemo(() => {
+    if (!projection) return { nodes: [] as Node<Data>[], edges: [] as Edge[] };
+    return {
+      nodes: projection.nodes.map((item) => ({
+        id: item.id,
+        type: "world",
+        position: { x: item.x, y: item.y },
+        data: item,
+        style: { width: item.width, height: item.height },
+      })),
+      edges: projection.edges.map((item) => ({
+        id: item.id,
+        source: item.source,
+        target: item.target,
+        type: "smoothstep",
+        label: item.label,
+      })),
+    };
+  }, [projection]);
+  const visible = new Set(
+    Object.entries(groups)
+      .filter(([key]) => layers.has(key))
+      .flatMap(([, value]) => [...value]),
+  );
+  const nodeIds = new Set(
+    built.nodes
+      .filter((node) => visible.has(node.data.type))
+      .map((node) => node.id),
+  );
+  const connected = selected
+    ? new Set(
+        built.edges
+          .filter(
+            (edge) => edge.source === selected || edge.target === selected,
+          )
+          .flatMap((edge) => [edge.source, edge.target]),
+      )
+    : new Set<string>();
+  const nodes = built.nodes
+    .filter((node) => nodeIds.has(node.id))
+    .map((node) => ({
+      ...node,
+      className: selected && !connected.has(node.id) ? styles.dim : "",
+    }));
+  const edges = built.edges
+    .filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
+    .map((edge) => ({
+      ...edge,
+      animated: Boolean(
+        selected && (edge.source === selected || edge.target === selected),
+      ),
+    }));
+  return (
+    <main className={styles.workspace}>
+      <aside>
+        <small>WORLD LAYERS</small>
+        <h1>Story observatory</h1>
+        <p>See only what the selected story path establishes.</p>
+        {Object.keys(groups).map((group) => (
+          <label key={group}>
+            <input
+              type="checkbox"
+              checked={layers.has(group)}
+              onChange={() =>
+                setLayers((current) => {
+                  const next = new Set(current);
+                  if (next.has(group)) next.delete(group);
+                  else next.add(group);
+                  return next;
+                })
+              }
+            />
+            <span>{group}</span>
+          </label>
+        ))}
+      </aside>
+      <section
+        className={styles.canvas}
+        aria-label="Storyworld projection"
+        data-layout-ready={Boolean(projection)}
+      >
+        <header>
+          <span>{branchId === "main" ? "MAIN" : "BRANCH"} · STORY POINT</span>
+          <strong>{sequence}</strong>
+          <small>
+            {nodes.length} records · {edges.length} supported connections ·{" "}
+            {projection?.compilerVersion ?? "preparing"}
+          </small>
+        </header>
+        {error ? (
+          <p className="canvas-loading">{error}</p>
+        ) : (
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.18 }}
+            minZoom={0.2}
+            maxZoom={1.8}
+            onNodeClick={(_, node) => {
+              setSelected(node.id);
+              if (node.id.startsWith("entity:")) onSelect?.(node.id.slice(7));
+            }}
+            onNodeDoubleClick={(_, node) => {
+              if (node.data.sourceSceneId) onOpen(node.data.sourceSceneId);
+            }}
+          >
+            <Background color="#303844" gap={28} />
+            <Controls showInteractive={false} />
+          </ReactFlow>
+        )}
+      </section>
+    </main>
+  );
 }

@@ -8,6 +8,16 @@ export function calculateImpact(state: CanvasState, proposal: StoryObservation):
   if (!before || before.value === proposal.value) return null;
   const entity = state.entities.find((item) => item.id === proposal.subjectId);
   const currentOrder = state.scenes.find((scene) => scene.id === proposal.sceneId)?.order ?? 0;
-  const affectedScenes = state.scenes.filter((scene) => scene.order > currentOrder && entity && new RegExp(`\\b${entity.aliases.concat(entity.name).join("| ")}\\b`, "i").test(scene.manuscriptText) && scene.people.includes("lena")).map((scene) => ({ id: scene.id, title: scene.title, chapterId: scene.chapterId, quote: scene.manuscriptText.split(/(?<=[.!?])\s/).find((sentence) => /silver key/i.test(sentence)) ?? scene.manuscriptText, reason: `The same tracked object is used by Lena after being left in the ${proposal.value.toLowerCase()}.` }));
+  const aliases = entity?.aliases.concat(entity.name).map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) ?? [];
+  const matcher = aliases.length ? new RegExp(`\\b(?:${aliases.join("|")})\\b`, "i") : null;
+  const affectedScenes = state.scenes
+    .filter((scene) => scene.order > currentOrder && matcher?.test(scene.content))
+    .map((scene) => ({
+      id: scene.id,
+      title: scene.title,
+      chapterId: scene.chapterId,
+      quote: scene.content.split(/(?<=[.!?])\s/).find((sentence) => matcher?.test(sentence)) ?? scene.content,
+      reason: `${entity?.name ?? "This record"} appears after its confirmed ${proposal.predicate} changed to ${proposal.value}. Review whether the later evidence still has a supported path.`,
+    }));
   return { changed: proposal, before, affectedScenes };
 }
